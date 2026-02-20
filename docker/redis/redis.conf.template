@@ -1,0 +1,51 @@
+# Redis Configuration
+
+################################## ACL/Authentication Settings ###################################
+
+# Set password for default authentication
+requirepass ${REDIS_DEFAULT_PASSWORD}
+
+# Setup admin user
+# ~* Allows user to use all keys to be mentioned in commands
+# +@all Enables user to use all redis commands
+user admin_user on >${REDIS_PASSWORD} ~* +@all
+
+################################## Persistence Settings ###################################
+
+# Save the DB to disk (Snapshotting)
+# Unless specified otherwise, by default Redis will save the DB:
+#   * After 3600 seconds (an hour) if at least 1 change was performed
+#   * After 300 seconds (5 minutes) if at least 100 changes were performed
+#   * After 60 seconds if at least 10000 changes were performed
+#
+# You can set these explicitly by uncommenting the following line.
+save 3600 1
+save 300 10
+save 60 10000
+
+################################## Network Settings ###################################
+
+# Enable TCP keepalive for long-lived connections
+tcp-keepalive 300
+
+# Set custom port for redis
+port 6379
+
+################################### Clients ####################################
+
+# Set the max number of connected clients at the same time. By default
+# this limit is set to 10000 clients, however if the Redis server is not
+# able to configure the process file limit to allow for the specified limit
+# the max number of allowed clients is set to the current file limit
+# minus 32 (as Redis reserves a few file descriptors for internal uses).
+#
+# Once the limit is reached Redis will close all the new connections sending
+# an error 'max number of clients reached'.
+#
+# IMPORTANT: When Redis Cluster is used, the max number of connections is also
+# shared with the cluster bus: every node in the cluster will use two
+# connections, one incoming and another outgoing. It is important to size the
+# limit accordingly in case of very large clusters.
+#
+maxclients 10000
+

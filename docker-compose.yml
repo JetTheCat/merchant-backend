@@ -1,0 +1,108 @@
+services:
+  nginx:
+    container_name: web-nginx
+    image: nginx:latest # Using the default Nginx image with custom configuration.
+    volumes:
+      # Mount the application code for live updates
+      - ./:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      # Map port 80 inside the container to the port specified by 'NGINX_PORT' on the host machine
+      - "80:80"
+    environment:
+      - NGINX_HOST=localhost
+    networks:
+      - web-network
+    depends_on:
+      php-fpm:
+        condition: service_started # Wait for php-fpm to start
+
+  workspace:
+    container_name: workspace
+    build:
+      # Set context to root directory
+      context: .
+      dockerfile: ./docker/workspace/Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+        XDEBUG_ENABLED: ${XDEBUG_ENABLED:-true}
+        XDEBUG_MODE: develop,coverage,debug,profile
+        XDEBUG_HOST: ${XDEBUG_HOST:-host.docker.internal}
+        XDEBUG_IDE_KEY: ${XDEBUG_IDE_KEY:-DOCKER}
+        XDEBUG_LOG: /dev/stdout
+        XDEBUG_LOG_LEVEL: 0
+    tty: true # Enables an interactive terminal
+    stdin_open: true # Keeps standard input open for 'docker exec'
+    volumes:
+      - ./:/var/www
+    networks:
+      - web-network
+    depends_on:
+      postgres:
+        condition: service_started
+
+  php-fpm:
+    container_name: php-api
+    build:
+      context: .
+      dockerfile: ./docker/php-fpm/Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+        XDEBUG_ENABLED: ${XDEBUG_ENABLED:-false}
+        XDEBUG_MODE: develop,coverage,debug,profile
+        XDEBUG_HOST: ${XDEBUG_HOST:-host.docker.internal}
+        XDEBUG_IDE_KEY: ${XDEBUG_IDE_KEY:-DOCKER}
+        XDEBUG_LOG: /dev/stdout
+        XDEBUG_LOG_LEVEL: 0
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      # Mount the application code for live updates
+      - ./:/var/www
+    networks:
+      - web-network
+    depends_on:
+      postgres:
+        condition: service_started
+
+  postgres:
+    image: postgres:17.4-bookworm
+    container_name: postgres-db
+    environment:
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    networks:
+      - web-network
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    container_name: redis
+    build:
+        context: .
+        dockerfile: ./docker/redis/Dockerfile
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-secret}
+      REDIS_DEFAULT_PASSWORD: ${REDIS_DEFAULT_PASSWORD:-secret}
+    ports:
+        - "6379:6379"
+    networks:
+        - web-network
+    volumes:
+        - redis-data:/data
+
+networks:
+  web-network:
+      driver: bridge
+      name: web-network
+      ipam:
+        config:
+          - subnet: 172.21.0.0/24
+            ip_range: 172.21.0.0/24
+
+volumes:
+  pgdata:
+  redis-data:
+
