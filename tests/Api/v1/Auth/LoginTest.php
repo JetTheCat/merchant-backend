@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Api\Auth;
+namespace Tests\Api\v1\Auth;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -16,14 +16,15 @@ class LoginTest extends TestCase
     use AuthEndpoints;
 
     private const TEST_PASSWORD = 'SecurePass123!@#';
+
     private const TEST_EMAIL = 'jet@example.com';
 
     private User $user;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->user = User::factory()->create([
             'email' => self::TEST_EMAIL,
             'password' => Hash::make(self::TEST_PASSWORD),
@@ -87,9 +88,9 @@ class LoginTest extends TestCase
                     'password' => 'WrongPassword123!@#',
                 ],
                 'expectedError' => [
-                    "credentials" => [
-                        "Invalid email or password"
-                    ]
+                    'credentials' => [
+                        'Invalid email or password',
+                    ],
                 ],
             ],
             'non-existent email' => [
@@ -98,9 +99,9 @@ class LoginTest extends TestCase
                     'password' => self::TEST_PASSWORD,
                 ],
                 'expectedError' => [
-                    "credentials" => [
-                        "Invalid email or password"
-                    ]
+                    'credentials' => [
+                        'Invalid email or password',
+                    ],
                 ],
             ],
             'missing email' => [
@@ -108,9 +109,9 @@ class LoginTest extends TestCase
                     'password' => self::TEST_PASSWORD,
                 ],
                 'expectedError' => [
-                    "email" => [
-                        "The email field is required."
-                    ]
+                    'email' => [
+                        'The email field is required.',
+                    ],
                 ],
             ],
             'missing password' => [
@@ -118,9 +119,9 @@ class LoginTest extends TestCase
                     'email' => 'jet@example.com',
                 ],
                 'expectedError' => [
-                    "password" => [
-                        "The password field is required."
-                    ]
+                    'password' => [
+                        'The password field is required.',
+                    ],
                 ],
             ],
             'invalid email format' => [
@@ -129,20 +130,20 @@ class LoginTest extends TestCase
                     'password' => self::TEST_PASSWORD,
                 ],
                 'expectedError' => [
-                    "email" => [
-                        "The email field must be a valid email address."
-                    ]
+                    'email' => [
+                        'The email field must be a valid email address.',
+                    ],
                 ],
             ],
             'empty credentials' => [
                 'payload' => [],
                 'expectedError' => [
-                    "email" => [
-                        "The email field is required."
+                    'email' => [
+                        'The email field is required.',
                     ],
-                    "password" => [
-                        "The password field is required."
-                    ]
+                    'password' => [
+                        'The password field is required.',
+                    ],
                 ],
             ],
         ];
