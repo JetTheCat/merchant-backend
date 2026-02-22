@@ -1,8 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\UserStatus;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -14,6 +19,7 @@ class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+
     use HasUuids;
 
     /**
@@ -26,6 +32,8 @@ class User extends Authenticatable
         'last_name',
         'email',
         'password',
+        'phone',
+        'status',
     ];
 
     /**
@@ -47,7 +55,9 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
             'password' => 'hashed',
+            'status' => UserStatus::class,
         ];
     }
 
@@ -64,4 +74,24 @@ class User extends Authenticatable
      * @var string
      */
     protected $keyType = 'string';
+
+    #[Scope]
+    protected function active(Builder $query): void
+    {
+        $query->where('status', UserStatus::ACTIVE);
+    }
+
+    #[Scope]
+    protected function verified(Builder $query): void
+    {
+        $query->whereNotNull('email_verified_at')
+            ->whereNotNull('phone_verified_at');
+    }
+
+    protected function fullName(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->first_name.' '.$this->last_name,
+        );
+    }
 }

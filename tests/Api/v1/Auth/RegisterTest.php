@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Api\Auth;
+namespace Tests\Api\v1\Auth;
 
 use App\Models\User;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -13,17 +13,18 @@ class RegisterTest extends TestCase
 {
     use AuthEndpoints;
 
+    private const VALID_PAYLOAD = [
+        'firstName' => 'Jet',
+        'lastName' => 'Lim',
+        'email' => 'jet@example.com',
+        'password' => 'SecurePass123!@#',
+        'passwordConfirmation' => 'SecurePass123!@#',
+        'phone' => '+60123456789',
+    ];
+
     public function testUserCanRegisterWithValidData(): void
     {
-        $payload = [
-            'firstName' => 'Jet',
-            'lastName' => 'Lim',
-            'email' => 'jet@example.com',
-            'password' => 'SecurePass123!@#',
-            'passwordConfirmation' => 'SecurePass123!@#',
-        ];
-
-        $jsonResponse = $this->postJson(self::registerEndpoint(), $payload);
+        $jsonResponse = $this->postJson(self::registerEndpoint(), self::VALID_PAYLOAD);
 
         $jsonResponse->assertStatus(201)
             ->assertJsonStructure([
@@ -60,19 +61,25 @@ class RegisterTest extends TestCase
     public function testUserCannotRegisterWithDuplicateEmail(): void
     {
         User::factory()->create([
-            'email' => 'existing@example.com',
+            'email' => self::VALID_PAYLOAD['email'],
         ]);
 
-        $response = $this->postJson(self::registerEndpoint(), [
-            'firstName' => 'Jet',
-            'lastName' => 'Lim',
-            'email' => 'existing@example.com',
-            'password' => 'SecurePass123!@#',
-            'passwordConfirmation' => 'SecurePass123!@#',
-        ]);
+        $response = $this->postJson(self::registerEndpoint(), self::VALID_PAYLOAD);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['email']);
+    }
+
+    public function testUserCannotRegisterWithDuplicatePhone(): void
+    {
+        User::factory()->create([
+            'phone' => self::VALID_PAYLOAD['phone'],
+        ]);
+
+        $response = $this->postJson(self::registerEndpoint(), self::VALID_PAYLOAD);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['phone']);
     }
 
     #[DataProvider('invalidRegistrationData')]
