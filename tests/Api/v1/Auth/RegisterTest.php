@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Api\v1\Auth;
 
+use App\Jobs\SendEmailVerificationJob;
 use App\Models\User;
+use Illuminate\Support\Facades\Bus;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Api\v1\Traits\AuthEndpoints;
 use Tests\TestCase;
@@ -21,6 +23,13 @@ class RegisterTest extends TestCase
         'passwordConfirmation' => 'SecurePass123!@#',
         'phone' => '+60123456789',
     ];
+
+    public function setUp(): void
+    {
+        parent::setUp();
+        
+        Bus::fake(SendEmailVerificationJob::class);
+    }
 
     public function testUserCanRegisterWithValidData(): void
     {
@@ -167,5 +176,17 @@ class RegisterTest extends TestCase
                 'expectedErrors' => ['password'],
             ],
         ];
+    }
+
+    public function testItDispatchesSendEmailVerificationJob()
+    {
+        $this->postJson(self::registerEndpoint(), self::VALID_PAYLOAD);
+
+        $testUser = User::where('email', self::VALID_PAYLOAD['email'])->first();
+
+        Bus::assertDispatched(
+            SendEmailVerificationJob::class,
+            fn (SendEmailVerificationJob $job) => $job->user->id === $testUser->id
+        );
     }
 }

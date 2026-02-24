@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
+use App\Jobs\SendEmailVerificationJob;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,6 +17,8 @@ class RegisterController extends Controller
     public function __invoke(RegisterRequest $request): JsonResponse
     {
         $user = User::create($request->validated());
+
+        SendEmailVerificationJob::dispatch($user);
 
         $token = $user->createToken(
             name: config('sanctum.token_name'),

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Notifications\VerifyEmailNotification;
 use App\UserStatus;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -15,9 +17,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     use HasUuids;
@@ -84,8 +85,7 @@ class User extends Authenticatable
     #[Scope]
     protected function verified(Builder $query): void
     {
-        $query->whereNotNull('email_verified_at')
-            ->whereNotNull('phone_verified_at');
+        $query->whereNotNull('email_verified_at');
     }
 
     protected function fullName(): Attribute
@@ -93,5 +93,10 @@ class User extends Authenticatable
         return Attribute::make(
             get: fn () => $this->first_name.' '.$this->last_name,
         );
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailNotification);
     }
 }
