@@ -15,4 +15,9 @@ trait UserEndpoints
     {
         return '/api/v1/user';
     }
+
+    protected static function updatePasswordEndpoint(): string
+    {
+        return '/api/v1/user/password';
+    }
 }
