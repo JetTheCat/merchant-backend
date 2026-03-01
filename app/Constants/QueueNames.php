@@ -6,8 +6,6 @@ namespace App\Constants;
 
 /**
  * Queue name constants for application queues
- * 
- * @package App\Constants
  */
 class QueueNames
 {
@@ -15,7 +13,7 @@ class QueueNames
      * Email notification jobs
      */
     public const EMAILS = 'emails';
-    
+
     /**
      * Default application jobs
      */

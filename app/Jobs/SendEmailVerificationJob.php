@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Constants\QueueConnections;
 use App\Constants\QueueNames;
 use App\Models\User;
 use Exception;
@@ -20,12 +21,13 @@ class SendEmailVerificationJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
     public array $backoff = [60, 300, 900]; // 1min, 5min, 15min
 
     public function __construct(
         public readonly User $user
     ) {
-        $this->onConnection('redis')
+        $this->onConnection(QueueConnections::REDIS)
             ->onQueue(QueueNames::EMAILS);
     }
 
@@ -38,7 +40,7 @@ class SendEmailVerificationJob implements ShouldQueue
                 'user_id' => $this->user->id,
                 'error' => $e->getMessage(),
             ]);
-            
+
             throw $e;
         }
     }

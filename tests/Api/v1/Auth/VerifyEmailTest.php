@@ -13,7 +13,7 @@ use Tests\TestCase;
 
 class VerifyEmailTest extends TestCase
 {
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -91,7 +91,7 @@ class VerifyEmailTest extends TestCase
 
         $response = $this->actingAs($user)
             ->getJson($invalidUrl);
-        
+
         $response->assertStatus(Response::HTTP_FORBIDDEN);
 
         $this->assertNull($user->fresh()->email_verified_at);

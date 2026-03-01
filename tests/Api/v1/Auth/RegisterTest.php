@@ -24,10 +24,10 @@ class RegisterTest extends TestCase
         'phone' => '+60123456789',
     ];
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
-        
+
         Bus::fake(SendEmailVerificationJob::class);
     }
 

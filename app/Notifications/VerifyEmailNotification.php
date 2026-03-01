@@ -14,12 +14,10 @@ class VerifyEmailNotification extends VerifyEmail
 {
     public function toMail($notifiable): MailMessage
     {
-        $verificationUrl = $this->verificationUrl($notifiable);
-
         return (new MailMessage)
             ->subject('Verify Your Email Address')
             ->view('emails.verify-email', [
-                'verificationUrl' => $verificationUrl,
+                'verificationUrl' => $this->verificationUrl($notifiable),
                 'user' => $notifiable,
             ]);
     }
@@ -27,7 +25,7 @@ class VerifyEmailNotification extends VerifyEmail
     protected function verificationUrl($notifiable): string
     {
         $frontendUrl = config('app.frontend_url');
-        
+
         $id = $notifiable->getKey();
         $hash = sha1($notifiable->getEmailForVerification());
 

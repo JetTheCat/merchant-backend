@@ -15,7 +15,7 @@ class ResendVerificationEmailTest extends TestCase
 {
     use AuthEndpoints;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -35,7 +35,7 @@ class ResendVerificationEmailTest extends TestCase
             ]);
 
         Bus::assertDispatchedTimes(SendEmailVerificationJob::class, 1);
-        
+
         Bus::assertDispatched(
             SendEmailVerificationJob::class,
             fn (SendEmailVerificationJob $job) => $job->user->id === $user->id

@@ -22,7 +22,7 @@ class UpdatePasswordRequest extends FormRequest
                 'required',
                 'string',
                 'confirmed',
-                Password::defaults()
+                Password::defaults(),
             ],
         ];
     }

@@ -122,4 +122,8 @@ return [
     'email_verification' => [
         'expire' => env('AUTH_EMAIL_VERIFICATION_EXPIRE', 60),
     ],
+
+    'password_reset' => [
+        'expire' => env('AUTH_PASSWORD_RESET_EXPIRE', 60),
+    ],
 ];
