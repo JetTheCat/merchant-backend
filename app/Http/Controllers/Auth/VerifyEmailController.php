@@ -16,7 +16,7 @@ class VerifyEmailController extends Controller
     {
         $user = User::find($id);
 
-        if (!$user || sha1($user->email) !== $hash) {
+        if (! $user || sha1($user->email) !== $hash) {
             return response()->json([
                 'message' => 'Invalid verification link.',
             ], Response::HTTP_FORBIDDEN);

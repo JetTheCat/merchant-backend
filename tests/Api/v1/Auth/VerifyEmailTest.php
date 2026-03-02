@@ -112,7 +112,7 @@ class VerifyEmailTest extends TestCase
 
         $tamperedUrl = str_replace(
             $otherUser->id,
-        $user->id,
+            $user->id,
             $verificationUrl
         );
 
