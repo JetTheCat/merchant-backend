@@ -20,12 +20,9 @@ Route::prefix('auth')->group(function () {
         Route::post('/logout', LogoutController::class);
         Route::post('/email-verification/resend', ResendVerificationEmailController::class)->name('verification.send');
     });
-});
 
-Route::middleware(['auth:sanctum', 'signed'])->group(function () {
-    Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)->name('verification.verify');
-});
-
-Route::middleware('signed')->group(function () {
-    Route::post('/password/reset/{id}', ResetPasswordController::class)->name('password.reset');
+    Route::middleware('signed')->group(function () {
+        Route::get('/email/verify/{id}/{hash}', VerifyEmailController::class)->name('verification.verify');
+        Route::post('/password/reset/{id}', ResetPasswordController::class)->name('password.reset');
+    });
 });

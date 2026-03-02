@@ -20,14 +20,13 @@ class VerifyEmailTest extends TestCase
         Event::fake([Verified::class]);
     }
 
-    public function testAuthenticatedUserCanVerifyEmail(): void
+    public function testUserCanVerifyEmail(): void
     {
         $user = User::factory()->unverified()->create();
 
         $verificationUrl = $this->generateVerificationUrl($user);
 
-        $response = $this->actingAs($user)
-            ->getJson($verificationUrl);
+        $response = $this->getJson($verificationUrl);
 
         $response->assertStatus(Response::HTTP_OK)
             ->assertJson([
@@ -42,21 +41,6 @@ class VerifyEmailTest extends TestCase
         });
     }
 
-    public function testUnauthenticatedUserCannotVerifyEmail(): void
-    {
-        $user = User::factory()->unverified()->create();
-
-        $verificationUrl = $this->generateVerificationUrl($user);
-
-        $response = $this->getJson($verificationUrl);
-
-        $response->assertStatus(Response::HTTP_UNAUTHORIZED);
-
-        $this->assertNull($user->fresh()->email_verified_at);
-
-        Event::assertNotDispatched(Verified::class);
-    }
-
     public function testAlreadyVerifiedEmailReturnsAppropriateMessage(): void
     {
         $user = User::factory()->create([
@@ -65,8 +49,7 @@ class VerifyEmailTest extends TestCase
 
         $verificationUrl = $this->generateVerificationUrl($user);
 
-        $response = $this->actingAs($user)
-            ->getJson($verificationUrl);
+        $response = $this->getJson($verificationUrl);
 
         $response->assertStatus(Response::HTTP_OK)
             ->assertJson([
@@ -89,8 +72,7 @@ class VerifyEmailTest extends TestCase
             ]
         );
 
-        $response = $this->actingAs($user)
-            ->getJson($invalidUrl);
+        $response = $this->getJson($invalidUrl);
 
         $response->assertStatus(Response::HTTP_FORBIDDEN);
 
@@ -112,8 +94,7 @@ class VerifyEmailTest extends TestCase
             ]
         );
 
-        $response = $this->actingAs($user)
-            ->getJson($expiredUrl);
+        $response = $this->getJson($expiredUrl);
 
         $response->assertStatus(Response::HTTP_FORBIDDEN);
 
@@ -129,8 +110,13 @@ class VerifyEmailTest extends TestCase
 
         $verificationUrl = $this->generateVerificationUrl($otherUser);
 
-        $response = $this->actingAs($user)
-            ->getJson($verificationUrl);
+        $tamperedUrl = str_replace(
+            $otherUser->id,
+        $user->id,
+            $verificationUrl
+        );
+
+        $response = $this->getJson($tamperedUrl);
 
         $response->assertStatus(Response::HTTP_FORBIDDEN);
 
@@ -147,13 +133,12 @@ class VerifyEmailTest extends TestCase
         $verificationUrl = $this->generateVerificationUrl($user);
 
         $tamperedUrl = str_replace(
-            '/email/verify/'.$user->id.'/',
+            "/email/verify/{$user->id}/",
             '/email/verify/999/',
             $verificationUrl
         );
 
-        $response = $this->actingAs($user)
-            ->getJson($tamperedUrl);
+        $response = $this->getJson($tamperedUrl);
 
         $response->assertStatus(Response::HTTP_FORBIDDEN);
 
@@ -170,8 +155,7 @@ class VerifyEmailTest extends TestCase
 
         $verificationUrl = $this->generateVerificationUrl($user);
 
-        $this->actingAs($user)
-            ->getJson($verificationUrl);
+        $this->getJson($verificationUrl);
 
         Event::assertNotDispatched(Verified::class);
     }

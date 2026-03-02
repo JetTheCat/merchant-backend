@@ -80,7 +80,7 @@ class ResetPasswordTest extends TestCase
 
         $resetUrl = $this->generateResetPasswordUrl($user);
 
-        $tamperedUrl = $resetUrl.'&tampered=true';
+        $tamperedUrl = "{$resetUrl}&tampered=true";
 
         $response = $this->postJson($tamperedUrl, [
             'password' => 'NewPassword123!@#',
