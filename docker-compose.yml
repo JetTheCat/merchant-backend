@@ -14,8 +14,8 @@ services:
     networks:
       - web-network
     depends_on:
-      php-fpm:
-        condition: service_started # Wait for php-fpm to start
+      octane:
+        condition: service_started
 
   workspace:
     container_name: workspace
@@ -42,11 +42,11 @@ services:
       postgres:
         condition: service_started
 
-  php-fpm:
-    container_name: php-api
+  octane:
+    container_name: octane-server
     build:
       context: .
-      dockerfile: ./docker/php-fpm/Dockerfile
+      dockerfile: ./docker/octane/Dockerfile
       args:
         UID: ${UID:-1000}
         GID: ${GID:-1000}
@@ -57,13 +57,19 @@ services:
         XDEBUG_LOG: /dev/stdout
         XDEBUG_LOG_LEVEL: 0
     user: "${UID:-1000}:${GID:-1000}"
+    tty: true # Enables an interactive terminal
+    stdin_open: true # Keeps standard input open for 'docker exec'
     volumes:
       # Mount the application code for live updates
       - ./:/var/www
+    ports:
+      - "8000:8000"
     networks:
       - web-network
     depends_on:
       postgres:
+        condition: service_started
+      redis:
         condition: service_started
 
   postgres:
