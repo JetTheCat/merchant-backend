@@ -1,4 +1,4 @@
-.PHONY: up upd down rebuild ssh ssh-bash ssh-db ssh-root
+.PHONY: up upd down rebuild ssh ssh-bash ssh-db ssh-root octane-restart octane-logs octane-ssh
 
 up:
 	docker compose up
@@ -25,3 +25,13 @@ ssh-db:
 
 ssh-root:
 	docker exec -it --user root workspace bash
+
+# Octane-server
+octane-restart:
+	docker compose restart octane
+
+octane-logs:
+	docker logs -f octane-server
+
+octane-ssh:
+	docker exec -it --user www octane-server bash
