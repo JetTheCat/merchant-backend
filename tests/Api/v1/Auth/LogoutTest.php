@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tests\Api\Auth;
+namespace Tests\Api\v1\Auth;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -16,12 +16,14 @@ class LogoutTest extends TestCase
     use AuthEndpoints;
 
     private const TEST_PASSWORD = 'SecurePass123!@#';
+
     private const TEST_EMAIL = 'jet@example.com';
 
     private User $user;
+
     private string $token;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
 
     /*
@@ -40,7 +42,7 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        
+
         'sanctum' => [
             'driver' => 'sanctum',
             'provider' => 'users',
@@ -117,4 +119,11 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    'email_verification' => [
+        'expire' => env('AUTH_EMAIL_VERIFICATION_EXPIRE', 60),
+    ],
+
+    'password_reset' => [
+        'expire' => env('AUTH_PASSWORD_RESET_EXPIRE', 60),
+    ],
 ];

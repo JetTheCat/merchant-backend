@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Tests\Api\Auth;
+namespace Tests\Api\v1\Auth;
 
+use App\Jobs\SendEmailVerificationJob;
 use App\Models\User;
+use Illuminate\Support\Facades\Bus;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Api\v1\Traits\AuthEndpoints;
 use Tests\TestCase;
@@ -13,17 +15,25 @@ class RegisterTest extends TestCase
 {
     use AuthEndpoints;
 
+    private const VALID_PAYLOAD = [
+        'firstName' => 'Jet',
+        'lastName' => 'Lim',
+        'email' => 'jet@example.com',
+        'password' => 'SecurePass123!@#',
+        'passwordConfirmation' => 'SecurePass123!@#',
+        'phone' => '+60123456789',
+    ];
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Bus::fake(SendEmailVerificationJob::class);
+    }
+
     public function testUserCanRegisterWithValidData(): void
     {
-        $payload = [
-            'firstName' => 'Jet',
-            'lastName' => 'Lim',
-            'email' => 'jet@example.com',
-            'password' => 'SecurePass123!@#',
-            'passwordConfirmation' => 'SecurePass123!@#',
-        ];
-
-        $jsonResponse = $this->postJson(self::registerEndpoint(), $payload);
+        $jsonResponse = $this->postJson(self::registerEndpoint(), self::VALID_PAYLOAD);
 
         $jsonResponse->assertStatus(201)
             ->assertJsonStructure([
@@ -60,19 +70,25 @@ class RegisterTest extends TestCase
     public function testUserCannotRegisterWithDuplicateEmail(): void
     {
         User::factory()->create([
-            'email' => 'existing@example.com',
+            'email' => self::VALID_PAYLOAD['email'],
         ]);
 
-        $response = $this->postJson(self::registerEndpoint(), [
-            'firstName' => 'Jet',
-            'lastName' => 'Lim',
-            'email' => 'existing@example.com',
-            'password' => 'SecurePass123!@#',
-            'passwordConfirmation' => 'SecurePass123!@#',
-        ]);
+        $response = $this->postJson(self::registerEndpoint(), self::VALID_PAYLOAD);
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['email']);
+    }
+
+    public function testUserCannotRegisterWithDuplicatePhone(): void
+    {
+        User::factory()->create([
+            'phone' => self::VALID_PAYLOAD['phone'],
+        ]);
+
+        $response = $this->postJson(self::registerEndpoint(), self::VALID_PAYLOAD);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['phone']);
     }
 
     #[DataProvider('invalidRegistrationData')]
@@ -160,5 +176,17 @@ class RegisterTest extends TestCase
                 'expectedErrors' => ['password'],
             ],
         ];
+    }
+
+    public function testItDispatchesSendEmailVerificationJob()
+    {
+        $this->postJson(self::registerEndpoint(), self::VALID_PAYLOAD);
+
+        $testUser = User::where('email', self::VALID_PAYLOAD['email'])->first();
+
+        Bus::assertDispatched(
+            SendEmailVerificationJob::class,
+            fn (SendEmailVerificationJob $job) => $job->user->id === $testUser->id
+        );
     }
 }

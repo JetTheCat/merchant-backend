@@ -25,4 +25,14 @@ trait AuthEndpoints
     {
         return '/api/v1/user';
     }
+
+    protected static function resendVerificationEmailEndpoint(): string
+    {
+        return '/api/v1/auth/email-verification/resend';
+    }
+
+    protected static function forgotPasswordEndpoint(): string
+    {
+        return '/api/v1/auth/forgot-password';
+    }
 }
