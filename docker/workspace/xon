@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Enable Xdebug for debugging
+# NOTE: This script must be sourced (not executed) to update the environment variable
+# in the current shell session. Use: source xon OR . xon
+# If executed directly (./xon), it will run in a subshell and XDEBUG_MODE won't persist.
+
+export XDEBUG_MODE=develop,coverage,debug,profile
+echo "✓ Xdebug enabled (mode: develop,coverage,debug,profile)"
+echo "  Current XDEBUG_MODE: $XDEBUG_MODE"

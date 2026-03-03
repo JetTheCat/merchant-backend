@@ -55,6 +55,16 @@ RUN if [ "${XDEBUG_ENABLED}" = "true" ]; then \
     echo "xdebug.start_with_request=yes" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini ; \
 fi
 
+# Copy xon and xoff scripts to toggle Xdebug
+# These scripts MUST be sourced (not executed) to update XDEBUG_MODE in the current shell.
+# When executed directly, they run in a subshell and the environment variable doesn't persist.
+# Aliases are created below to automatically source them when typing 'xon' or 'xoff'.
+COPY ./docker/workspace/xon /usr/local/bin/xon
+COPY ./docker/workspace/xoff /usr/local/bin/xoff
+RUN chmod +x /usr/local/bin/xon /usr/local/bin/xoff && \
+    echo 'alias xon="source /usr/local/bin/xon"' >> /etc/bash.bashrc && \
+    echo 'alias xoff="source /usr/local/bin/xoff"' >> /etc/bash.bashrc
+
 # If the group already exists, use it; otherwise, create the 'www' group
 RUN if getent group ${GID}; then \
       useradd -m -u ${UID} -g ${GID} -s /bin/bash www; \

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Disable Xdebug for faster test execution
+# NOTE: This script must be sourced (not executed) to update the environment variable
+# in the current shell session. Use: source xoff OR . xoff
+# If executed directly (./xoff), it will run in a subshell and XDEBUG_MODE won't persist.
+
+export XDEBUG_MODE=off
+echo "✓ Xdebug disabled (mode: off)"
+echo "  Current XDEBUG_MODE: $XDEBUG_MODE"
