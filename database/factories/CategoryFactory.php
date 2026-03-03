@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\CategoryType;
 use App\Models\Category;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -36,7 +37,10 @@ class CategoryFactory extends Factory
             'icon' => fake()->randomElement($icons),
             'sort_order' => fake()->numberBetween(0, 100),
             'is_active' => fake()->boolean(90),
-            'type' => 'general',
+            'type' => fake()->randomElement([
+                CategoryType::MERCHANT->value,
+                CategoryType::GENERAL->value,
+            ]),
         ];
     }
 

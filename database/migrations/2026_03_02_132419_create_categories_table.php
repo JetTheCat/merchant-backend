@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('icon', 100)->nullable();
             $table->integer('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
-            $table->enum('type', ['merchant', 'general'])->default('general');
+            $table->string('type')->default('general');
             $table->timestamps();
 
             $table->index('slug');
