@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Merchant extends Model
@@ -35,7 +37,6 @@ class Merchant extends Model
         'platform_fee_rate',
         'settlement_cycle',
         'status',
-        'rejection_reason',
         'bank_name',
         'bank_account_number',
         'bank_account_name',
@@ -55,6 +56,17 @@ class Merchant extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function merchantUsers(): HasMany
+    {
+        return $this->hasMany(MerchantUser::class);
+    }
+
+    public function owner(): HasOne
+    {
+        return $this->hasOne(MerchantUser::class)
+            ->where('role', 'owner');
     }
 
     public function scopeActive($query)
@@ -100,18 +112,8 @@ class Merchant extends Model
         return $this->status === MerchantStatus::ACTIVE;
     }
 
-    public function isPending(): bool
-    {
-        return $this->status === MerchantStatus::PENDING;
-    }
-
     public function isSuspended(): bool
     {
         return $this->status === MerchantStatus::SUSPENDED;
-    }
-
-    public function isRejected(): bool
-    {
-        return $this->status === MerchantStatus::REJECTED;
     }
 }

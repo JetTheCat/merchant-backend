@@ -36,8 +36,7 @@ return new class extends Migration
             $table->decimal('platform_fee_rate', 5, 4)->default(0.05);
             $table->string('settlement_cycle', 20)->default('weekly');
 
-            $table->string('status', 20)->default('pending');
-            $table->text('rejection_reason')->nullable();
+            $table->string('status', 20)->default('active');
 
             $table->string('bank_name', 100)->nullable();
             $table->text('bank_account_number')->nullable();
