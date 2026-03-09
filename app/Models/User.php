@@ -6,6 +6,8 @@ namespace App\Models;
 
 use App\Notifications\VerifyEmailNotification;
 use App\UserStatus;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,11 +18,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable implements MustVerifyEmail, FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
-    use HasUuids;
+    use HasUuids, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -75,6 +78,11 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $keyType = 'string';
 
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->hasRole('admin');
+    }
+
     #[Scope]
     protected function active(Builder $query): void
     {
@@ -88,6 +96,13 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     protected function fullName(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->first_name.' '.$this->last_name,
+        );
+    }
+
+    protected function name(): Attribute
     {
         return Attribute::make(
             get: fn () => $this->first_name.' '.$this->last_name,
