@@ -20,14 +20,12 @@ class Category extends Model
         'slug',
         'description',
         'icon',
-        'sort_order',
         'is_active',
         'type',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'sort_order' => 'integer',
         'type' => CategoryType::class,
     ];
 
@@ -65,7 +63,7 @@ class Category extends Model
 
     public function scopeOrdered($query)
     {
-        return $query->orderBy('sort_order')->orderBy('name');
+        return $query->orderBy('name');
     }
 
     public function getFormattedNameAttribute(): string

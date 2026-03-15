@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('slug', 100)->unique();
             $table->text('description')->nullable();
             $table->string('icon', 100)->nullable();
-            $table->integer('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
             $table->string('type')->default('general');
             $table->timestamps();
@@ -27,7 +26,6 @@ return new class extends Migration
             $table->index('slug');
             $table->index('is_active');
             $table->index('type');
-            $table->index('sort_order');
         });
     }
 

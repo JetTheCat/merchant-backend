@@ -25,7 +25,6 @@ class ListCategoriesTest extends TestCase
                 'slug',
                 'description',
                 'icon',
-                'sortOrder',
                 'isActive',
                 'type',
             ],
@@ -64,21 +63,18 @@ class ListCategoriesTest extends TestCase
             ->assertJsonCount(2, 'data');
     }
 
-    public function testItReturnsCategoriesOrderedBySortOrderAndName(): void
+    public function testItReturnsCategoriesOrderedByName(): void
     {
         $category1 = Category::factory()->create([
             'name' => 'Retail',
-            'sort_order' => 2,
             'is_active' => true,
         ]);
         $category2 = Category::factory()->create([
             'name' => 'Food & Beverage',
-            'sort_order' => 1,
             'is_active' => true,
         ]);
         $category3 = Category::factory()->create([
             'name' => 'Services',
-            'sort_order' => 1,
             'is_active' => true,
         ]);
 
@@ -88,9 +84,9 @@ class ListCategoriesTest extends TestCase
         $response->assertStatus(Response::HTTP_OK);
 
         $data = $response->json('data');
-        $this->assertEquals($category2->id, $data[0]['id']);
-        $this->assertEquals($category3->id, $data[1]['id']);
-        $this->assertEquals($category1->id, $data[2]['id']);
+        $this->assertEquals($category2->id, $data[0]['id']); // Food & Beverage
+        $this->assertEquals($category1->id, $data[1]['id']); // Retail
+        $this->assertEquals($category3->id, $data[2]['id']); // Services
     }
 
     public function testItCachesCategoriesList(): void

@@ -22,7 +22,6 @@ class CategoryResource extends JsonResource
             'slug' => $this->slug,
             'description' => $this->description,
             'icon' => $this->icon,
-            'sortOrder' => $this->sort_order,
             'isActive' => $this->is_active,
             'type' => $this->type,
         ];

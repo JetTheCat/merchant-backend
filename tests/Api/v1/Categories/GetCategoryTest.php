@@ -28,7 +28,6 @@ class GetCategoryTest extends TestCase
             'slug',
             'description',
             'icon',
-            'sortOrder',
             'isActive',
             'type',
         ],

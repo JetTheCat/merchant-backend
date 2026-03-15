@@ -17,25 +17,11 @@ class CategoryFactory extends Factory
     {
         $name = fake()->unique()->words(2, true);
 
-        $icons = [
-            'utensils',
-            'shopping-bag',
-            'briefcase',
-            'film',
-            'heart',
-            'car',
-            'scissors',
-            'dumbbell',
-            'book',
-            'plane',
-        ];
-
         return [
             'name' => $name,
             'slug' => Str::slug($name),
             'description' => fake()->sentence(10),
-            'icon' => fake()->randomElement($icons),
-            'sort_order' => fake()->numberBetween(0, 100),
+            'icon' => null,
             'is_active' => fake()->boolean(90),
             'type' => fake()->randomElement([
                 CategoryType::MERCHANT->value,
