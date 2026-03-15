@@ -8,6 +8,7 @@ use App\Enums\MerchantStatus;
 use App\Enums\SettlementCycle;
 use App\Models\Category;
 use App\Models\Merchant;
+use Database\Seeders\CategorySeeder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class MerchantFactory extends Factory
@@ -16,11 +17,14 @@ class MerchantFactory extends Factory
 
     public function definition(): array
     {
+        $categorySlugs = array_column(CategorySeeder::CATEGORIES_DATA, 'slug');
+        $category = Category::where('slug', fake()->randomElement($categorySlugs))->first();
+        
         return [
             'name' => fake()->company(),
             'business_name' => fake()->company().' Sdn Bhd',
             'business_registration_number' => fake()->numerify('##########'),
-            'category_id' => Category::factory(),
+            'category_id' => $category?->id ?? Category::factory(),
             'description' => fake()->paragraph(3),
             'logo_url' => fake()->imageUrl(200, 200, 'business', true),
             'cover_image_url' => fake()->imageUrl(800, 400, 'business', true),
@@ -34,8 +38,7 @@ class MerchantFactory extends Factory
             'longitude' => fake()->longitude(99.5, 104.5),
             'platform_fee_rate' => fake()->randomFloat(4, 0.03, 0.10),
             'settlement_cycle' => fake()->randomElement(SettlementCycle::cases())->value,
-            'status' => fake()->randomElement(MerchantStatus::cases())->value,
-            'rejection_reason' => null,
+            'status' => MerchantStatus::ACTIVE->value,
             'bank_name' => fake()->randomElement(['Maybank', 'CIMB Bank', 'Public Bank', 'RHB Bank', 'Hong Leong Bank']),
             'bank_account_number' => fake()->numerify('##############'),
             'bank_account_name' => fake()->company(),
@@ -49,25 +52,10 @@ class MerchantFactory extends Factory
         ]);
     }
 
-    public function pending(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'status' => MerchantStatus::PENDING->value,
-        ]);
-    }
-
     public function suspended(): static
     {
         return $this->state(fn (array $attributes) => [
             'status' => MerchantStatus::SUSPENDED->value,
-        ]);
-    }
-
-    public function rejected(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'status' => MerchantStatus::REJECTED->value,
-            'rejection_reason' => fake()->sentence(),
         ]);
     }
 
