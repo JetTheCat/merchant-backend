@@ -44,7 +44,17 @@ class GetMerchantsController extends Controller
             });
         }
 
-        $merchants = $query->orderBy('id')->cursorPaginate($request->getLimit());
+        if (isset($validated['latitude']) && isset($validated['longitude'])) {
+            $radius = $validated['radius'] ?? 10;
+            $query->nearLocation(
+                $validated['latitude'],
+                $validated['longitude'],
+                $radius
+            );
+            $merchants = $query->cursorPaginate($request->getLimit());
+        } else {
+            $merchants = $query->orderBy('id')->cursorPaginate($request->getLimit());
+        }
 
         return response()->json([
             'data' => MerchantCustomerResource::collection($merchants->items()),

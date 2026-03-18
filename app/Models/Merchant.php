@@ -6,6 +6,8 @@ namespace App\Models;
 
 use App\Enums\MerchantStatus;
 use App\Enums\SettlementCycle;
+use App\Observers\MerchantObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+#[ObservedBy([MerchantObserver::class])]
 class Merchant extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
@@ -81,19 +84,17 @@ class Merchant extends Model
 
     public function scopeNearLocation($query, float $latitude, float $longitude, float $radiusKm = 10)
     {
-        $earthRadiusKm = 6371;
+        $radiusMeters = $radiusKm * 1000;
 
-        return $query->selectRaw(
-            "*, (
-                {$earthRadiusKm} * acos(
-                    cos(radians(?)) * cos(radians(latitude)) *
-                    cos(radians(longitude) - radians(?)) +
-                    sin(radians(?)) * sin(radians(latitude))
-                )
-            ) AS distance",
-            [$latitude, $longitude, $latitude]
-        )
-            ->having('distance', '<=', $radiusKm)
+        return $query
+            ->selectRaw(
+                "*, ST_Distance(location, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography) / 1000 AS distance",
+                [$longitude, $latitude]
+            )
+            ->whereRaw(
+                "ST_DWithin(location, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography, ?)",
+                [$longitude, $latitude, $radiusMeters]
+            )
             ->orderBy('distance');
     }
 

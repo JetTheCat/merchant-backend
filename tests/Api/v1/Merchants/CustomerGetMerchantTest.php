@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Tests\Api\v1\Traits\MerchantEndpoints;
 use Tests\TestCase;
 
-class GetMerchantControllerTest extends TestCase
+class CustomerGetMerchantTest extends TestCase
 {
     use RefreshDatabase, MerchantEndpoints;
 

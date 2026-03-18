@@ -31,6 +31,9 @@ class GetMerchantsRequest extends FormRequest
             'search' => ['nullable', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:100'],
             'state' => ['nullable', 'string', 'max:100'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:longitude'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
+            'radius' => ['nullable', 'integer', 'min:1', 'max:100'],
             'limit' => ['nullable', 'integer', 'min:1', 'max:' . self::MAX_LIMIT],
             'cursor' => ['nullable', 'string'],
         ];

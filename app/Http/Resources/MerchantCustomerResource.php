@@ -33,6 +33,7 @@ class MerchantCustomerResource extends JsonResource
             'fullAddress' => $this->full_address,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
+            'distance' => $this->when(isset($this->distance), fn () => round($this->distance, 2)),
             'status' => $this->status->value,
             'statusLabel' => $this->status->label(),
         ];

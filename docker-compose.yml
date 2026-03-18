@@ -73,7 +73,9 @@ services:
         condition: service_started
 
   postgres:
-    image: postgres:17.4-bookworm
+    build:
+      context: .
+      dockerfile: ./docker/postgres/Dockerfile
     container_name: postgres-db
     environment:
       POSTGRES_PASSWORD: secret
