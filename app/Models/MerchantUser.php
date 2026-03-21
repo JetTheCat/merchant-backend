@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Constants\MerchantUserRoles;
+use App\Enums\MerchantUserRole;
 use App\Enums\MerchantUserStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -38,6 +38,7 @@ class MerchantUser extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'last_login_at' => 'datetime',
+        'role' => MerchantUserRole::class,
         'status' => MerchantUserStatus::class,
         'password' => 'hashed',
     ];
@@ -64,12 +65,12 @@ class MerchantUser extends Authenticatable
 
     public function scopeOwners($query)
     {
-        return $query->where('role', MerchantUserRoles::OWNER);
+        return $query->where('role', MerchantUserRole::OWNER);
     }
 
     public function scopeStaff($query)
     {
-        return $query->where('role', MerchantUserRoles::STAFF);
+        return $query->where('role', MerchantUserRole::STAFF);
     }
 
     public function isActive(): bool
@@ -89,12 +90,12 @@ class MerchantUser extends Authenticatable
 
     public function isOwner(): bool
     {
-        return $this->role === MerchantUserRoles::OWNER;
+        return $this->role === MerchantUserRole::OWNER;
     }
 
     public function isStaff(): bool
     {
-        return $this->role === MerchantUserRoles::STAFF;
+        return $this->role === MerchantUserRole::STAFF;
     }
 
     public function canLogin(): bool

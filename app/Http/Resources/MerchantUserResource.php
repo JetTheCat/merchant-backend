@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
-use App\Constants\MerchantUserRoles;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -25,7 +24,7 @@ class MerchantUserResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'role' => $this->role,
-            'roleLabel' => MerchantUserRoles::label($this->role),
+            'roleLabel' => $this->role->label(),
             'status' => $this->status,
             'statusLabel' => $this->status->label(),
             'emailVerifiedAt' => $this->email_verified_at,
