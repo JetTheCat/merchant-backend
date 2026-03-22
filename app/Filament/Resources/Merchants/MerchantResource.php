@@ -23,9 +23,11 @@ class MerchantResource extends Resource
 {
     protected static ?string $model = Merchant::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::BuildingStorefront;
 
-    protected static ?string $recordTitleAttribute = 'Merchant';
+    protected static ?string $recordTitleAttribute = 'name';
+
+    protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema
     {

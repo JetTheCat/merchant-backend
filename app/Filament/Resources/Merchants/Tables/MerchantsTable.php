@@ -46,10 +46,7 @@ class MerchantsTable
                 TextColumn::make('status')
                     ->badge()
                     ->formatStateUsing(fn (MerchantStatus $state) => $state->label())
-                    ->color(fn (MerchantStatus $state) => match ($state) {
-                        MerchantStatus::ACTIVE => 'success',
-                        MerchantStatus::SUSPENDED => 'danger',
-                    }),
+                    ->color(fn (MerchantStatus $state) => $state->color()),
 
                 TextColumn::make('created_at')
                     ->label('Created')
@@ -60,11 +57,7 @@ class MerchantsTable
             ->defaultSort('created_at', 'desc')
             ->filters([
                 SelectFilter::make('status')
-                    ->options(
-                        collect(MerchantStatus::cases())
-                            ->mapWithKeys(fn ($case) => [$case->value => $case->label()])
-                            ->toArray()
-                    ),
+                    ->options(MerchantStatus::options()),
 
                 SelectFilter::make('category')
                     ->relationship('category', 'name')

@@ -5,7 +5,9 @@ namespace App\Filament\Resources\Merchants\RelationManagers;
 use App\Enums\MerchantUserRole;
 use App\Enums\MerchantUserStatus;
 use App\Models\MerchantUser;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
+use Filament\Support\Icons\Heroicon;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -20,8 +22,10 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -51,17 +55,17 @@ class MerchantUsersRelationManager extends RelationManager
                     ->required(),
                 TextInput::make('password')
                     ->password()
-                    ->required(),
+                    ->required(fn (string $operation) => $operation === 'create')
+                    ->saved(filled(...)),
                 Select::make('role')
-                    ->options(MerchantUserRole::class)
+                    ->options(MerchantUserRole::options())
                     ->default(MerchantUserRole::STAFF->value)
                     ->required(),
                 Select::make('status')
-                    ->options(MerchantUserStatus::class)
-                    ->default(MerchantUserStatus::PENDING_VERIFICATION)
+                    ->options(MerchantUserStatus::options())
+                    ->default(MerchantUserStatus::PENDING_VERIFICATION->value)
                     ->required(),
                 DateTimePicker::make('email_verified_at'),
-                DateTimePicker::make('last_login_at'),
             ]);
     }
 
@@ -69,30 +73,53 @@ class MerchantUsersRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                TextEntry::make('id')
-                    ->label('ID'),
-                TextEntry::make('name'),
-                TextEntry::make('email')
-                    ->label('Email address'),
-                TextEntry::make('phone'),
-                TextEntry::make('role'),
-                TextEntry::make('status')
-                    ->badge(),
-                TextEntry::make('email_verified_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('last_login_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('created_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('updated_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('deleted_at')
-                    ->dateTime()
-                    ->visible(fn (MerchantUser $record): bool => $record->trashed()),
+                Section::make('Account Details')
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('name'),
+
+                        TextEntry::make('role')
+                            ->badge()
+                            ->formatStateUsing(fn (MerchantUserRole $state) => $state->label())
+                            ->color('info'),
+
+                        TextEntry::make('status')
+                            ->badge()
+                            ->formatStateUsing(fn (MerchantUserStatus $state) => $state->label())
+                            ->color(fn (MerchantUserStatus $state) => $state->color()),
+                    ]),
+
+                Section::make('Contact')
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('email'),
+
+                        TextEntry::make('phone')
+                            ->default('—'),
+
+                        TextEntry::make('email_verified_at')
+                            ->label('Email Verified')
+                            ->dateTime('d M Y, H:i')
+                            ->default('Not verified'),
+                    ]),
+
+                Section::make('Activity')
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('last_login_at')
+                            ->label('Last Login')
+                            ->dateTime('d M Y, H:i')
+                            ->default('Never'),
+
+                        TextEntry::make('created_at')
+                            ->label('Created')
+                            ->dateTime('d M Y'),
+
+                        TextEntry::make('deleted_at')
+                            ->label('Deleted')
+                            ->dateTime('d M Y, H:i')
+                            ->visible(fn (MerchantUser $record): bool => $record->trashed()),
+                    ]),
             ]);
     }
 
@@ -100,9 +127,8 @@ class MerchantUsersRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('email')
+            ->defaultSort('created_at', 'desc')
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID'),
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('email')
@@ -111,9 +137,14 @@ class MerchantUsersRelationManager extends RelationManager
                 TextColumn::make('phone')
                     ->searchable(),
                 TextColumn::make('role')
-                    ->searchable(),
+                    ->searchable()
+                    ->badge()
+                    ->formatStateUsing(fn (MerchantUserRole $state) => $state->label())
+                    ->color('info'),
                 TextColumn::make('status')
                     ->badge()
+                    ->formatStateUsing(fn (MerchantUserStatus $state) => $state->label())
+                    ->color(fn (MerchantUserStatus $state) => $state->color())
                     ->searchable(),
                 TextColumn::make('email_verified_at')
                     ->dateTime()
@@ -135,6 +166,12 @@ class MerchantUsersRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                SelectFilter::make('status')
+                    ->options(MerchantUserStatus::options()),
+
+                SelectFilter::make('role')
+                    ->options(MerchantUserRole::options()),
+
                 TrashedFilter::make(),
             ])
             ->headerActions([
@@ -143,6 +180,23 @@ class MerchantUsersRelationManager extends RelationManager
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+
+                Action::make('suspend')
+                    ->label('Suspend')
+                    ->icon(Heroicon::OutlinedNoSymbol)
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->visible(fn (MerchantUser $record) => $record->isActive())
+                    ->action(fn (MerchantUser $record) => $record->update(['status' => MerchantUserStatus::SUSPENDED])),
+
+                Action::make('activate')
+                    ->label('Activate')
+                    ->icon(Heroicon::OutlinedCheckCircle)
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn (MerchantUser $record) => $record->isSuspended())
+                    ->action(fn (MerchantUser $record) => $record->update(['status' => MerchantUserStatus::ACTIVE])),
+
                 DeleteAction::make(),
                 ForceDeleteAction::make(),
                 RestoreAction::make(),

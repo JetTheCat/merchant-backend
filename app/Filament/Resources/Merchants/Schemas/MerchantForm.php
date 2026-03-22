@@ -102,20 +102,12 @@ class MerchantForm
 
                         Select::make('settlement_cycle')
                             ->label('Settlement Cycle')
-                            ->options(
-                                collect(SettlementCycle::cases())
-                                    ->mapWithKeys(fn ($case) => [$case->value => $case->label()])
-                                    ->toArray()
-                            )
+                            ->options(SettlementCycle::options())
                             ->required()
                             ->default(SettlementCycle::WEEKLY->value),
 
                         Select::make('status')
-                            ->options(
-                                collect(MerchantStatus::cases())
-                                    ->mapWithKeys(fn ($case) => [$case->value => $case->label()])
-                                    ->toArray()
-                            )
+                            ->options(MerchantStatus::options())
                             ->required()
                             ->default(MerchantStatus::ACTIVE->value),
                     ]),

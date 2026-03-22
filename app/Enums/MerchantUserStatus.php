@@ -19,6 +19,22 @@ enum MerchantUserStatus: string
         };
     }
 
+    public static function options(): array
+    {
+        return collect(self::cases())
+            ->mapWithKeys(fn ($case) => [$case->value => $case->label()])
+            ->toArray();
+    }
+
+    public function color(): string
+    {
+        return match ($this) {
+            self::ACTIVE => 'success',
+            self::SUSPENDED => 'danger',
+            self::PENDING_VERIFICATION => 'warning',
+        };
+    }
+
     public function canLogin(): bool
     {
         return $this === self::ACTIVE;
