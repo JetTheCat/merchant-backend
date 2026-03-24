@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Constants\MerchantUserRoles;
+use App\Enums\MerchantUserRole;
 use App\Enums\MerchantUserStatus;
 use App\Models\Merchant;
 use App\Models\MerchantUser;
@@ -24,7 +24,7 @@ class MerchantUserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->numerify('+60#########'),
             'password' => Hash::make('password'),
-            'role' => fake()->randomElement(MerchantUserRoles::all()),
+            'role' => fake()->randomElement(MerchantUserRole::cases())->value,
             'status' => MerchantUserStatus::ACTIVE->value,
             'email_verified_at' => now(),
             'last_login_at' => fake()->optional(0.7)->dateTimeBetween('-30 days', 'now'),
@@ -35,14 +35,14 @@ class MerchantUserFactory extends Factory
     public function owner(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role' => MerchantUserRoles::OWNER,
+            'role' => MerchantUserRole::OWNER->value,
         ]);
     }
 
     public function staff(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role' => MerchantUserRoles::STAFF,
+            'role' => MerchantUserRole::STAFF->value,
         ]);
     }
 

@@ -58,6 +58,8 @@ return [
 
     'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
 
+    'merchant_portal_url' => env('MERCHANT_PORTAL_URL', 'http://localhost:3001'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\MerchantUserRole;
 use App\Enums\MerchantUserStatus;
+use App\Notifications\MerchantUserInvitationNotification;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -106,5 +107,10 @@ class MerchantUser extends Authenticatable
     public function updateLastLogin(): void
     {
         $this->update(['last_login_at' => now()]);
+    }
+
+    public function sendMerchantUserInvitationNotification(): void
+    {
+        $this->notify(new MerchantUserInvitationNotification);
     }
 }

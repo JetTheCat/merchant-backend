@@ -4,6 +4,7 @@ namespace App\Filament\Resources\MerchantUsers\Tables;
 
 use App\Enums\MerchantUserRole;
 use App\Enums\MerchantUserStatus;
+use App\Filament\Actions\SendMerchantUserInvitationAction;
 use App\Models\MerchantUser;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -77,6 +78,8 @@ class MerchantUsersTable
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+
+                SendMerchantUserInvitationAction::make(),
 
                 Action::make('suspend')
                     ->label('Suspend')
