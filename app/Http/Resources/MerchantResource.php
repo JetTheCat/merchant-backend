@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\MerchantUser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -40,15 +41,25 @@ class MerchantResource extends JsonResource
             'formattedPlatformFeeRate' => $this->formatted_platform_fee_rate,
             'settlementCycle' => $this->settlement_cycle,
             'status' => $this->status,
-            'rejectionReason' => $this->rejection_reason,
             'bankName' => $this->bank_name,
             'bankAccountNumber' => $this->when(
                 $this->bank_account_number,
-                fn () => '****' . substr($this->bank_account_number, -4)
+                fn () => $this->resolveBankAccountNumber($request)
             ),
             'bankAccountName' => $this->bank_account_name,
             'createdAt' => $this->created_at,
             'updatedAt' => $this->updated_at,
         ];
+    }
+
+    private function resolveBankAccountNumber(Request $request): string
+    {
+        $user = $request->user();
+
+        if ($user instanceof MerchantUser && $user->isOwner()) {
+            return $this->bank_account_number;
+        }
+
+        return '****' . substr($this->bank_account_number, -4);
     }
 }

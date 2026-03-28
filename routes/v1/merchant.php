@@ -11,6 +11,11 @@ use App\Http\Controllers\MerchantAuth\ForgotMerchantPasswordController;
 use App\Http\Controllers\MerchantAuth\LoginMerchantUserController;
 use App\Http\Controllers\MerchantAuth\LogoutMerchantUserController;
 use App\Http\Controllers\MerchantAuth\ResetMerchantPasswordController;
+use App\Http\Controllers\MerchantPortal\GetMerchantProfileController;
+use App\Http\Controllers\MerchantPortal\ListMerchantUsersController;
+use App\Http\Controllers\MerchantPortal\RemoveMerchantUserController;
+use App\Http\Controllers\MerchantPortal\UpdateMerchantProfileController;
+use App\Http\Controllers\MerchantPortal\UpdateMerchantUserController;
 
 // Customer facing - Browse and discover merchants
 Route::prefix('merchants')->middleware(['auth:sanctum'])->group(function () {
@@ -35,4 +40,12 @@ Route::prefix('merchant-auth')->group(function () {
 
 // Merchant owned - Merchant portal endpoints
 Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function () {
+    Route::get('/', GetMerchantProfileController::class);
+    Route::patch('/', UpdateMerchantProfileController::class);
+
+    Route::prefix('users')->group(function () {
+        Route::get('/', ListMerchantUsersController::class);
+        Route::patch('/{id}', UpdateMerchantUserController::class);
+        Route::delete('/{id}', RemoveMerchantUserController::class);
+    });
 });

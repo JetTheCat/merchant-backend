@@ -7,6 +7,8 @@ namespace App\Models;
 use App\Enums\MerchantUserRole;
 use App\Enums\MerchantUserStatus;
 use App\Notifications\MerchantUserInvitationNotification;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -49,29 +51,34 @@ class MerchantUser extends Authenticatable
         return $this->belongsTo(Merchant::class);
     }
 
-    public function scopeActive($query)
+    #[Scope]
+    protected function active(Builder $query): void
     {
-        return $query->where('status', MerchantUserStatus::ACTIVE->value);
+        $query->where('status', MerchantUserStatus::ACTIVE->value);
     }
 
-    public function scopePendingVerification($query)
+    #[Scope]
+    protected function pendingVerification(Builder $query): void
     {
-        return $query->where('status', MerchantUserStatus::PENDING_VERIFICATION->value);
+        $query->where('status', MerchantUserStatus::PENDING_VERIFICATION->value);
     }
 
-    public function scopeByRole($query, string $role)
+    #[Scope]
+    protected function byRole(Builder $query, string $role): void
     {
-        return $query->where('role', $role);
+        $query->where('role', $role);
     }
 
-    public function scopeOwners($query)
+    #[Scope]
+    protected function owner(Builder $query): void
     {
-        return $query->where('role', MerchantUserRole::OWNER);
+        $query->where('role', MerchantUserRole::OWNER);
     }
 
-    public function scopeStaff($query)
+    #[Scope]
+    protected function staff(Builder $query): void
     {
-        return $query->where('role', MerchantUserRole::STAFF);
+        $query->where('role', MerchantUserRole::STAFF);
     }
 
     public function isActive(): bool

@@ -48,7 +48,7 @@ class MerchantUserInfolist
                         TextEntry::make('email_verified_at')
                             ->label('Email Verified')
                             ->dateTime('d M Y, H:i')
-                            ->default('Not verified'),
+                            ->placeholder('Not verified'),
                     ]),
 
                 Section::make('Activity')
@@ -57,7 +57,7 @@ class MerchantUserInfolist
                         TextEntry::make('last_login_at')
                             ->label('Last Login')
                             ->dateTime('d M Y, H:i')
-                            ->default('Never'),
+                            ->placeholder('Never'),
 
                         TextEntry::make('created_at')
                             ->label('Created')
