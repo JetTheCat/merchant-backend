@@ -19,6 +19,22 @@ trait MerchantAuthEndpoints
         return '/api/v1/merchant-auth/logout';
     }
 
+    protected static function merchantForgotPasswordEndpoint(): string
+    {
+        return '/api/v1/merchant-auth/forgot-password';
+    }
+
+    protected function merchantResetPasswordUrl(MerchantUser $merchantUser): string
+    {
+        return URL::temporarySignedRoute(
+            'merchant.password.reset',
+            now()->addHour(),
+            [
+                'id' => $merchantUser->getKey(),
+            ]
+        );
+    }
+
     protected function acceptMerchantInvitationUrl(MerchantUser $merchantUser): string
     {
         return URL::temporarySignedRoute(
