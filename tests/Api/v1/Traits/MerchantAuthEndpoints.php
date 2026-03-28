@@ -9,6 +9,16 @@ use Illuminate\Support\Facades\URL;
 
 trait MerchantAuthEndpoints
 {
+    protected static function merchantLoginEndpoint(): string
+    {
+        return '/api/v1/merchant-auth/login';
+    }
+
+    protected static function merchantLogoutEndpoint(): string
+    {
+        return '/api/v1/merchant-auth/logout';
+    }
+
     protected function acceptMerchantInvitationUrl(MerchantUser $merchantUser): string
     {
         return URL::temporarySignedRoute(

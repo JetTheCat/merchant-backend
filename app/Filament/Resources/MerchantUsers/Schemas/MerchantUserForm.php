@@ -26,6 +26,7 @@ class MerchantUserForm
                     ->required(),
                 TextInput::make('password')
                     ->password()
+                    ->revealable()
                     ->required(false)
                     ->saved(fn (?string $state) => filled($state)),
                 Select::make('role')

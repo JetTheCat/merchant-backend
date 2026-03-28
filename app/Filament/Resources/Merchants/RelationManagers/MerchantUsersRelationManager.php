@@ -56,8 +56,9 @@ class MerchantUsersRelationManager extends RelationManager
                     ->required(),
                 TextInput::make('password')
                     ->password()
+                    ->revealable()
                     ->required(fn (string $operation) => $operation === 'create')
-                    ->saved(filled(...)),
+                    ->saved(fn (?string $state) => filled($state)),
                 Select::make('role')
                     ->options(MerchantUserRole::options())
                     ->default(MerchantUserRole::STAFF->value)
