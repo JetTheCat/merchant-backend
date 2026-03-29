@@ -2,10 +2,6 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\Merchants\GetMerchantController;
-use App\Http\Controllers\Merchants\GetMerchantsController;
 use App\Http\Controllers\MerchantAuth\AcceptMerchantInvitationController;
 use App\Http\Controllers\MerchantAuth\ForgotMerchantPasswordController;
 use App\Http\Controllers\MerchantAuth\LoginMerchantUserController;
@@ -16,6 +12,9 @@ use App\Http\Controllers\MerchantPortal\ListMerchantUsersController;
 use App\Http\Controllers\MerchantPortal\RemoveMerchantUserController;
 use App\Http\Controllers\MerchantPortal\UpdateMerchantProfileController;
 use App\Http\Controllers\MerchantPortal\UpdateMerchantUserController;
+use App\Http\Controllers\Merchants\GetMerchantController;
+use App\Http\Controllers\Merchants\GetMerchantsController;
+use Illuminate\Support\Facades\Route;
 
 // Customer facing - Browse and discover merchants
 Route::prefix('merchants')->middleware(['auth:sanctum'])->group(function () {

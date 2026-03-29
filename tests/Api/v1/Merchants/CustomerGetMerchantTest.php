@@ -16,9 +16,10 @@ use Tests\TestCase;
 
 class CustomerGetMerchantTest extends TestCase
 {
-    use RefreshDatabase, MerchantEndpoints;
+    use MerchantEndpoints, RefreshDatabase;
 
     private User $user;
+
     private Merchant $merchant;
 
     private const VALID_MERCHANT_STRUCTURE = [
@@ -55,7 +56,7 @@ class CustomerGetMerchantTest extends TestCase
 
         DB::table('merchants')->delete();
         DB::table('categories')->delete();
-        
+
         $this->seed(CategorySeeder::class);
         $this->user = User::factory()->create();
         $this->merchant = Merchant::factory()->create(['status' => 'active']);

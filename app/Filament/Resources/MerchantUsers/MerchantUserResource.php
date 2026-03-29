@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\MerchantUsers;
 
 use App\Filament\Resources\MerchantUsers\Pages\EditMerchantUser;
@@ -53,8 +55,8 @@ class MerchantUserResource extends Resource
     {
         return [
             'index' => ListMerchantUsers::route('/'),
-            'view'  => ViewMerchantUser::route('/{record}'),
-            'edit'  => EditMerchantUser::route('/{record}/edit'),
+            'view' => ViewMerchantUser::route('/{record}'),
+            'edit' => EditMerchantUser::route('/{record}/edit'),
         ];
     }
 

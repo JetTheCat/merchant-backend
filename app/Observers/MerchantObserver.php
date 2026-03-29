@@ -16,7 +16,7 @@ class MerchantObserver
     {
         if ($merchant->latitude && $merchant->longitude) {
             $merchant->location = DB::raw(sprintf(
-                "ST_SetSRID(ST_MakePoint(%s, %s), 4326)",
+                'ST_SetSRID(ST_MakePoint(%s, %s), 4326)',
                 $merchant->longitude,
                 $merchant->latitude
             ));

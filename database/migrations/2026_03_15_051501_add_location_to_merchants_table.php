@@ -20,11 +20,11 @@ return new class extends Migration
         DB::statement('CREATE INDEX merchants_location_idx ON merchants USING GIST(location)');
 
         // Populate location column from existing lat/lng data
-        DB::statement("
+        DB::statement('
             UPDATE merchants 
             SET location = ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)
             WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-        ");
+        ');
     }
 
     /**

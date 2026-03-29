@@ -23,7 +23,7 @@ class MerchantResource extends JsonResource
             'businessName' => $this->business_name,
             'businessRegistrationNumber' => $this->when(
                 $this->business_registration_number,
-                fn () => '****' . substr($this->business_registration_number, -4)
+                fn () => '****'.substr($this->business_registration_number, -4)
             ),
             'category' => new CategoryResource($this->whenLoaded('category')),
             'description' => $this->description,
@@ -60,6 +60,6 @@ class MerchantResource extends JsonResource
             return $this->bank_account_number;
         }
 
-        return '****' . substr($this->bank_account_number, -4);
+        return '****'.substr($this->bank_account_number, -4);
     }
 }

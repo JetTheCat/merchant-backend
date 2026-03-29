@@ -9,6 +9,7 @@ use Illuminate\Foundation\Http\FormRequest;
 class GetMerchantsRequest extends FormRequest
 {
     public const DEFAULT_LIMIT = 25;
+
     public const MAX_LIMIT = 100;
 
     /**
@@ -34,7 +35,7 @@ class GetMerchantsRequest extends FormRequest
             'latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:longitude'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
             'radius' => ['nullable', 'integer', 'min:1', 'max:100'],
-            'limit' => ['nullable', 'integer', 'min:1', 'max:' . self::MAX_LIMIT],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:'.self::MAX_LIMIT],
             'cursor' => ['nullable', 'string'],
         ];
     }

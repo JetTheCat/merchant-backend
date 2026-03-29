@@ -88,11 +88,11 @@ class Merchant extends Model
 
         return $query
             ->selectRaw(
-                "*, ST_Distance(location, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography) / 1000 AS distance",
+                '*, ST_Distance(location, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography) / 1000 AS distance',
                 [$longitude, $latitude]
             )
             ->whereRaw(
-                "ST_DWithin(location, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography, ?)",
+                'ST_DWithin(location, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography, ?)',
                 [$longitude, $latitude, $radiusMeters]
             )
             ->orderBy('distance');

@@ -19,7 +19,7 @@ class MerchantFactory extends Factory
     {
         $categorySlugs = array_column(CategorySeeder::CATEGORIES_DATA, 'slug');
         $category = Category::where('slug', fake()->randomElement($categorySlugs))->first();
-        
+
         return [
             'name' => fake()->company(),
             'business_name' => fake()->company().' Sdn Bhd',

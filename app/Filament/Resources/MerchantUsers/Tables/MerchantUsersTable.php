@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\MerchantUsers\Tables;
 
 use App\Enums\MerchantUserRole;
@@ -8,12 +10,12 @@ use App\Filament\Actions\SendMerchantUserInvitationAction;
 use App\Models\MerchantUser;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
-use Filament\Support\Icons\Heroicon;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;

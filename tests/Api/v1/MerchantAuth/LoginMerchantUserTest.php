@@ -152,7 +152,7 @@ class LoginMerchantUserTest extends TestCase
     public function testNonActiveMerchantUserCannotLogin(MerchantUserStatus $status): void
     {
         $this->merchantUser->update([
-            'status' => $status->value
+            'status' => $status->value,
         ]);
 
         $response = $this->postJson(self::merchantLoginEndpoint(), [

@@ -16,7 +16,7 @@ use Tests\TestCase;
 
 class GetMerchantsTest extends TestCase
 {
-    use RefreshDatabase, MerchantEndpoints;
+    use MerchantEndpoints, RefreshDatabase;
 
     private User $user;
 
@@ -62,7 +62,7 @@ class GetMerchantsTest extends TestCase
 
         DB::table('merchants')->delete();
         DB::table('categories')->delete();
-        
+
         $this->seed(CategorySeeder::class);
         $this->user = User::factory()->create();
     }

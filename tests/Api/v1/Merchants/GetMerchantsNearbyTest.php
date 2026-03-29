@@ -17,7 +17,7 @@ use Tests\TestCase;
 
 class GetMerchantsNearbyTest extends TestCase
 {
-    use RefreshDatabase, MerchantEndpoints;
+    use MerchantEndpoints, RefreshDatabase;
 
     private User $user;
 
@@ -27,7 +27,7 @@ class GetMerchantsNearbyTest extends TestCase
 
         DB::table('merchants')->delete();
         DB::table('categories')->delete();
-        
+
         $this->seed(CategorySeeder::class);
         $this->user = User::factory()->create();
     }

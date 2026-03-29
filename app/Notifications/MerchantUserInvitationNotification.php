@@ -22,7 +22,7 @@ class MerchantUserInvitationNotification extends Notification
     public function toMail(MerchantUser $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('You\'ve Been Invited to ' . $notifiable->merchant->name)
+            ->subject('You\'ve Been Invited to '.$notifiable->merchant->name)
             ->view('emails.merchant-invitation', [
                 'merchantUser' => $notifiable,
                 'setupUrl' => $this->setupUrl($notifiable),
@@ -40,7 +40,7 @@ class MerchantUserInvitationNotification extends Notification
             now()->addHours(72),
             [
                 'id' => $notifiable->getKey(),
-                'hash' => $hashedEmail
+                'hash' => $hashedEmail,
             ]
         );
 

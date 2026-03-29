@@ -9,11 +9,11 @@ trait MerchantEndpoints
     protected static function listMerchantsEndpoint(array $params = []): string
     {
         $url = '/api/v1/merchants';
-        
-        if (!empty($params)) {
-            $url .= '?' . http_build_query($params);
+
+        if (! empty($params)) {
+            $url .= '?'.http_build_query($params);
         }
-        
+
         return $url;
     }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\Merchants\RelationManagers;
 
 use App\Enums\MerchantUserRole;
@@ -8,7 +10,6 @@ use App\Filament\Actions\SendMerchantUserInvitationAction;
 use App\Models\MerchantUser;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
-use Filament\Support\Icons\Heroicon;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -25,6 +26,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;

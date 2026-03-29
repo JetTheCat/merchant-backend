@@ -6,11 +6,11 @@ namespace App\Http\Controllers\MerchantAuth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MerchantAuth\LoginMerchantUserRequest;
-use Symfony\Component\HttpFoundation\Response;
 use App\Http\Resources\MerchantUserResource;
 use App\Models\MerchantUser;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
+use Symfony\Component\HttpFoundation\Response;
 
 class LoginMerchantUserController extends Controller
 {

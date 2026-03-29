@@ -91,7 +91,7 @@ class RemoveMerchantUserTest extends TestCase
     }
 
     public function testStaffCannotRemoveMerchantUser(): void
-    {        
+    {
         [$staff, $anotherStaff] = MerchantUser::factory()
             ->staff()
             ->active()

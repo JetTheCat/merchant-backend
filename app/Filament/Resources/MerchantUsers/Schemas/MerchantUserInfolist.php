@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\MerchantUsers\Schemas;
 
 use App\Enums\MerchantUserRole;

@@ -8,7 +8,7 @@ enum CategoryType: string
 {
     case MERCHANT = 'merchant';
     case GENERAL = 'general';
-    
+
     public function label(): string
     {
         return match ($this) {
