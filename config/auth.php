@@ -47,6 +47,11 @@ return [
             'driver' => 'sanctum',
             'provider' => 'users',
         ],
+
+        'merchant_user' => [
+            'driver' => 'sanctum',
+            'provider' => 'merchant_users',
+        ],
     ],
 
     /*
@@ -70,6 +75,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
+        ],
+
+        'merchant_users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\MerchantUser::class,
         ],
 
         // 'users' => [
