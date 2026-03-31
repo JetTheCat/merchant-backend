@@ -99,4 +99,17 @@ class ForgotPasswordTest extends TestCase
 
         Bus::assertDispatchedTimes(SendPasswordResetNotificationJob::class, 2);
     }
+
+    public function testForgotPasswordIsRateLimited(): void
+    {
+        $email = 'user@example.com';
+
+        for ($i = 0; $i < config('rate_limiting.forgot_password.attempts'); $i++) {
+            $this->postJson(self::forgotPasswordEndpoint(), ['email' => $email]);
+        }
+
+        $response = $this->postJson(self::forgotPasswordEndpoint(), ['email' => $email]);
+
+        $response->assertStatus(Response::HTTP_TOO_MANY_REQUESTS);
+    }
 }

@@ -24,8 +24,8 @@ Route::prefix('merchants')->middleware(['auth:sanctum'])->group(function () {
 
 // Merchant auth - Public endpoints
 Route::prefix('merchant-auth')->group(function () {
-    Route::post('/login', LoginMerchantUserController::class);
-    Route::post('/forgot-password', ForgotMerchantPasswordController::class);
+    Route::post('/login', LoginMerchantUserController::class)->middleware('throttle:login');
+    Route::post('/forgot-password', ForgotMerchantPasswordController::class)->middleware('throttle:forgot-password');
 
     Route::middleware('auth:merchant_user')->group(function () {
         Route::post('/logout', LogoutMerchantUserController::class);

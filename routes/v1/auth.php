@@ -13,12 +13,14 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
     Route::post('/register', RegisterController::class);
-    Route::post('/login', LoginController::class);
-    Route::post('/forgot-password', ForgotPasswordController::class);
+    Route::post('/login', LoginController::class)->middleware('throttle:login');
+    Route::post('/forgot-password', ForgotPasswordController::class)->middleware('throttle:forgot-password');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', LogoutController::class);
-        Route::post('/email-verification/resend', ResendVerificationEmailController::class)->name('verification.send');
+        Route::post('/email-verification/resend', ResendVerificationEmailController::class)
+            ->middleware('throttle:resend-verification')
+            ->name('verification.send');
     });
 
     Route::middleware('signed')->group(function () {
