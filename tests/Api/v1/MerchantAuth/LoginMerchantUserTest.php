@@ -213,4 +213,21 @@ class LoginMerchantUserTest extends TestCase
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
+
+    public function testLoginIsRateLimited(): void
+    {
+        for ($i = 0; $i < config('rate_limiting.login.attempts'); $i++) {
+            $this->postJson(self::merchantLoginEndpoint(), [
+                'email' => 'merchant@example.com',
+                'password' => 'wrong-password',
+            ]);
+        }
+
+        $response = $this->postJson(self::merchantLoginEndpoint(), [
+            'email' => 'merchant@example.com',
+            'password' => 'wrong-password',
+        ]);
+
+        $response->assertStatus(Response::HTTP_TOO_MANY_REQUESTS);
+    }
 }

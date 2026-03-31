@@ -91,4 +91,19 @@ class ResendVerificationEmailTest extends TestCase
             fn (SendEmailVerificationJob $job) => $job->user->id === $user2->id
         );
     }
+
+    public function testResendVerificationIsRateLimited(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        for ($i = 0; $i < config('rate_limiting.resend_verification.attempts'); $i++) {
+            $this->actingAs($user)
+                ->postJson(self::resendVerificationEmailEndpoint());
+        }
+
+        $response = $this->actingAs($user)
+            ->postJson(self::resendVerificationEmailEndpoint());
+
+        $response->assertStatus(Response::HTTP_TOO_MANY_REQUESTS);
+    }
 }

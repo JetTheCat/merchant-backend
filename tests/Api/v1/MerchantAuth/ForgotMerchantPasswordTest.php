@@ -99,4 +99,17 @@ class ForgotMerchantPasswordTest extends TestCase
 
         Bus::assertDispatchedTimes(SendMerchantUserPasswordResetNotificationJob::class, 2);
     }
+
+    public function testForgotPasswordIsRateLimited(): void
+    {
+        $email = 'merchant@example.com';
+
+        for ($i = 0; $i < config('rate_limiting.forgot_password.attempts'); $i++) {
+            $this->postJson(self::merchantForgotPasswordEndpoint(), ['email' => $email]);
+        }
+
+        $response = $this->postJson(self::merchantForgotPasswordEndpoint(), ['email' => $email]);
+
+        $response->assertStatus(Response::HTTP_TOO_MANY_REQUESTS);
+    }
 }

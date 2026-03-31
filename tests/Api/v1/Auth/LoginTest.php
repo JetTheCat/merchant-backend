@@ -200,4 +200,21 @@ class LoginTest extends TestCase
         $this->assertGreaterThanOrEqual($beforeLogin + $expectedExpiry, $expiresAt);
         $this->assertLessThanOrEqual($afterLogin + $expectedExpiry, $expiresAt);
     }
+
+    public function testUserLoginIsRateLimited(): void
+    {
+        for ($i = 0; $i < config('rate_limiting.login.attempts'); $i++) {
+            $this->postJson(self::loginEndpoint(), [
+                'email' => 'test@example.com',
+                'password' => 'wrong-password',
+            ]);
+        }
+
+        $response = $this->postJson(self::loginEndpoint(), [
+            'email' => 'test@example.com',
+            'password' => 'wrong-password',
+        ]);
+
+        $response->assertStatus(Response::HTTP_TOO_MANY_REQUESTS);
+    }
 }
