@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\TransactionCategory;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Models\CreditPackage;
@@ -29,6 +30,7 @@ class TransactionFactory extends Factory
             'user_credit_id' => UserCredit::factory(),
             'credit_package_id' => CreditPackage::factory(),
             'merchant_user_id' => null,
+            'category' => TransactionCategory::CREDIT,
             'type' => TransactionType::CREDIT_PURCHASE,
             'reference_code' => Transaction::generateReferenceCode(),
             'status' => TransactionStatus::COMPLETED,

@@ -26,6 +26,7 @@ class Transaction extends Model
         'user_credit_id',
         'credit_package_id',
         'merchant_user_id',
+        'category',
         'type',
         'reference_code',
         'status',
@@ -44,6 +45,7 @@ class Transaction extends Model
     ];
 
     protected $casts = [
+        'category' => TransactionCategory::class,
         'type' => TransactionType::class,
         'status' => TransactionStatus::class,
         'amount' => 'decimal:2',

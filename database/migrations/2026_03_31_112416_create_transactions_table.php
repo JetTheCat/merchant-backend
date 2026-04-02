@@ -15,6 +15,7 @@ return new class extends Migration
             $table->foreignUuid('user_credit_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignUuid('credit_package_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignUuid('merchant_user_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('category', 100);
             $table->string('type', 30);
             $table->string('reference_code', 20)->unique();
             $table->string('status', 20)->default('pending');
@@ -35,6 +36,7 @@ return new class extends Migration
 
             $table->index('user_id');
             $table->index('merchant_id');
+            $table->index('category');
             $table->index('type');
             $table->index('status');
             $table->index('reference_code');

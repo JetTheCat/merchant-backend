@@ -22,28 +22,4 @@ enum TransactionType: string
             self::CREDIT_ADJUSTMENT => 'Credit Adjustment',
         };
     }
-
-    public function category(): string
-    {
-        return match($this) {
-            self::CREDIT_PURCHASE,
-            self::CREDIT_REDEMPTION,
-            self::CREDIT_REFUND,
-            self::CREDIT_EXPIRY,
-            self::CREDIT_ADJUSTMENT => 'credit',
-        };
-    }
-
-    public function options(): array
-    {
-        return array_column(self::cases(), 'value');
-    }
-
-    public static function creditTypes(): array
-    {
-        return array_filter(
-            self::cases(),
-            fn (self $type) => $type->category() === 'credit'
-        );
-    }
 }
