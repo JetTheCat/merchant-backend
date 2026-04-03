@@ -25,7 +25,7 @@ class CreditPackageFactory extends Factory
             'selling_price' => $sellingPrice,
             'discount_percentage' => 10.00,
             'validity_days' => null,
-            'is_active' => true,
+            'is_active' => false,
             'purchase_limit_per_user' => null,
             'total_quantity' => null,
             'sold_quantity' => 0,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\TransactionCategory;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -19,6 +20,8 @@ class Transaction extends Model
     use HasFactory;
     use HasUuids;
     use SoftDeletes;
+
+    protected $table = 'transactions';
 
     protected $fillable = [
         'user_id',

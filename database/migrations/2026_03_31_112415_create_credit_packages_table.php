@@ -17,7 +17,7 @@ return new class extends Migration
             $table->decimal('selling_price', 10, 2);
             $table->decimal('discount_percentage', 5, 2);
             $table->integer('validity_days')->nullable();
-            $table->boolean('is_active')->default(true);
+            $table->boolean('is_active')->default(false);
             $table->integer('purchase_limit_per_user')->nullable();
             $table->integer('total_quantity')->nullable();
             $table->integer('sold_quantity')->default(0);

@@ -32,4 +32,24 @@ trait MerchantPortalEndpoints
     {
         return '/api/v1/merchant/users/'.$id;
     }
+
+    protected static function listCreditPackagesEndpoint(): string
+    {
+        return '/api/v1/merchant/packages';
+    }
+
+    protected static function createCreditPackageEndpoint(): string
+    {
+        return '/api/v1/merchant/packages';
+    }
+
+    protected static function updateCreditPackageEndpoint(string $id): string
+    {
+        return '/api/v1/merchant/packages/'.$id;
+    }
+
+    protected static function deleteCreditPackageEndpoint(string $id): string
+    {
+        return '/api/v1/merchant/packages/'.$id;
+    }
 }

@@ -7,9 +7,13 @@ use App\Http\Controllers\MerchantAuth\ForgotMerchantPasswordController;
 use App\Http\Controllers\MerchantAuth\LoginMerchantUserController;
 use App\Http\Controllers\MerchantAuth\LogoutMerchantUserController;
 use App\Http\Controllers\MerchantAuth\ResetMerchantPasswordController;
+use App\Http\Controllers\MerchantPortal\CreateCreditPackageController;
+use App\Http\Controllers\MerchantPortal\DeleteCreditPackageController;
 use App\Http\Controllers\MerchantPortal\GetMerchantProfileController;
+use App\Http\Controllers\MerchantPortal\ListCreditPackagesController;
 use App\Http\Controllers\MerchantPortal\ListMerchantUsersController;
 use App\Http\Controllers\MerchantPortal\RemoveMerchantUserController;
+use App\Http\Controllers\MerchantPortal\UpdateCreditPackageController;
 use App\Http\Controllers\MerchantPortal\UpdateMerchantProfileController;
 use App\Http\Controllers\MerchantPortal\UpdateMerchantUserController;
 use App\Http\Controllers\Merchants\GetMerchantController;
@@ -46,5 +50,12 @@ Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function ()
         Route::get('/', ListMerchantUsersController::class);
         Route::patch('/{id}', UpdateMerchantUserController::class);
         Route::delete('/{id}', RemoveMerchantUserController::class);
+    });
+
+    Route::prefix('packages')->group(function () {
+        Route::get('/', ListCreditPackagesController::class);
+        Route::post('/', CreateCreditPackageController::class);
+        Route::patch('/{id}', UpdateCreditPackageController::class);
+        Route::delete('/{id}', DeleteCreditPackageController::class);
     });
 });
