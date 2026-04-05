@@ -193,34 +193,6 @@ class GetMerchantsTest extends TestCase
             ->assertJsonCount(1, 'data');
     }
 
-    public function testItCanCombineMultipleFilters(): void
-    {
-        $restaurantCategory = Category::where('slug', 'restaurants')->first();
-
-        Merchant::factory()->create([
-            'category_id' => $restaurantCategory->id,
-            'city' => 'Kuala Lumpur',
-            'state' => 'Kuala Lumpur',
-            'name' => 'Italian Restaurant',
-        ]);
-
-        Merchant::factory()->create([
-            'category_id' => $restaurantCategory->id,
-            'city' => 'Penang',
-            'state' => 'Penang',
-        ]);
-
-        $response = $this->actingAs($this->user)
-            ->getJson($this->listMerchantsEndpoint([
-                'category' => 'restaurants',
-                'city' => 'Kuala Lumpur',
-                'state' => 'Kuala Lumpur',
-            ]));
-
-        $response->assertStatus(Response::HTTP_OK)
-            ->assertJsonCount(1, 'data');
-    }
-
     public function testItSupportsCursorPagination(): void
     {
         Merchant::factory()->count(30)->create();

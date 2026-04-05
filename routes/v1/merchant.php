@@ -18,12 +18,14 @@ use App\Http\Controllers\MerchantPortal\UpdateMerchantProfileController;
 use App\Http\Controllers\MerchantPortal\UpdateMerchantUserController;
 use App\Http\Controllers\Merchants\GetMerchantController;
 use App\Http\Controllers\Merchants\GetMerchantsController;
+use App\Http\Controllers\Merchants\ListMerchantCreditPackagesController;
 use Illuminate\Support\Facades\Route;
 
 // Customer facing - Browse and discover merchants
 Route::prefix('merchants')->middleware(['auth:sanctum'])->group(function () {
     Route::get('/', GetMerchantsController::class);
     Route::get('/{id}', GetMerchantController::class);
+    Route::get('/{id}/packages', ListMerchantCreditPackagesController::class);
 });
 
 // Merchant auth - Public endpoints
