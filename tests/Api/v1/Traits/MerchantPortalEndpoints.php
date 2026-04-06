@@ -43,6 +43,11 @@ trait MerchantPortalEndpoints
         return '/api/v1/user/credits';
     }
 
+    protected static function listCreditTransactionsEndpoint(): string
+    {
+        return '/api/v1/user/credits/transactions';
+    }
+
     protected static function getUserCreditEndpoint(string $merchantId): string
     {
         return "/api/v1/user/credits/{$merchantId}";

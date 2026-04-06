@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Users\GetUserController;
 use App\Http\Controllers\Users\GetUserCreditController;
+use App\Http\Controllers\Users\ListCreditTransactionsController;
 use App\Http\Controllers\Users\ListUserCreditsController;
 use App\Http\Controllers\Users\UpdatePasswordController;
 use App\Http\Controllers\Users\UpdateUserController;
@@ -16,6 +17,7 @@ Route::prefix('user')->middleware(['auth:sanctum'])->group(function () {
 
     Route::prefix('credits')->group(function () {
         Route::get('/', ListUserCreditsController::class);
+        Route::get('/transactions', ListCreditTransactionsController::class);
         Route::get('/{merchantId}', GetUserCreditController::class);
     });
 });
