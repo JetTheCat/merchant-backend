@@ -66,6 +66,26 @@ class Merchant extends Model
         return $this->hasMany(MerchantUser::class);
     }
 
+    public function creditPackages(): HasMany
+    {
+        return $this->hasMany(CreditPackage::class);
+    }
+
+    public function userCredits(): HasMany
+    {
+        return $this->hasMany(UserCredit::class);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function creditTransactions(): HasMany
+    {
+        return $this->hasMany(CreditTransaction::class);
+    }
+
     public function owner(): HasOne
     {
         return $this->hasOne(MerchantUser::class)
