@@ -29,6 +29,7 @@ class Transaction extends Model
         'user_credit_id',
         'credit_package_id',
         'merchant_user_id',
+        'payment_id',
         'category',
         'type',
         'reference_code',
@@ -85,6 +86,11 @@ class Transaction extends Model
     public function merchantUser(): BelongsTo
     {
         return $this->belongsTo(MerchantUser::class, 'merchant_user_id');
+    }
+
+    public function payment(): BelongsTo
+    {
+        return $this->belongsTo(Payment::class);
     }
 
     #[Scope]
