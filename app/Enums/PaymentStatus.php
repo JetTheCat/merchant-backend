@@ -13,6 +13,7 @@ enum PaymentStatus: string
     case REQUIRES_CAPTURE = 'requires_capture';
     case SUCCEEDED = 'succeeded';
     case CANCELED = 'canceled';
+    case PAYMENT_FAILED = 'payment_failed';
 
     public function label(): string
     {
@@ -24,6 +25,7 @@ enum PaymentStatus: string
             self::REQUIRES_CAPTURE => 'Requires Capture',
             self::SUCCEEDED => 'Succeeded',
             self::CANCELED => 'Canceled',
+            self::PAYMENT_FAILED => 'Payment Failed',
         };
     }
 
@@ -36,7 +38,8 @@ enum PaymentStatus: string
             self::REQUIRES_CAPTURE => 'warning',
             self::PROCESSING => 'info',
             self::SUCCEEDED => 'success',
-            self::CANCELED => 'danger',
+            self::CANCELED,
+            self::PAYMENT_FAILED => 'danger',
         };
     }
 }

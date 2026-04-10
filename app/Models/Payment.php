@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Enums\PaymentType;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -33,7 +33,7 @@ class Payment extends Model
     ];
 
     protected $casts = [
-        'payment_method' => PaymentMethod::class,
+        'payment_method' => PaymentType::class,
         'status' => PaymentStatus::class,
         'amount' => 'decimal:2',
         'stripe_payload' => 'array',
@@ -68,6 +68,12 @@ class Payment extends Model
         $query->where('status', PaymentStatus::CANCELED);
     }
 
+    #[Scope]
+    protected function failed(Builder $query): void
+    {
+        $query->where('status', PaymentStatus::PAYMENT_FAILED);
+    }
+
     public function markAsSucceeded(string $chargeId, array $payload): bool
     {
         return $this->update([
@@ -81,7 +87,7 @@ class Payment extends Model
     public function markAsFailed(string $reason, array $payload): bool
     {
         return $this->update([
-            'status' => PaymentStatus::CANCELED,
+            'status' => PaymentStatus::PAYMENT_FAILED,
             'failure_reason' => $reason,
             'stripe_payload' => $payload,
         ]);

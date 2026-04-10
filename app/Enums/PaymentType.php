@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-enum PaymentMethod: string
+enum PaymentType: string
 {
     case CARD = 'card';
     case FPX = 'fpx';
