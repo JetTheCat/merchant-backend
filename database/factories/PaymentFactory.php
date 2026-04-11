@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Enums\PaymentType;
+use App\Enums\Currency;
 use App\Enums\PaymentStatus;
+use App\Enums\PaymentType;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -24,7 +25,7 @@ class PaymentFactory extends Factory
             'stripe_payment_intent_id' => 'pi_test_' . $this->faker->regexify('[A-Za-z0-9]{24}'),
             'stripe_charge_id' => null,
             'amount' => $this->faker->randomFloat(2, 10, 500),
-            'currency' => 'MYR',
+            'currency' => Currency::MYR,
             'status' => PaymentStatus::REQUIRES_PAYMENT_METHOD,
             'stripe_payload' => null,
             'failure_reason' => null,

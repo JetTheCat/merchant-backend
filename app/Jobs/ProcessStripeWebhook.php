@@ -8,11 +8,13 @@ use App\Constants\QueueConnections;
 use App\Constants\QueueNames;
 use App\Models\Payment;
 use App\Models\StripeEvent;
+use App\Services\CreditPurchaseService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -31,21 +33,21 @@ class ProcessStripeWebhook implements ShouldQueue
             ->onQueue(QueueNames::DEFAULT);
     }
 
-    public function handle(): void
+    public function handle(CreditPurchaseService $creditPurchaseService): void
     {
         $payload = $this->stripeEvent->payload;
         $paymentIntentId = $payload['data']['object']['id'] ?? null;
 
         match ($this->stripeEvent->type) {
-            'payment_intent.succeeded' => $this->handleSucceeded($paymentIntentId, $payload),
-            'payment_intent.payment_failed' => $this->handleFailed($paymentIntentId, $payload),
+            'payment_intent.succeeded' => $this->handleSucceeded($paymentIntentId, $payload, $creditPurchaseService),
+            'payment_intent.payment_failed' => $this->handleFailed($paymentIntentId, $payload, $creditPurchaseService),
             default => null,
         };
 
         $this->stripeEvent->markAsProcessed();
     }
 
-    private function handleSucceeded(?string $paymentIntentId, array $payload): void
+    private function handleSucceeded(?string $paymentIntentId, array $payload, CreditPurchaseService $creditPurchaseService): void
     {
         if ($paymentIntentId === null) {
             return;
@@ -61,10 +63,13 @@ class ProcessStripeWebhook implements ShouldQueue
 
         $chargeId = $payload['data']['object']['latest_charge'] ?? '';
 
-        $payment->markAsSucceeded($chargeId, $payload);
+        DB::transaction(function () use ($payment, $chargeId, $payload, $creditPurchaseService) {
+            $payment->markAsSucceeded($chargeId, $payload);
+            $creditPurchaseService->grantCredits($payment);
+        });
     }
 
-    private function handleFailed(?string $paymentIntentId, array $payload): void
+    private function handleFailed(?string $paymentIntentId, array $payload, CreditPurchaseService $creditPurchaseService): void
     {
         if ($paymentIntentId === null) {
             return;
@@ -80,7 +85,10 @@ class ProcessStripeWebhook implements ShouldQueue
 
         $reason = $payload['data']['object']['last_payment_error']['message'] ?? 'Payment failed.';
 
-        $payment->markAsFailed($reason, $payload);
+        DB::transaction(function () use ($payment, $reason, $payload, $creditPurchaseService) {
+            $payment->markAsFailed($reason, $payload);
+            $creditPurchaseService->failPurchase($payment);
+        });
     }
 
     public function failed(Throwable $exception): void

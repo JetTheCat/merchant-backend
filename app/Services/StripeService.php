@@ -20,7 +20,7 @@ class StripeService
     {
         $intent = $this->stripeClient->paymentIntents->create([
             'amount' => (int) bcmul((string) $payment->amount, '100'),
-            'currency' => strtolower($payment->currency),
+            'currency' => strtolower($payment->currency->value),
             'payment_method_types' => ['card', 'fpx', 'grabpay'],
             'metadata' => [
                 'payment_id' => $payment->id,
@@ -29,6 +29,7 @@ class StripeService
         ]);
 
         return new PaymentIntentResult(
+            paymentId: $payment->id,
             paymentIntentId: $intent->id,
             clientSecret: $intent->client_secret,
         );

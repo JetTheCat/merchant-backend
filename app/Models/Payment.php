@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\Currency;
 use App\Enums\PaymentStatus;
 use App\Enums\PaymentType;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -34,6 +35,7 @@ class Payment extends Model
 
     protected $casts = [
         'payment_method' => PaymentType::class,
+        'currency' => Currency::class,
         'status' => PaymentStatus::class,
         'amount' => 'decimal:2',
         'stripe_payload' => 'array',
