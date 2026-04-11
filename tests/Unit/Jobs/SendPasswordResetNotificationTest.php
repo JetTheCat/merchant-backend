@@ -10,7 +10,7 @@ use App\Notifications\ResetPasswordNotification;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
-class SendPasswordResetNotificationJobTest extends TestCase
+class SendPasswordResetNotificationTest extends TestCase
 {
     public function testJobSendsResetPasswordNotification(): void
     {
