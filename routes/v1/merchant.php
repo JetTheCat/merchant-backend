@@ -8,6 +8,7 @@ use App\Http\Controllers\MerchantAuth\LoginMerchantUserController;
 use App\Http\Controllers\MerchantAuth\LogoutMerchantUserController;
 use App\Http\Controllers\MerchantAuth\ResetMerchantPasswordController;
 use App\Http\Controllers\MerchantPortal\CreateCreditPackageController;
+use App\Http\Controllers\MerchantPortal\ListMerchantTransactionsController;
 use App\Http\Controllers\MerchantPortal\DeleteCreditPackageController;
 use App\Http\Controllers\MerchantPortal\GetMerchantProfileController;
 use App\Http\Controllers\MerchantPortal\ListCreditPackagesController;
@@ -53,6 +54,8 @@ Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function ()
         Route::patch('/{id}', UpdateMerchantUserController::class);
         Route::delete('/{id}', RemoveMerchantUserController::class);
     });
+
+    Route::get('/transactions', ListMerchantTransactionsController::class);
 
     Route::prefix('packages')->group(function () {
         Route::get('/', ListCreditPackagesController::class);

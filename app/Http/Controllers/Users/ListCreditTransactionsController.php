@@ -8,6 +8,7 @@ use App\Enums\TransactionType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Users\ListCreditTransactionsRequest;
 use App\Http\Resources\CreditTransactionResource;
+use App\Http\Responses\CursorPaginationMeta;
 use App\Models\CreditTransaction;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -36,12 +37,7 @@ class ListCreditTransactionsController extends Controller
 
         return response()->json([
             'data' => CreditTransactionResource::collection($transactions->items()),
-            'meta' => [
-                'per_page' => $request->getLimit(),
-                'next_cursor' => $transactions->nextCursor()?->encode(),
-                'prev_cursor' => $transactions->previousCursor()?->encode(),
-                'has_more' => $transactions->hasMorePages(),
-            ],
+            'meta' => CursorPaginationMeta::build($transactions, $request->getLimit()),
         ], Response::HTTP_OK);
     }
 }

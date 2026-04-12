@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use RuntimeException;
 
 class Transaction extends Model
 {
@@ -124,8 +125,22 @@ class Transaction extends Model
     public static function generateReferenceCode(): string
     {
         $date = now()->format('Ymd');
-        $random = strtoupper(substr(str_replace(['+', '/', '='], '', base64_encode(random_bytes(6))), 0, 6));
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $random = implode('', array_map(fn () => $chars[random_int(0, 35)], range(0, 5)));
 
         return "TXN-{$date}-{$random}";
+    }
+
+    public static function generateUniqueReferenceCode(int $maxAttempts = 5): string
+    {
+        for ($i = 0; $i < $maxAttempts; $i++) {
+            $code = static::generateReferenceCode();
+
+            if (!static::withTrashed()->where('reference_code', $code)->exists()) {
+                return $code;
+            }
+        }
+
+        throw new RuntimeException("Failed to generate a unique reference code after {$maxAttempts} attempts.");
     }
 }

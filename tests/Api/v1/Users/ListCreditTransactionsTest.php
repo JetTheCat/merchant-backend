@@ -12,12 +12,12 @@ use App\Models\Merchant;
 use App\Models\MerchantUser;
 use App\Models\User;
 use Symfony\Component\HttpFoundation\Response;
-use Tests\Api\v1\Traits\MerchantPortalEndpoints;
+use Tests\Api\v1\Traits\UserEndpoints;
 use Tests\TestCase;
 
 class ListCreditTransactionsTest extends TestCase
 {
-    use MerchantPortalEndpoints;
+    use UserEndpoints;
 
     private User $user;
 

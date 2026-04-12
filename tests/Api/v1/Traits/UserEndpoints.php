@@ -20,4 +20,24 @@ trait UserEndpoints
     {
         return '/api/v1/user/password';
     }
+
+    protected static function listUserCreditsEndpoint(): string
+    {
+        return '/api/v1/user/credits';
+    }
+
+    protected static function getUserCreditEndpoint(string $merchantId): string
+    {
+        return "/api/v1/user/credits/{$merchantId}";
+    }
+
+    protected static function listCreditTransactionsEndpoint(): string
+    {
+        return '/api/v1/user/credits/transactions';
+    }
+
+    protected static function getCreditTransactionEndpoint(string $id): string
+    {
+        return "/api/v1/user/credits/transactions/{$id}";
+    }
 }

@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Users;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Users\ListUserCreditsRequest;
 use App\Http\Resources\UserCreditResource;
+use App\Http\Responses\CursorPaginationMeta;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -43,12 +44,7 @@ class ListUserCreditsController extends Controller
 
         return response()->json([
             'data' => UserCreditResource::collection($credits->items()),
-            'meta' => [
-                'per_page' => $request->getLimit(),
-                'next_cursor' => $credits->nextCursor()?->encode(),
-                'prev_cursor' => $credits->previousCursor()?->encode(),
-                'has_more' => $credits->hasMorePages(),
-            ],
+            'meta' => CursorPaginationMeta::build($credits, $request->getLimit()),
         ], Response::HTTP_OK);
     }
 }
