@@ -43,7 +43,7 @@ class CreditPurchaseService
                 'credit_package_id' => $package->id,
                 'category' => TransactionCategory::CREDIT,
                 'type' => TransactionType::CREDIT_PURCHASE,
-                'reference_code' => Transaction::generateReferenceCode(),
+                'reference_code' => Transaction::generateUniqueReferenceCode(),
                 'status' => TransactionStatus::PENDING,
                 'amount' => $package->credit_amount,
                 'paid_amount' => $package->selling_price,

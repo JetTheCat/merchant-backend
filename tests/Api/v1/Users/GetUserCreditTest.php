@@ -9,12 +9,12 @@ use App\Models\User;
 use App\Models\UserCredit;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
-use Tests\Api\v1\Traits\MerchantPortalEndpoints;
+use Tests\Api\v1\Traits\UserEndpoints;
 use Tests\TestCase;
 
 class GetUserCreditTest extends TestCase
 {
-    use MerchantPortalEndpoints;
+    use UserEndpoints;
 
     private User $user;
 

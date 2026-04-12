@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Merchants;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Merchants\GetMerchantsRequest;
 use App\Http\Resources\MerchantCustomerResource;
+use App\Http\Responses\CursorPaginationMeta;
 use App\Models\Merchant;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -58,12 +59,7 @@ class GetMerchantsController extends Controller
 
         return response()->json([
             'data' => MerchantCustomerResource::collection($merchants->items()),
-            'meta' => [
-                'per_page' => $request->getLimit(),
-                'next_cursor' => $merchants->nextCursor()?->encode(),
-                'prev_cursor' => $merchants->previousCursor()?->encode(),
-                'has_more' => $merchants->hasMorePages(),
-            ],
+            'meta' => CursorPaginationMeta::build($merchants, $request->getLimit()),
         ], Response::HTTP_OK);
     }
 }

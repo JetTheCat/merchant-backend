@@ -10,12 +10,12 @@ use App\Models\MerchantUser;
 use App\Models\User;
 use App\Models\UserCredit;
 use Symfony\Component\HttpFoundation\Response;
-use Tests\Api\v1\Traits\MerchantPortalEndpoints;
+use Tests\Api\v1\Traits\UserEndpoints;
 use Tests\TestCase;
 
 class ListUserCreditsTest extends TestCase
 {
-    use MerchantPortalEndpoints;
+    use UserEndpoints;
 
     private User $user;
 
