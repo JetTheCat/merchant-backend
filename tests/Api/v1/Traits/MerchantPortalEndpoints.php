@@ -43,6 +43,11 @@ trait MerchantPortalEndpoints
         return '/api/v1/merchant/transactions';
     }
 
+    protected static function generateRedemptionQrEndpoint(): string
+    {
+        return '/api/v1/merchant/redemptions/qr';
+    }
+
     protected static function listCreditPackagesEndpoint(): string
     {
         return '/api/v1/merchant/packages';

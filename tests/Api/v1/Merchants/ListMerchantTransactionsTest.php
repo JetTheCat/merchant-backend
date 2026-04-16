@@ -25,6 +25,7 @@ class ListMerchantTransactionsTest extends TestCase
         'data' => [
             '*' => [
                 'id',
+                'merchantUser',
                 'type',
                 'typeLabel',
                 'status',
@@ -34,6 +35,8 @@ class ListMerchantTransactionsTest extends TestCase
                 'paidAmount',
                 'balanceBefore',
                 'balanceAfter',
+                'notes',
+                'metadata',
                 'createdAt',
             ],
         ],

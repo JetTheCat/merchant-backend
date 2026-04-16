@@ -129,4 +129,5 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'qr_expiry_minutes' => (int) env('APP_QR_EXPIRY', 5),
 ];

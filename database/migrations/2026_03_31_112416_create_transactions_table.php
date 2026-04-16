@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('user_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignUuid('merchant_id')->constrained()->onDelete('cascade');
             $table->foreignUuid('user_credit_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignUuid('credit_package_id')->nullable()->constrained()->nullOnDelete();
@@ -41,6 +41,7 @@ return new class extends Migration
             $table->index('status');
             $table->index('reference_code');
             $table->index('qr_code');
+            $table->index('redemption_code');
             $table->index('created_at');
         });
     }

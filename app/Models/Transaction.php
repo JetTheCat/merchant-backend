@@ -122,6 +122,11 @@ class Transaction extends Model
         return $this->update(['status' => TransactionStatus::FAILED]);
     }
 
+    public function markAsCancelled(): bool
+    {
+        return $this->update(['status' => TransactionStatus::CANCELLED]);
+    }
+
     public static function generateReferenceCode(): string
     {
         $date = now()->format('Ymd');
