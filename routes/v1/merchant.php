@@ -63,6 +63,7 @@ Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function ()
     Route::prefix('redemptions')->group(function () {
         Route::post('/qr', GenerateRedemptionQrController::class);
         Route::get('/', ListMerchantRedemptionsController::class);
+        Route::get('/today', GetTodayRedemptionSummaryController::class);
     });
 
     Route::prefix('packages')->group(function () {
