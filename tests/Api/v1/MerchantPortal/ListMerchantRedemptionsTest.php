@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Api\v1\MerchantPortal;
 
 use App\Enums\TransactionStatus;
-use App\Enums\TransactionType;
 use App\Models\CreditTransaction;
 use App\Models\Merchant;
 use App\Models\MerchantUser;
@@ -19,6 +18,7 @@ class ListMerchantRedemptionsTest extends TestCase
     use MerchantPortalEndpoints;
 
     private Merchant $merchant;
+
     private MerchantUser $merchantUser;
 
     private const VALID_STRUCTURE = [

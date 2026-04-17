@@ -19,8 +19,11 @@ class ConfirmRedemptionTest extends TestCase
     use UserEndpoints;
 
     private User $user;
+
     private Merchant $merchant;
+
     private UserCredit $userCredit;
+
     private CreditTransaction $pendingTransaction;
 
     private const string VALID_TOKEN = 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';

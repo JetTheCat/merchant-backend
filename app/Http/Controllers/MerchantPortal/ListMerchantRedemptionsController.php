@@ -34,7 +34,7 @@ class ListMerchantRedemptionsController extends Controller
             $validMerchantUser = MerchantUser::where('id', $validated['merchant_user_id'])
                 ->where('merchant_id', $merchant->id)
                 ->exists();
-    
+
             if (! $validMerchantUser) {
                 throw ValidationException::withMessages([
                     'merchant_user_id' => ['The selected merchant user does not belong to this merchant.'],

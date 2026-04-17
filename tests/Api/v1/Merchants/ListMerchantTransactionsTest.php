@@ -19,6 +19,7 @@ class ListMerchantTransactionsTest extends TestCase
     use MerchantPortalEndpoints;
 
     private Merchant $merchant;
+
     private MerchantUser $merchantUser;
 
     private const VALID_TRANSACTION_STRUCTURE = [
@@ -48,7 +49,7 @@ class ListMerchantTransactionsTest extends TestCase
         ],
     ];
 
-    public function setup(): void
+    protected function setup(): void
     {
         parent::setUp();
 

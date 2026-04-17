@@ -25,7 +25,7 @@ class GetTodayRedemptionSummaryController extends Controller
             ->whereDate('redeemed_at', today())
             ->selectRaw('COUNT(*) as count, COALESCE(SUM(amount), 0) as total_amount')
             ->first();
-        
+
         return response()->json([
             'data' => [
                 'totalAmount' => (float) $summary->total_amount,

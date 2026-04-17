@@ -18,6 +18,7 @@ class GetTodayRedemptionSummaryTest extends TestCase
     use MerchantPortalEndpoints;
 
     private Merchant $merchant;
+
     private MerchantUser $merchantUser;
 
     protected function setUp(): void
@@ -38,7 +39,7 @@ class GetTodayRedemptionSummaryTest extends TestCase
 
         $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
             ->getJson(self::getTodayRedemptionSummaryEndpoint());
-        
+
         $response->assertStatus(Response::HTTP_OK)
             ->assertJsonStructure([
                 'data' => ['totalAmount', 'count'],

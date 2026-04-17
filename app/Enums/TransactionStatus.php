@@ -14,7 +14,7 @@ enum TransactionStatus: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'Pending',
             self::COMPLETED => 'Completed',
             self::FAILED => 'Failed',
@@ -25,7 +25,7 @@ enum TransactionStatus: string
 
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'warning',
             self::COMPLETED => 'success',
             self::FAILED => 'danger',

@@ -141,7 +141,7 @@ class Transaction extends Model
         for ($i = 0; $i < $maxAttempts; $i++) {
             $code = static::generateReferenceCode();
 
-            if (!static::withTrashed()->where('reference_code', $code)->exists()) {
+            if (! static::withTrashed()->where('reference_code', $code)->exists()) {
                 return $code;
             }
         }
