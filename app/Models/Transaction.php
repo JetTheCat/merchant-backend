@@ -30,6 +30,7 @@ class Transaction extends Model
         'user_credit_id',
         'credit_package_id',
         'merchant_user_id',
+        'settlement_id',
         'payment_id',
         'category',
         'type',
@@ -39,6 +40,8 @@ class Transaction extends Model
         'paid_amount',
         'balance_before',
         'balance_after',
+        'platform_fee_rate',
+        'platform_fee',
         'qr_code',
         'qr_expires_at',
         'redemption_code',
@@ -57,6 +60,8 @@ class Transaction extends Model
         'paid_amount' => 'decimal:2',
         'balance_before' => 'decimal:2',
         'balance_after' => 'decimal:2',
+        'platform_fee_rate' => 'decimal:4',
+        'platform_fee' => 'decimal:2',
         'qr_expires_at' => 'datetime',
         'redeemed_at' => 'datetime',
         'expires_at' => 'datetime',
@@ -92,6 +97,11 @@ class Transaction extends Model
     public function payment(): BelongsTo
     {
         return $this->belongsTo(Payment::class);
+    }
+
+    public function settlement(): BelongsTo
+    {
+        return $this->belongsTo(Settlement::class);
     }
 
     #[Scope]
