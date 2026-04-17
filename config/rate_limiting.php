@@ -17,4 +17,9 @@ return [
         'attempts' => env('RATE_LIMIT_RESEND_VERIFICATION_ATTEMPTS', 3),
         'decay_minutes' => env('RATE_LIMIT_RESEND_VERIFICATION_DECAY_MINUTES', 60),
     ],
+
+    'redemption_qr' => [
+        'attempts' => env('RATE_LIMIT_REDEMPTION_QR_ATTEMPTS', 30),
+        'decay_minutes' => env('RATE_LIMIT_REDEMPTION_QR_DECAY_MINUTES', 1),
+    ],
 ];

@@ -107,4 +107,16 @@ class GenerateRedemptionQrTest extends TestCase
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
+
+    public function testRateLimitIsEnforced(): void
+    {
+        for ($i = 0; $i < config('rate_limiting.redemption_qr.attempts'); $i++) {
+            $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+                ->postJson(self::generateRedemptionQrEndpoint(), ['amount' => 10.00]);
+        }
+
+        $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->postJson(self::generateRedemptionQrEndpoint(), ['amount' => 10.00])
+            ->assertStatus(Response::HTTP_TOO_MANY_REQUESTS);
+    }
 }
