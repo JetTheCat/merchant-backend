@@ -12,7 +12,7 @@ enum TransactionCategory: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::CREDIT => 'Credit',
             self::PAYMENT => 'Payment',
             self::SETTLEMENT => 'Settlement',

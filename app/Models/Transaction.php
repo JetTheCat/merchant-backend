@@ -122,6 +122,11 @@ class Transaction extends Model
         return $this->update(['status' => TransactionStatus::FAILED]);
     }
 
+    public function markAsCancelled(): bool
+    {
+        return $this->update(['status' => TransactionStatus::CANCELLED]);
+    }
+
     public static function generateReferenceCode(): string
     {
         $date = now()->format('Ymd');
@@ -136,7 +141,7 @@ class Transaction extends Model
         for ($i = 0; $i < $maxAttempts; $i++) {
             $code = static::generateReferenceCode();
 
-            if (!static::withTrashed()->where('reference_code', $code)->exists()) {
+            if (! static::withTrashed()->where('reference_code', $code)->exists()) {
                 return $code;
             }
         }

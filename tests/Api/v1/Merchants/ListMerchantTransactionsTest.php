@@ -19,12 +19,14 @@ class ListMerchantTransactionsTest extends TestCase
     use MerchantPortalEndpoints;
 
     private Merchant $merchant;
+
     private MerchantUser $merchantUser;
 
     private const VALID_TRANSACTION_STRUCTURE = [
         'data' => [
             '*' => [
                 'id',
+                'merchantUser',
                 'type',
                 'typeLabel',
                 'status',
@@ -34,6 +36,8 @@ class ListMerchantTransactionsTest extends TestCase
                 'paidAmount',
                 'balanceBefore',
                 'balanceAfter',
+                'notes',
+                'metadata',
                 'createdAt',
             ],
         ],
@@ -45,7 +49,7 @@ class ListMerchantTransactionsTest extends TestCase
         ],
     ];
 
-    public function setup(): void
+    protected function setup(): void
     {
         parent::setUp();
 

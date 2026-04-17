@@ -14,7 +14,7 @@ enum TransactionType: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::CREDIT_PURCHASE => 'Credit Purchase',
             self::CREDIT_REDEMPTION => 'Credit Redemption',
             self::CREDIT_REFUND => 'Credit Refund',

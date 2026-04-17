@@ -7,7 +7,7 @@ namespace App\Http\Controllers\MerchantPortal;
 use App\Enums\TransactionType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MerchantPortal\ListMerchantTransactionsRequest;
-use App\Http\Resources\CreditTransactionResource;
+use App\Http\Resources\MerchantTransactionResource;
 use App\Http\Responses\CursorPaginationMeta;
 use App\Models\CreditTransaction;
 use App\Models\MerchantUser;
@@ -23,6 +23,7 @@ class ListMerchantTransactionsController extends Controller
         $merchant = $request->user()->merchant()->firstOrFail();
 
         $query = CreditTransaction::query()
+            ->with('merchantUser')
             ->where('merchant_id', $merchant->id)
             ->orderByDesc('created_at')
             ->orderByDesc('id');
@@ -44,7 +45,7 @@ class ListMerchantTransactionsController extends Controller
         $transactions = $query->cursorPaginate($request->getLimit());
 
         return response()->json([
-            'data' => CreditTransactionResource::collection($transactions->items()),
+            'data' => MerchantTransactionResource::collection($transactions->items()),
             'meta' => CursorPaginationMeta::build($transactions, $request->getLimit()),
         ], Response::HTTP_OK);
     }

@@ -15,7 +15,7 @@ class StripeEventFactory extends Factory
     public function definition(): array
     {
         return [
-            'stripe_event_id' => 'evt_test_' . $this->faker->regexify('[A-Za-z0-9]{24}'),
+            'stripe_event_id' => 'evt_test_'.$this->faker->regexify('[A-Za-z0-9]{24}'),
             'type' => 'payment_intent.succeeded',
             'payload' => [],
             'processed_at' => null,

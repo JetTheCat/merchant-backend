@@ -27,8 +27,8 @@ class CreditPurchaseServiceTest extends TestCase
         $mockStripeService->shouldReceive('createPaymentIntent')
             ->andReturnUsing(fn (Payment $payment) => new PaymentIntentResult(
                 paymentId: $payment->id,
-                paymentIntentId: 'pi_test_' . fake()->regexify('[A-Za-z0-9]{24}'),
-                clientSecret: 'pi_test_secret_' . fake()->regexify('[A-Za-z0-9]{24}'),
+                paymentIntentId: 'pi_test_'.fake()->regexify('[A-Za-z0-9]{24}'),
+                clientSecret: 'pi_test_secret_'.fake()->regexify('[A-Za-z0-9]{24}'),
             ));
 
         $this->service = app(CreditPurchaseService::class);

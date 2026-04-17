@@ -52,5 +52,10 @@ class AppServiceProvider extends ServiceProvider
             config('rate_limiting.resend_verification.decay_minutes'),
             config('rate_limiting.resend_verification.attempts'),
         )->by($request->ip().'|'.$request->user()?->id));
+
+        RateLimiter::for('redemption-qr', fn (Request $request) => Limit::perMinutes(
+            config('rate_limiting.redemption_qr.decay_minutes'),
+            config('rate_limiting.redemption_qr.attempts'),
+        )->by($request->user()?->id));
     }
 }
