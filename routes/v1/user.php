@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Users\ConfirmRedemptionController;
 use App\Http\Controllers\Users\GetCreditTransactionController;
 use App\Http\Controllers\Users\GetUserController;
 use App\Http\Controllers\Users\GetUserCreditController;
@@ -18,6 +19,7 @@ Route::prefix('user')->middleware(['auth:sanctum'])->group(function () {
 
     Route::prefix('credits')->group(function () {
         Route::get('/', ListUserCreditsController::class);
+        Route::post('/redeem', ConfirmRedemptionController::class);
         Route::get('/transactions', ListCreditTransactionsController::class);
         Route::get('/transactions/{transaction}', GetCreditTransactionController::class);
         Route::get('/{merchantId}', GetUserCreditController::class);

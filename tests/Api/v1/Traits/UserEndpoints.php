@@ -40,4 +40,9 @@ trait UserEndpoints
     {
         return "/api/v1/user/credits/transactions/{$id}";
     }
+
+    protected static function confirmRedemptionEndpoint(): string
+    {
+        return '/api/v1/user/credits/redeem';
+    }
 }
