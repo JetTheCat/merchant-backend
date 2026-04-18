@@ -63,6 +63,16 @@ trait MerchantPortalEndpoints
         return '/api/v1/merchant/redemptions/today';
     }
 
+    protected static function listSettlementsEndpoint(): string
+    {
+        return '/api/v1/merchant/settlements';
+    }
+
+    protected static function getSettlementEndpoint(string $id): string
+    {
+        return "/api/v1/merchant/settlements/{$id}";
+    }
+
     protected static function listCreditPackagesEndpoint(): string
     {
         return '/api/v1/merchant/packages';

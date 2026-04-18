@@ -11,6 +11,8 @@ use App\Http\Controllers\MerchantPortal\CreateCreditPackageController;
 use App\Http\Controllers\MerchantPortal\DeleteCreditPackageController;
 use App\Http\Controllers\MerchantPortal\GenerateRedemptionQrController;
 use App\Http\Controllers\MerchantPortal\GetMerchantProfileController;
+use App\Http\Controllers\MerchantPortal\GetSettlementController;
+use App\Http\Controllers\MerchantPortal\ListSettlementsController;
 use App\Http\Controllers\MerchantPortal\GetTodayRedemptionSummaryController;
 use App\Http\Controllers\MerchantPortal\ListCreditPackagesController;
 use App\Http\Controllers\MerchantPortal\ListMerchantRedemptionsController;
@@ -66,6 +68,11 @@ Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function ()
         Route::post('/{id}/refund', RefundRedemptionController::class);
         Route::get('/', ListMerchantRedemptionsController::class);
         Route::get('/today', GetTodayRedemptionSummaryController::class);
+    });
+
+    Route::prefix('settlements')->group(function () {
+        Route::get('/', ListSettlementsController::class);
+        Route::get('/{id}', GetSettlementController::class);
     });
 
     Route::prefix('packages')->group(function () {
