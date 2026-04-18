@@ -6,7 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\Merchant;
 use App\Services\SettlementService;
-use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Exception;
 use Illuminate\Console\Command;
 use InvalidArgumentException;
@@ -36,8 +36,8 @@ class GenerateSettlement extends Command
         }
 
         try {
-            $periodStart = Carbon::createFromFormat('Y-m-d', $this->argument('periodStart'));
-            $periodEnd = Carbon::createFromFormat('Y-m-d', $this->argument('periodEnd'));
+            $periodStart = CarbonImmutable::createFromFormat('Y-m-d', $this->argument('periodStart'));
+            $periodEnd = CarbonImmutable::createFromFormat('Y-m-d', $this->argument('periodEnd'));
         } catch (Exception) {
             $this->error('Invalid date format. Use YYYY-MM-DD.');
 

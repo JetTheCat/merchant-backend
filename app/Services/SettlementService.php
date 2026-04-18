@@ -10,14 +10,14 @@ use App\Enums\TransactionType;
 use App\Models\CreditTransaction;
 use App\Models\Merchant;
 use App\Models\Settlement;
-use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use RuntimeException;
 
 class SettlementService
 {
-    public function generateForMerchant(Merchant $merchant, Carbon $periodStart, Carbon $periodEnd): Settlement
+    public function generateForMerchant(Merchant $merchant, CarbonImmutable $periodStart, CarbonImmutable $periodEnd): Settlement
     {
         if (empty($merchant->bank_name) || empty($merchant->bank_account_number) || empty($merchant->bank_account_name)) {
             throw new InvalidArgumentException("Merchant [{$merchant->id}] does not have banking details on file.");
