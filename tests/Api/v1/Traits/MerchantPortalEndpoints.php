@@ -73,6 +73,11 @@ trait MerchantPortalEndpoints
         return "/api/v1/merchant/settlements/{$id}";
     }
 
+    protected static function getSettlementInvoiceEndpoint(string $id): string
+    {
+        return "/api/v1/merchant/settlements/{$id}/invoice";
+    }
+
     protected static function listCreditPackagesEndpoint(): string
     {
         return '/api/v1/merchant/packages';
