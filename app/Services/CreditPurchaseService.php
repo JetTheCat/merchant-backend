@@ -71,7 +71,9 @@ class CreditPurchaseService
 
     public function grantCredits(Payment $payment): void
     {
-        $transaction = CreditTransaction::where('payment_id', $payment->id)->first();
+        $transaction = CreditTransaction::with('creditPackage.merchant')
+            ->where('payment_id', $payment->id)
+            ->first();
 
         if ($transaction === null) {
             Log::warning('Transaction not found for payment', ['payment_id' => $payment->id]);
@@ -84,10 +86,15 @@ class CreditPurchaseService
         $balanceBefore = $userCredit->balance;
         $balanceAfter = bcadd((string) $balanceBefore, (string) $transaction->amount, 2);
 
+        $feeRate = $transaction->creditPackage->merchant->platform_fee_rate;
+        $fee = bcmul((string) $transaction->paid_amount, (string) $feeRate, 2);
+
         $transaction->update([
             'status' => TransactionStatus::COMPLETED,
             'balance_before' => $balanceBefore,
             'balance_after' => $balanceAfter,
+            'platform_fee_rate' => $feeRate,
+            'platform_fee' => $fee,
         ]);
 
         $userCredit->update([

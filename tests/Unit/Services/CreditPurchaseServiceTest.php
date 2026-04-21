@@ -8,6 +8,7 @@ use App\DataTransferObjects\PaymentIntentResult;
 use App\Enums\PaymentStatus;
 use App\Enums\TransactionStatus;
 use App\Models\CreditPackage;
+use App\Models\Merchant;
 use App\Models\Payment;
 use App\Models\User;
 use App\Models\UserCredit;
@@ -82,7 +83,17 @@ class CreditPurchaseServiceTest extends TestCase
     public function testGrantCreditsUpdatesBalanceAndCompletesTransaction(): void
     {
         $user = User::factory()->create();
-        $package = CreditPackage::factory()->active()->create(['credit_amount' => 100, 'selling_price' => 90]);
+        $merchant = Merchant::factory()
+            ->active()
+            ->create(['platform_fee_rate' => 0.05]);
+
+        $package = CreditPackage::factory()
+            ->active()
+            ->for($merchant)
+            ->create([
+                'credit_amount' => 100,
+                'selling_price' => 90
+            ]);
 
         $userCredit = UserCredit::factory()->for($user)->withBalance(50)->create([
             'merchant_id' => $package->merchant_id,
@@ -116,6 +127,8 @@ class CreditPurchaseServiceTest extends TestCase
         $this->assertEquals(TransactionStatus::COMPLETED, $transaction->status);
         $this->assertEquals('50.00', $transaction->balance_before);
         $this->assertEquals('150.00', $transaction->balance_after);
+        $this->assertEquals('0.0500', $transaction->platform_fee_rate);
+        $this->assertEquals('4.50', $transaction->platform_fee);
         $this->assertEquals('150.00', $userCredit->balance);
         $this->assertEquals('150.00', $userCredit->total_purchased);
         $this->assertNotNull($userCredit->last_purchase_at);

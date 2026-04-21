@@ -318,7 +318,7 @@
             <p style="font-weight: 600;">
                 {{ $settlement->period_start->format('d M Y') }} — {{ $settlement->period_end->format('d M Y') }}
             </p>
-            <p class="label">{{ $settlement->redemption_count }} {{ Str::plural('transaction', $settlement->redemption_count) }}</p>
+            <p class="label">{{ $settlement->transaction_count }} {{ Str::plural('transaction', $settlement->transaction_count) }}</p>
         </div>
 
         <div class="info-block">
@@ -332,8 +332,8 @@
     {{-- Summary Boxes --}}
     <div class="summary-grid">
         <div class="summary-box">
-            <div class="summary-label">Total Redemptions</div>
-            <div class="summary-value">RM {{ number_format((float) $settlement->total_redemptions, 2) }}</div>
+            <div class="summary-label">Total Sales</div>
+            <div class="summary-value">RM {{ number_format((float) $settlement->total_sales, 2) }}</div>
         </div>
         <div class="summary-box">
             <div class="summary-label">Platform Fee</div>
@@ -341,7 +341,7 @@
         </div>
         <div class="summary-box">
             <div class="summary-label">Transactions</div>
-            <div class="summary-value">{{ $settlement->redemption_count }}</div>
+            <div class="summary-value">{{ $settlement->transaction_count }}</div>
         </div>
         <div class="summary-box net">
             <div class="summary-label">Net Payout</div>
@@ -373,7 +373,7 @@
             @endforeach
             <tr class="totals-row">
                 <td colspan="2">Total</td>
-                <td class="text-right">{{ number_format((float) $settlement->total_redemptions, 2) }}</td>
+                <td class="text-right">{{ number_format((float) $settlement->total_sales, 2) }}</td>
                 <td class="text-right">{{ number_format((float) $settlement->total_fees, 2) }}</td>
                 <td class="text-right">{{ number_format((float) $settlement->net_amount, 2) }}</td>
             </tr>

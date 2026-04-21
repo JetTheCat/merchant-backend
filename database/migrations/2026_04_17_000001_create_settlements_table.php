@@ -17,10 +17,10 @@ return new class extends Migration
             $table->date('period_start');
             $table->date('period_end');
 
-            $table->decimal('total_redemptions', 10, 2);
+            $table->decimal('total_sales', 10, 2);
             $table->decimal('total_fees', 10, 2);
             $table->decimal('net_amount', 10, 2);
-            $table->integer('redemption_count');
+            $table->integer('transaction_count');
 
             $table->string('status', 20)->default('pending');
 

@@ -25,31 +25,31 @@ class SettlementService
 
         return DB::transaction(function () use ($merchant, $periodStart, $periodEnd) {
             $transactions = CreditTransaction::where('merchant_id', $merchant->id)
-                ->where('type', TransactionType::CREDIT_REDEMPTION)
+                ->where('type', TransactionType::CREDIT_PURCHASE)
                 ->where('status', TransactionStatus::COMPLETED)
                 ->whereNull('settlement_id')
-                ->whereBetween('redeemed_at', [$periodStart->startOfDay(), $periodEnd->endOfDay()])
+                ->whereBetween('created_at', [$periodStart->startOfDay(), $periodEnd->endOfDay()])
                 ->lockForUpdate()
-                ->select(['id', 'amount', 'platform_fee'])
+                ->select(['id', 'paid_amount', 'platform_fee'])
                 ->get();
 
             if ($transactions->isEmpty()) {
                 throw new InvalidArgumentException("No unsettled transactions found for merchant [{$merchant->id}] in the given period.");
             }
 
-            $totalRedemptions = $transactions->sum(fn ($t) => (float) $t->amount);
+            $totalSales = $transactions->sum(fn ($t) => (float) $t->paid_amount);
             $totalFees = $transactions->sum(fn ($t) => (float) $t->platform_fee);
-            $netAmount = bcsub((string) $totalRedemptions, (string) $totalFees, 2);
+            $netAmount = bcsub((string) $totalSales, (string) $totalFees, 2);
 
             $settlement = Settlement::create([
                 'merchant_id' => $merchant->id,
                 'reference_code' => $this->generateUniqueReferenceCode(),
                 'period_start' => $periodStart->toDateString(),
                 'period_end' => $periodEnd->toDateString(),
-                'total_redemptions' => $totalRedemptions,
+                'total_sales' => $totalSales,
                 'total_fees' => $totalFees,
                 'net_amount' => $netAmount,
-                'redemption_count' => $transactions->count(),
+                'transaction_count' => $transactions->count(),
                 'status' => SettlementStatus::PENDING,
                 'bank_name' => $merchant->bank_name,
                 'bank_account_number' => $merchant->bank_account_number,

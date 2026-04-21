@@ -26,12 +26,11 @@ class GenerateSettlementTest extends TestCase
 
     public function testGeneratesSettlementSuccessfully(): void
     {
-        CreditTransaction::factory()->count(3)->redemption()->for($this->merchant)->create([
+        CreditTransaction::factory()->count(3)->purchase()->for($this->merchant)->create([
             'status' => TransactionStatus::COMPLETED,
-            'amount' => 100.00,
+            'paid_amount' => 100.00,
             'platform_fee_rate' => 0.05,
             'platform_fee' => 5.00,
-            'redeemed_at' => now(),
         ]);
 
         $this->artisan('settlements:generate', [
@@ -46,12 +45,11 @@ class GenerateSettlementTest extends TestCase
 
     public function testSettlementIsCreatedInDatabase(): void
     {
-        CreditTransaction::factory()->count(2)->redemption()->for($this->merchant)->create([
+        CreditTransaction::factory()->count(2)->purchase()->for($this->merchant)->create([
             'status' => TransactionStatus::COMPLETED,
-            'amount' => 50.00,
+            'paid_amount' => 50.00,
             'platform_fee_rate' => 0.05,
             'platform_fee' => 2.50,
-            'redeemed_at' => now(),
         ]);
 
         $this->artisan('settlements:generate', [
@@ -62,10 +60,10 @@ class GenerateSettlementTest extends TestCase
 
         $this->assertDatabaseHas('settlements', [
             'merchant_id' => $this->merchant->id,
-            'total_redemptions' => '100.00',
+            'total_sales' => '100.00',
             'total_fees' => '5.00',
             'net_amount' => '95.00',
-            'redemption_count' => 2,
+            'transaction_count' => 2,
             'status' => SettlementStatus::PENDING,
         ]);
     }
@@ -129,12 +127,12 @@ class GenerateSettlementTest extends TestCase
 
     public function testDoesNotIncludeTransactionsOutsidePeriod(): void
     {
-        CreditTransaction::factory()->redemption()->for($this->merchant)->create([
+        CreditTransaction::factory()->purchase()->for($this->merchant)->create([
             'status' => TransactionStatus::COMPLETED,
-            'amount' => 100.00,
+            'paid_amount' => 100.00,
             'platform_fee_rate' => 0.05,
             'platform_fee' => 5.00,
-            'redeemed_at' => now()->subDays(10),
+            'created_at' => now()->subDays(10),
         ]);
 
         $this->artisan('settlements:generate', [
@@ -150,13 +148,12 @@ class GenerateSettlementTest extends TestCase
     {
         $existingSettlement = Settlement::factory()->for($this->merchant)->create();
 
-        CreditTransaction::factory()->redemption()->for($this->merchant)->create([
+        CreditTransaction::factory()->purchase()->for($this->merchant)->create([
             'status' => TransactionStatus::COMPLETED,
-            'amount' => 100.00,
+            'paid_amount' => 100.00,
             'platform_fee_rate' => 0.05,
             'platform_fee' => 5.00,
             'settlement_id' => $existingSettlement->id,
-            'redeemed_at' => now(),
         ]);
 
         $this->artisan('settlements:generate', [

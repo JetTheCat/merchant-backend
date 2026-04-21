@@ -32,12 +32,11 @@ class SettlementServiceTest extends TestCase
 
     public function testGenerateForMerchantCreatesSettlement(): void
     {
-        CreditTransaction::factory()->count(3)->redemption()->for($this->merchant)->create([
+        CreditTransaction::factory()->count(3)->purchase()->for($this->merchant)->create([
             'status' => TransactionStatus::COMPLETED,
-            'amount' => 100.00,
+            'paid_amount' => 100.00,
             'platform_fee_rate' => 0.05,
             'platform_fee' => 5.00,
-            'redeemed_at' => now(),
         ]);
 
         $date = CarbonImmutable::today();
@@ -54,21 +53,20 @@ class SettlementServiceTest extends TestCase
             'merchant_id' => $this->merchant->id,
             'period_start' => $date->toDateString(),
             'period_end' => $date->toDateString(),
-            'total_redemptions' => '300.00',
+            'total_sales' => '300.00',
             'total_fees' => '15.00',
             'net_amount' => '285.00',
-            'redemption_count' => 3,
+            'transaction_count' => 3,
             'status' => SettlementStatus::PENDING,
         ]);
     }
 
     public function testGenerateForMerchantSnapshotsBankingDetails(): void
     {
-        CreditTransaction::factory()->redemption()->for($this->merchant)->create([
+        CreditTransaction::factory()->purchase()->for($this->merchant)->create([
             'status' => TransactionStatus::COMPLETED,
             'platform_fee_rate' => 0.05,
             'platform_fee' => 5.00,
-            'redeemed_at' => now(),
         ]);
 
         $settlement = $this->service->generateForMerchant(
@@ -84,11 +82,10 @@ class SettlementServiceTest extends TestCase
 
     public function testGenerateForMerchantSetsSettlementIdOnTransactions(): void
     {
-        $transactions = CreditTransaction::factory()->count(2)->redemption()->for($this->merchant)->create([
+        $transactions = CreditTransaction::factory()->count(2)->purchase()->for($this->merchant)->create([
             'status' => TransactionStatus::COMPLETED,
             'platform_fee_rate' => 0.05,
             'platform_fee' => 5.00,
-            'redeemed_at' => now(),
         ]);
 
         $settlement = $this->service->generateForMerchant(
@@ -106,12 +103,11 @@ class SettlementServiceTest extends TestCase
     {
         $existingSettlement = Settlement::factory()->for($this->merchant)->create();
 
-        CreditTransaction::factory()->redemption()->for($this->merchant)->create([
+        CreditTransaction::factory()->purchase()->for($this->merchant)->create([
             'status' => TransactionStatus::COMPLETED,
             'platform_fee_rate' => 0.05,
             'platform_fee' => 5.00,
             'settlement_id' => $existingSettlement->id,
-            'redeemed_at' => now(),
         ]);
 
         $this->expectException(InvalidArgumentException::class);
@@ -125,9 +121,8 @@ class SettlementServiceTest extends TestCase
 
     public function testGenerateForMerchantOnlyIncludesCompletedTransactions(): void
     {
-        CreditTransaction::factory()->redemption()->for($this->merchant)->create([
+        CreditTransaction::factory()->purchase()->for($this->merchant)->create([
             'status' => TransactionStatus::PENDING,
-            'redeemed_at' => null,
         ]);
 
         $this->expectException(InvalidArgumentException::class);
@@ -141,11 +136,11 @@ class SettlementServiceTest extends TestCase
 
     public function testGenerateForMerchantOnlyIncludesTransactionsWithinPeriod(): void
     {
-        CreditTransaction::factory()->redemption()->for($this->merchant)->create([
+        CreditTransaction::factory()->purchase()->for($this->merchant)->create([
             'status' => TransactionStatus::COMPLETED,
             'platform_fee_rate' => 0.05,
             'platform_fee' => 5.00,
-            'redeemed_at' => now()->subDays(10),
+            'created_at' => now()->subDays(10),
         ]);
 
         $this->expectException(InvalidArgumentException::class);

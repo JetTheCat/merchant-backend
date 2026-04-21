@@ -19,10 +19,10 @@ class SettlementFactory extends Factory
 
     public function definition(): array
     {
-        $totalRedemptions = fake()->randomFloat(2, 100, 5000);
+        $totalSales = fake()->randomFloat(2, 100, 5000);
         $feeRate = fake()->randomFloat(4, 0.03, 0.10);
-        $totalFees = round($totalRedemptions * $feeRate, 2);
-        $netAmount = round($totalRedemptions - $totalFees, 2);
+        $totalFees = round($totalSales * $feeRate, 2);
+        $netAmount = round($totalSales - $totalFees, 2);
         $periodStart = fake()->dateTimeBetween('-3 months', '-1 month');
         $periodEnd = fake()->dateTimeBetween($periodStart, 'now');
 
@@ -31,10 +31,10 @@ class SettlementFactory extends Factory
             'reference_code' => Transaction::generateReferenceCode(),
             'period_start' => $periodStart,
             'period_end' => $periodEnd,
-            'total_redemptions' => $totalRedemptions,
+            'total_sales' => $totalSales,
             'total_fees' => $totalFees,
             'net_amount' => $netAmount,
-            'redemption_count' => fake()->numberBetween(1, 50),
+            'transaction_count' => fake()->numberBetween(1, 50),
             'status' => SettlementStatus::PENDING,
             'bank_name' => fake()->randomElement(['Maybank', 'CIMB Bank', 'Public Bank', 'RHB Bank', 'Hong Leong Bank']),
             'bank_account_number' => fake()->numerify('##############'),

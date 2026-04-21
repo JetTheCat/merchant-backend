@@ -45,8 +45,7 @@ class RedemptionService
     public function confirmRedemption(string $token, User $user): CreditTransaction
     {
         return DB::transaction(function () use ($token, $user) {
-            $transaction = CreditTransaction::with('merchant')
-                ->where('qr_code', $token)
+            $transaction = CreditTransaction::where('qr_code', $token)
                 ->where('type', TransactionType::CREDIT_REDEMPTION)
                 ->first();
 
@@ -100,17 +99,12 @@ class RedemptionService
             $balanceBefore = $userCredit->balance;
             $balanceAfter = bcsub((string) $balanceBefore, (string) $transaction->amount, 2);
 
-            $feeRate = $transaction->merchant->platform_fee_rate;
-            $fee = bcmul((string) $transaction->amount, (string) $feeRate, 2);
-
             $transaction->update([
                 'user_id' => $user->id,
                 'user_credit_id' => $userCredit->id,
                 'status' => TransactionStatus::COMPLETED,
                 'balance_before' => $balanceBefore,
                 'balance_after' => $balanceAfter,
-                'platform_fee_rate' => $feeRate,
-                'platform_fee' => $fee,
                 'redeemed_at' => now(),
             ]);
 
