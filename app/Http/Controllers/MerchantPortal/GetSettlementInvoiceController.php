@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\MerchantPortal;
 
+use App\Enums\TransactionType;
 use App\Http\Controllers\Controller;
 use App\Models\Settlement;
 use Illuminate\Http\Request;
@@ -19,16 +20,16 @@ class GetSettlementInvoiceController extends Controller
             ->with('merchant')
             ->findOrFail($id);
 
-        $transactions = $settlement->transactions()
-            ->whereNotNull('redeemed_at')
-            ->orderBy('redeemed_at')
-            ->get(['redeemed_at', 'reference_code', 'amount', 'platform_fee']);
+        $purchases = $settlement->transactions()
+            ->where('type', TransactionType::CREDIT_PURCHASE)
+            ->orderBy('created_at')
+            ->get(['created_at', 'reference_code', 'paid_amount', 'platform_fee']);
 
         $filename = "settlement-{$settlement->reference_code}.pdf";
 
         return Pdf::view('settlements.invoice', [
             'settlement' => $settlement,
-            'transactions' => $transactions,
+            'purchases' => $purchases,
         ])->download($filename);
     }
 }

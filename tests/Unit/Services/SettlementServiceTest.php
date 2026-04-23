@@ -165,7 +165,7 @@ class SettlementServiceTest extends TestCase
     public function testGenerateForMerchantThrowsWhenNoUnsettledTransactions(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('No unsettled transactions found');
+        $this->expectExceptionMessage('No unsettled credit purchases found');
 
         $this->service->generateForMerchant(
             $this->merchant,

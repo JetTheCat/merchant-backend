@@ -34,7 +34,7 @@ class SettlementService
                 ->get();
 
             if ($transactions->isEmpty()) {
-                throw new InvalidArgumentException("No unsettled transactions found for merchant [{$merchant->id}] in the given period.");
+                throw new InvalidArgumentException("No unsettled credit purchases found for merchant [{$merchant->id}] in the given period.");
             }
 
             $totalSales = $transactions->sum(fn ($t) => (float) $t->paid_amount);

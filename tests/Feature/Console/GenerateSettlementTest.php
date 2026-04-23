@@ -122,7 +122,7 @@ class GenerateSettlementTest extends TestCase
             'periodEnd' => now()->toDateString(),
         ])
             ->assertFailed()
-            ->expectsOutputToContain('No unsettled transactions found');
+            ->expectsOutputToContain('No unsettled credit purchases found');
     }
 
     public function testDoesNotIncludeTransactionsOutsidePeriod(): void
@@ -141,7 +141,7 @@ class GenerateSettlementTest extends TestCase
             'periodEnd' => now()->toDateString(),
         ])
             ->assertFailed()
-            ->expectsOutputToContain('No unsettled transactions found');
+            ->expectsOutputToContain('No unsettled credit purchases found');
     }
 
     public function testDoesNotIncludeAlreadySettledTransactions(): void
@@ -162,6 +162,6 @@ class GenerateSettlementTest extends TestCase
             'periodEnd' => now()->toDateString(),
         ])
             ->assertFailed()
-            ->expectsOutputToContain('No unsettled transactions found');
+            ->expectsOutputToContain('No unsettled credit purchases found');
     }
 }

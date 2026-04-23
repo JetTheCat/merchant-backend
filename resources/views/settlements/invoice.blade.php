@@ -362,13 +362,13 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($transactions as $transaction)
+            @foreach ($purchases as $purchase)
                 <tr>
-                    <td>{{ $transaction->redeemed_at->format('d M Y, h:i A') }}</td>
-                    <td class="mono">{{ $transaction->reference_code }}</td>
-                    <td class="text-right">{{ number_format((float) $transaction->amount, 2) }}</td>
-                    <td class="text-right">{{ number_format((float) $transaction->platform_fee, 2) }}</td>
-                    <td class="text-right">{{ number_format((float) $transaction->amount - (float) $transaction->platform_fee, 2) }}</td>
+                    <td>{{ $purchase->created_at->format('d M Y, h:i A') }}</td>
+                    <td class="mono">{{ $purchase->reference_code }}</td>
+                    <td class="text-right">{{ number_format((float) $purchase->paid_amount, 2) }}</td>
+                    <td class="text-right">{{ number_format((float) $purchase->platform_fee, 2) }}</td>
+                    <td class="text-right">{{ number_format((float) $purchase->paid_amount - (float) $purchase->platform_fee, 2) }}</td>
                 </tr>
             @endforeach
             <tr class="totals-row">
