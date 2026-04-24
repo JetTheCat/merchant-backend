@@ -9,7 +9,10 @@ use App\Enums\TransactionType;
 use App\Models\CreditTransaction;
 use App\Models\Merchant;
 use App\Models\MerchantUser;
+use App\Models\User;
+use App\Models\UserCredit;
 use App\Services\RedemptionService;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class RedemptionServiceTest extends TestCase
@@ -87,5 +90,84 @@ class RedemptionServiceTest extends TestCase
         $second = $this->service->generateQr($merchantUser, 20.00);
 
         $this->assertNotEquals($first->redemption_code, $second->redemption_code);
+    }
+
+    public function testRefundRedemptionCreatesRefundTransactionAndRestoresBalance(): void
+    {
+        $merchant = Merchant::factory()->active()->create();
+        $merchantUser = MerchantUser::factory()->owner()->for($merchant)->create();
+        $customer = User::factory()->create();
+        $userCredit = UserCredit::factory()
+            ->for($customer)
+            ->for($merchant)
+            ->withBalance(50)
+            ->create(['total_redeemed' => 30]);
+        $redemption = CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($merchant)
+            ->for($customer)
+            ->create([
+                'merchant_user_id' => $merchantUser->id,
+                'user_credit_id' => $userCredit->id,
+                'amount' => 30,
+                'balance_before' => 80,
+                'balance_after' => 50,
+            ]);
+
+        $refund = $this->service->refundRedemption($redemption, $merchantUser, 'Wrong amount.');
+
+        $this->assertEquals(TransactionType::CREDIT_REFUND, $refund->type);
+        $this->assertEquals(TransactionStatus::COMPLETED, $refund->status);
+        $this->assertEquals('30.00', $refund->amount);
+        $this->assertEquals('50.00', $refund->balance_before);
+        $this->assertEquals('80.00', $refund->balance_after);
+        $this->assertEquals('Wrong amount.', $refund->notes);
+
+        $this->assertEquals(TransactionStatus::REVERSED, $redemption->fresh()->status);
+
+        $userCredit->refresh();
+        $this->assertEquals('80.00', $userCredit->balance);
+        $this->assertEquals('0.00', $userCredit->total_redeemed);
+    }
+
+    public function testRefundRedemptionThrowsIfNotCreditRedemptionType(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        $merchant = Merchant::factory()->active()->create();
+        $merchantUser = MerchantUser::factory()->for($merchant)->create();
+        $purchase = CreditTransaction::factory()->purchase()->for($merchant)->create();
+
+        $this->service->refundRedemption($purchase, $merchantUser);
+    }
+
+    public function testRefundRedemptionThrowsIfNotCompleted(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        $merchant = Merchant::factory()->active()->create();
+        $merchantUser = MerchantUser::factory()->for($merchant)->create();
+        $redemption = CreditTransaction::factory()
+            ->redemption()
+            ->for($merchant)
+            ->create(['status' => TransactionStatus::REVERSED]);
+
+        $this->service->refundRedemption($redemption, $merchantUser);
+    }
+
+    public function testRefundRedemptionThrowsIfUserCreditIdIsNull(): void
+    {
+        $this->expectException(ValidationException::class);
+
+        $merchant = Merchant::factory()->active()->create();
+        $merchantUser = MerchantUser::factory()->for($merchant)->create();
+        $redemption = CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($merchant)
+            ->create(['user_credit_id' => null]);
+
+        $this->service->refundRedemption($redemption, $merchantUser);
     }
 }

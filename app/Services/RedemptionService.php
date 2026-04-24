@@ -118,6 +118,62 @@ class RedemptionService
         });
     }
 
+    public function refundRedemption(CreditTransaction $redemption, MerchantUser $byUser, ?string $notes = null): CreditTransaction
+    {
+        return DB::transaction(function () use ($redemption, $byUser, $notes) {
+            $redemption = CreditTransaction::where('id', $redemption->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($redemption->type !== TransactionType::CREDIT_REDEMPTION) {
+                throw ValidationException::withMessages([
+                    'redemption' => ['Only redemption transactions can be refunded.'],
+                ]);
+            }
+
+            if ($redemption->status !== TransactionStatus::COMPLETED) {
+                throw ValidationException::withMessages([
+                    'redemption' => ['Only completed redemptions can be refunded.'],
+                ]);
+            }
+
+            if (is_null($redemption->user_credit_id)) {
+                throw ValidationException::withMessages([
+                    'redemption' => ['This redemption has no associated user credit and cannot be refunded.'],
+                ]);
+            }
+
+            $redemption->update(['status' => TransactionStatus::REVERSED]);
+
+            $userCredit = UserCredit::where('id', $redemption->user_credit_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $balanceBefore = $userCredit->balance;
+            $balanceAfter = bcadd((string) $balanceBefore, (string) $redemption->amount, 2);
+
+            $userCredit->update([
+                'balance' => $balanceAfter,
+                'total_redeemed' => bcsub((string) $userCredit->total_redeemed, (string) $redemption->amount, 2),
+            ]);
+
+            return CreditTransaction::create([
+                'user_id' => $redemption->user_id,
+                'merchant_id' => $byUser->merchant_id,
+                'merchant_user_id' => $byUser->id,
+                'user_credit_id' => $redemption->user_credit_id,
+                'category' => TransactionCategory::CREDIT,
+                'type' => TransactionType::CREDIT_REFUND,
+                'reference_code' => Transaction::generateUniqueReferenceCode(),
+                'status' => TransactionStatus::COMPLETED,
+                'amount' => $redemption->amount,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'notes' => $notes,
+            ]);
+        });
+    }
+
     private function generateToken(): string
     {
         return bin2hex(random_bytes(20));
