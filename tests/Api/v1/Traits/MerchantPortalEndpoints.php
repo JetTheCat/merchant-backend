@@ -53,6 +53,11 @@ trait MerchantPortalEndpoints
         return '/api/v1/merchant/redemptions';
     }
 
+    protected static function refundRedemptionEndpoint(string $id): string
+    {
+        return "/api/v1/merchant/redemptions/{$id}/refund";
+    }
+
     protected static function getTodayRedemptionSummaryEndpoint(): string
     {
         return '/api/v1/merchant/redemptions/today';
