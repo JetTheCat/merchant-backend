@@ -38,6 +38,11 @@ trait MerchantPortalEndpoints
         return "/api/v1/merchants/{$merchantId}/packages";
     }
 
+    protected static function getMerchantStatsEndpoint(): string
+    {
+        return '/api/v1/merchant/stats';
+    }
+
     protected static function listMerchantTransactionsEndpoint(): string
     {
         return '/api/v1/merchant/transactions';
