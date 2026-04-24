@@ -92,7 +92,7 @@ class CreditPurchaseServiceTest extends TestCase
             ->for($merchant)
             ->create([
                 'credit_amount' => 100,
-                'selling_price' => 90
+                'selling_price' => 90,
             ]);
 
         $userCredit = UserCredit::factory()->for($user)->withBalance(50)->create([

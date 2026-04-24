@@ -17,6 +17,7 @@ use Tests\TestCase;
 class SettlementServiceTest extends TestCase
 {
     private SettlementService $service;
+
     private Merchant $merchant;
 
     protected function setUp(): void

@@ -16,7 +16,7 @@ class RefundRedemptionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'notes' => ['sometimes', 'string', 'max:255']
+            'notes' => ['sometimes', 'string', 'max:255'],
         ];
     }
 }

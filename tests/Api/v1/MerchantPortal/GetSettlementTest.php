@@ -17,6 +17,7 @@ class GetSettlementTest extends TestCase
     use MerchantPortalEndpoints;
 
     private Merchant $merchant;
+
     private MerchantUser $merchantUser;
 
     private const VALID_STRUCTURE = [

@@ -31,7 +31,7 @@ class MarkSettlementAsPaidAction extends Action
             ->requiresConfirmation()
             ->modalDescription('This will mark the settlement as paid.')
             ->visible(fn (Settlement $record) => in_array($record->status, [SettlementStatus::PENDING, SettlementStatus::PROCESSING]));
-        
+
         $this->schema([
             TextInput::make('paymentReference')
                 ->label('Payment Reference')

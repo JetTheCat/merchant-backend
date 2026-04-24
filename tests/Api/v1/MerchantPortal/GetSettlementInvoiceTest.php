@@ -18,6 +18,7 @@ class GetSettlementInvoiceTest extends TestCase
     use MerchantPortalEndpoints;
 
     private Merchant $merchant;
+
     private MerchantUser $merchantUser;
 
     protected function setUp(): void
