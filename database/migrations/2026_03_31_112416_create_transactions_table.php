@@ -25,6 +25,8 @@ return new class extends Migration
             $table->decimal('paid_amount', 10, 2)->nullable();
             $table->decimal('balance_before', 10, 2);
             $table->decimal('balance_after', 10, 2);
+            $table->decimal('platform_fee_rate', 5, 4)->nullable();
+            $table->decimal('platform_fee', 10, 2)->nullable();
             $table->string('qr_code', 100)->nullable();
             $table->timestamp('qr_expires_at')->nullable();
             $table->string('redemption_code', 10)->nullable();

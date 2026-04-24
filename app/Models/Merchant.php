@@ -92,6 +92,11 @@ class Merchant extends Model
             ->where('role', 'owner');
     }
 
+    public function settlements(): HasMany
+    {
+        return $this->hasMany(Settlement::class);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', MerchantStatus::ACTIVE->value);
