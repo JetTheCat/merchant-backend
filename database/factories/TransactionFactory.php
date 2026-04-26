@@ -7,11 +7,9 @@ namespace Database\Factories;
 use App\Enums\TransactionCategory;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
-use App\Models\CreditPackage;
 use App\Models\Merchant;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Models\UserCredit;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -27,8 +25,8 @@ class TransactionFactory extends Factory
         return [
             'user_id' => User::factory(),
             'merchant_id' => Merchant::factory(),
-            'user_credit_id' => UserCredit::factory(),
-            'credit_package_id' => CreditPackage::factory(),
+            'user_credit_id' => null,
+            'credit_package_id' => null,
             'merchant_user_id' => null,
             'category' => TransactionCategory::CREDIT,
             'type' => TransactionType::CREDIT_PURCHASE,
