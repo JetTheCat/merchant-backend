@@ -84,6 +84,16 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->hasRole('admin');
     }
 
+    public function isActive(): bool
+    {
+        return $this->status->isActive();
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->status->isSuspended();
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->isAdmin();

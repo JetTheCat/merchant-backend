@@ -12,7 +12,7 @@ use App\Http\Controllers\Users\UpdatePasswordController;
 use App\Http\Controllers\Users\UpdateUserController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('user')->middleware(['auth:sanctum', 'user.active'])->group(function () {
+Route::prefix('user')->middleware(['auth:sanctum', 'verified', 'user.active'])->group(function () {
     Route::get('/', GetUserController::class);
     Route::patch('/', UpdateUserController::class);
     Route::patch('/password', UpdatePasswordController::class);
