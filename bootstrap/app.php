@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'camel.response' => \App\Http\Middleware\ConvertResponseKeysToCamelCase::class,
             'snake.request' => \App\Http\Middleware\ConvertRequestKeysToSnakeCase::class,
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+            'user.active' => \App\Http\Middleware\EnsureUserIsActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
