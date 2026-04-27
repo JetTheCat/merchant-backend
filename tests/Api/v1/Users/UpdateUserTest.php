@@ -20,7 +20,6 @@ class UpdateUserTest extends TestCase
         'lastName',
         'email',
         'emailVerifiedAt',
-        'phone',
         'createdAt',
         'updatedAt',
     ];
@@ -31,14 +30,12 @@ class UpdateUserTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'email' => 'john@example.com',
-            'phone' => '+60123456789',
         ]);
 
         $payload = [
             'firstName' => 'Jane',
             'lastName' => 'Smith',
             'email' => 'jane@example.com',
-            'phone' => '+60198765432',
         ];
 
         $response = $this->actingAs($user)
@@ -55,7 +52,6 @@ class UpdateUserTest extends TestCase
                     'firstName' => 'Jane',
                     'lastName' => 'Smith',
                     'email' => 'jane@example.com',
-                    'phone' => '+60198765432',
                 ],
             ]);
 
@@ -64,40 +60,34 @@ class UpdateUserTest extends TestCase
             'first_name' => 'Jane',
             'last_name' => 'Smith',
             'email' => 'jane@example.com',
-            'phone' => '+60198765432',
         ]);
     }
 
-    public function testUserCanUpdateOnlyFirstName(): void
+    public function testUserCanUpdateName(): void
     {
         $user = User::factory()->create([
             'first_name' => 'John',
             'last_name' => 'Doe',
-            'email' => 'john@example.com',
-            'phone' => '+60123456789',
         ]);
 
-        $payload = [
-            'firstName' => 'Jane',
-        ];
-
         $response = $this->actingAs($user)
-            ->patchJson(self::updateUserEndpoint(), $payload);
+            ->patchJson(self::updateUserEndpoint(), [
+                'firstName' => 'Jane',
+                'lastName' => 'Smith',
+            ]);
 
         $response->assertStatus(Response::HTTP_OK)
             ->assertJson([
                 'data' => [
                     'firstName' => 'Jane',
-                    'lastName' => 'Doe',
-                    'email' => 'john@example.com',
-                    'phone' => '+60123456789',
+                    'lastName' => 'Smith',
                 ],
             ]);
 
         $this->assertDatabaseHas('users', [
             'id' => $user->id,
             'first_name' => 'Jane',
-            'last_name' => 'Doe',
+            'last_name' => 'Smith',
         ]);
     }
 
@@ -127,41 +117,13 @@ class UpdateUserTest extends TestCase
         ]);
     }
 
-    public function testUserCanUpdateOnlyPhone(): void
-    {
-        $user = User::factory()->create([
-            'phone' => '+60123456789',
-        ]);
-
-        $payload = [
-            'phone' => '+60198765432',
-        ];
-
-        $response = $this->actingAs($user)
-            ->patchJson(self::updateUserEndpoint(), $payload);
-
-        $response->assertStatus(Response::HTTP_OK)
-            ->assertJson([
-                'data' => [
-                    'phone' => '+60198765432',
-                ],
-            ]);
-
-        $this->assertDatabaseHas('users', [
-            'id' => $user->id,
-            'phone' => '+60198765432',
-        ]);
-    }
-
     public function testUserCanKeepSameEmailWhenUpdating(): void
     {
         $user = User::factory()->create([
-            'first_name' => 'John',
             'email' => 'john@example.com',
         ]);
 
         $payload = [
-            'firstName' => 'Jane',
             'email' => 'john@example.com',
         ];
 
@@ -171,32 +133,7 @@ class UpdateUserTest extends TestCase
         $response->assertStatus(Response::HTTP_OK)
             ->assertJson([
                 'data' => [
-                    'firstName' => 'Jane',
                     'email' => 'john@example.com',
-                ],
-            ]);
-    }
-
-    public function testUserCanKeepSamePhoneWhenUpdating(): void
-    {
-        $user = User::factory()->create([
-            'first_name' => 'John',
-            'phone' => '+60123456789',
-        ]);
-
-        $payload = [
-            'firstName' => 'Jane',
-            'phone' => '+60123456789',
-        ];
-
-        $response = $this->actingAs($user)
-            ->patchJson(self::updateUserEndpoint(), $payload);
-
-        $response->assertStatus(Response::HTTP_OK)
-            ->assertJson([
-                'data' => [
-                    'firstName' => 'Jane',
-                    'phone' => '+60123456789',
                 ],
             ]);
     }
@@ -234,32 +171,6 @@ class UpdateUserTest extends TestCase
         $this->assertDatabaseHas('users', [
             'id' => $user->id,
             'email' => 'john@example.com',
-        ]);
-    }
-
-    public function testUserCannotUpdateToExistingPhone(): void
-    {
-        User::factory()->create([
-            'phone' => '+60111111111',
-        ]);
-
-        $user = User::factory()->create([
-            'phone' => '+60123456789',
-        ]);
-
-        $payload = [
-            'phone' => '+60111111111',
-        ];
-
-        $response = $this->actingAs($user)
-            ->patchJson(self::updateUserEndpoint(), $payload);
-
-        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
-            ->assertJsonValidationErrors(['phone']);
-
-        $this->assertDatabaseHas('users', [
-            'id' => $user->id,
-            'phone' => '+60123456789',
         ]);
     }
 
@@ -316,12 +227,6 @@ class UpdateUserTest extends TestCase
                 ],
                 'expectedErrors' => ['email'],
             ],
-            'empty phone' => [
-                'payload' => [
-                    'phone' => '',
-                ],
-                'expectedErrors' => ['phone'],
-            ],
             'first name too long' => [
                 'payload' => [
                     'firstName' => str_repeat('a', 256),
@@ -339,12 +244,6 @@ class UpdateUserTest extends TestCase
                     'email' => str_repeat('a', 250).'@test.com',
                 ],
                 'expectedErrors' => ['email'],
-            ],
-            'phone too long' => [
-                'payload' => [
-                    'phone' => str_repeat('1', 21),
-                ],
-                'expectedErrors' => ['phone'],
             ],
         ];
     }
@@ -373,7 +272,6 @@ class UpdateUserTest extends TestCase
         $oldPasswordHash = $user->password;
 
         $payload = [
-            'firstName' => 'Jane',
             'password' => 'NewPassword123!@#',
         ];
 
@@ -394,7 +292,6 @@ class UpdateUserTest extends TestCase
         ]);
 
         $payload = [
-            'firstName' => 'Jane',
             'status' => 'suspended',
         ];
 

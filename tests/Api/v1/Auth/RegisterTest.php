@@ -21,7 +21,6 @@ class RegisterTest extends TestCase
         'email' => 'jet@example.com',
         'password' => 'SecurePass123!@#',
         'passwordConfirmation' => 'SecurePass123!@#',
-        'phone' => '+60123456789',
     ];
 
     protected function setUp(): void
@@ -77,18 +76,6 @@ class RegisterTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['email']);
-    }
-
-    public function testUserCannotRegisterWithDuplicatePhone(): void
-    {
-        User::factory()->create([
-            'phone' => self::VALID_PAYLOAD['phone'],
-        ]);
-
-        $response = $this->postJson(self::registerEndpoint(), self::VALID_PAYLOAD);
-
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors(['phone']);
     }
 
     #[DataProvider('invalidRegistrationData')]

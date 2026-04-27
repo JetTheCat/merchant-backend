@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('phone', 20)->unique();
+            $table->string('phone', 20)->nullable()->unique();
             $table->timestamp('phone_verified_at')->nullable();
             $table->enum('status', ['active', 'suspended', 'banned'])->default('active');
             $table->rememberToken();

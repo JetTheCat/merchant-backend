@@ -18,7 +18,6 @@ class GetUserTest extends TestCase
         'lastName',
         'email',
         'emailVerifiedAt',
-        'phone',
         'createdAt',
         'updatedAt',
     ];
@@ -41,7 +40,6 @@ class GetUserTest extends TestCase
                 'firstName' => 'John',
                 'lastName' => 'Doe',
                 'email' => 'john@example.com',
-                'phone' => '+60123456789',
             ]);
     }
 
