@@ -16,9 +16,9 @@ class PlatformStatsOverview extends StatsOverviewWidget
     protected function getStats(): array
     {
         return [
-            Stat::make('GMV (All Time)', 'RM ' . number_format($this->getGmv(), 2)),
-            Stat::make('GMV (This Month)', 'RM ' . number_format($this->getGmvThisMonth(), 2)),
-            Stat::make('Platform Fees (All Time)', 'RM ' . number_format($this->getPlatformFees(), 2)),
+            Stat::make('GMV (All Time)', 'RM '.number_format($this->getGmv(), 2)),
+            Stat::make('GMV (This Month)', 'RM '.number_format($this->getGmvThisMonth(), 2)),
+            Stat::make('Platform Fees (All Time)', 'RM '.number_format($this->getPlatformFees(), 2)),
             Stat::make('Active Merchants', Merchant::active()->count()),
             Stat::make('Total Users', User::count()),
         ];
