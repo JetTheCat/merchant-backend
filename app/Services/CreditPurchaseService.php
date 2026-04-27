@@ -102,6 +102,8 @@ class CreditPurchaseService
             'total_purchased' => bcadd((string) $userCredit->total_purchased, (string) $transaction->amount, 2),
             'last_purchase_at' => now(),
         ]);
+
+        $transaction->creditPackage->increment('sold_quantity');
     }
 
     public function failPurchase(Payment $payment): void

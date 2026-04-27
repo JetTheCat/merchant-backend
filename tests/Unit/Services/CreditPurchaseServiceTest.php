@@ -134,6 +134,52 @@ class CreditPurchaseServiceTest extends TestCase
         $this->assertNotNull($userCredit->last_purchase_at);
     }
 
+    public function testGrantCreditsIncrementsSoldQuantity(): void
+    {
+        $user = User::factory()->create();
+        $merchant = Merchant::factory()->active()->create(['platform_fee_rate' => 0.05]);
+
+        $package = CreditPackage::factory()
+            ->active()
+            ->for($merchant)
+            ->create([
+                'credit_amount' => 100,
+                'selling_price' => 90,
+                'sold_quantity' => 0,
+            ]);
+
+        $userCredit = UserCredit::factory()->for($user)->create([
+            'merchant_id' => $package->merchant_id,
+        ]);
+
+        $payment = Payment::factory()->create([
+            'user_id' => $user->id,
+            'status' => PaymentStatus::PROCESSING,
+        ]);
+
+        $package->transactions()->create([
+            'user_id' => $user->id,
+            'merchant_id' => $package->merchant_id,
+            'user_credit_id' => $userCredit->id,
+            'payment_id' => $payment->id,
+            'category' => 'credit',
+            'type' => 'credit_purchase',
+            'reference_code' => 'TXN-TEST-003',
+            'status' => TransactionStatus::PENDING,
+            'amount' => 100,
+            'paid_amount' => 90,
+            'balance_before' => 0,
+            'balance_after' => 100,
+        ]);
+
+        $this->service->grantCredits($payment);
+
+        $this->assertDatabaseHas('credit_packages', [
+            'id' => $package->id,
+            'sold_quantity' => 1,
+        ]);
+    }
+
     public function testFailPurchaseMarksTransactionAsFailed(): void
     {
         $user = User::factory()->create();
