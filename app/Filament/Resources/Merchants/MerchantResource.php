@@ -8,6 +8,7 @@ use App\Filament\Resources\Merchants\Pages\CreateMerchant;
 use App\Filament\Resources\Merchants\Pages\EditMerchant;
 use App\Filament\Resources\Merchants\Pages\ListMerchants;
 use App\Filament\Resources\Merchants\Pages\ViewMerchant;
+use App\Filament\Resources\Merchants\RelationManagers\CreditPackagesRelationManager;
 use App\Filament\Resources\Merchants\RelationManagers\MerchantUsersRelationManager;
 use App\Filament\Resources\Merchants\RelationManagers\SettlementsRelationManager;
 use App\Filament\Resources\Merchants\Schemas\MerchantForm;
@@ -51,6 +52,7 @@ class MerchantResource extends Resource
     {
         return [
             MerchantUsersRelationManager::class,
+            CreditPackagesRelationManager::class,
             SettlementsRelationManager::class,
         ];
     }
