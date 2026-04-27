@@ -36,7 +36,6 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'last_name',
         'email',
         'password',
-        'phone',
         'status',
     ];
 
@@ -82,6 +81,16 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function isAdmin(): bool
     {
         return $this->hasRole('admin');
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status->isActive();
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->status->isSuspended();
     }
 
     public function canAccessPanel(Panel $panel): bool
