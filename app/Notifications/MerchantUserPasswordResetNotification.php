@@ -48,7 +48,7 @@ class MerchantUserPasswordResetNotification extends Notification
         parse_str($parsedUrl['query'] ?? '', $queryParams);
 
         return sprintf(
-            '%s/password/reset?id=%s&expires=%s&signature=%s',
+            '%s/reset-password?id=%s&expires=%s&signature=%s',
             $frontendUrl,
             $userId,
             $queryParams['expires'] ?? '',
