@@ -48,7 +48,7 @@ class MerchantUserInvitationNotification extends Notification
         parse_str($parsedUrl['query'] ?? '', $queryParams);
 
         return sprintf(
-            '%s/invitation/setup?id=%s&hash=%s&expires=%s&signature=%s',
+            '%s/invitation?id=%s&hash=%s&expires=%s&signature=%s',
             $frontendUrl,
             $notifiable->getKey(),
             $hashedEmail,
