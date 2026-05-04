@@ -49,7 +49,8 @@ class CreditPackagesRelationManager extends RelationManager
                 TextColumn::make('discount_percentage')
                     ->label('Discount')
                     ->suffix('%')
-                    ->numeric(decimalPlaces: 2),
+                    ->numeric(decimalPlaces: 2)
+                    ->state(fn (CreditPackage $record) => $record->discount_percentage),
 
                 TextColumn::make('sold_quantity')
                     ->label('Sold')

@@ -33,8 +33,6 @@ class CreateCreditPackageTest extends TestCase
             'description' => 'Get RM 100 credits for RM 90.',
             'credit_amount' => 100.00,
             'selling_price' => 90.00,
-            'discount_percentage' => 10.00,
-            'validity_days' => null,
             'purchase_limit_per_user' => null,
             'total_quantity' => null,
         ];
@@ -55,7 +53,6 @@ class CreateCreditPackageTest extends TestCase
                     'creditAmount',
                     'sellingPrice',
                     'discountPercentage',
-                    'validityDays',
                     'isActive',
                     'purchaseLimitPerUser',
                     'totalQuantity',
@@ -95,7 +92,6 @@ class CreateCreditPackageTest extends TestCase
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
             ->postJson(self::createCreditPackageEndpoint(), [
                 ...$this->validPayload,
-                'validity_days' => 365,
                 'purchase_limit_per_user' => 1,
                 'total_quantity' => 100,
             ]);
@@ -103,7 +99,6 @@ class CreateCreditPackageTest extends TestCase
         $response->assertStatus(Response::HTTP_CREATED)
             ->assertJson([
                 'data' => [
-                    'validityDays' => 365,
                     'purchaseLimitPerUser' => 1,
                     'totalQuantity' => 100,
                 ],
@@ -152,10 +147,6 @@ class CreateCreditPackageTest extends TestCase
             'selling_price below minimum' => [
                 'payload' => ['name' => 'Test', 'credit_amount' => 100, 'selling_price' => 0],
                 'expectedErrors' => ['sellingPrice'],
-            ],
-            'validity_days below minimum' => [
-                'payload' => ['name' => 'Test', 'credit_amount' => 100, 'selling_price' => 90, 'validity_days' => 0],
-                'expectedErrors' => ['validityDays'],
             ],
             'name too long' => [
                 'payload' => ['name' => str_repeat('a', 101), 'credit_amount' => 100, 'selling_price' => 90],

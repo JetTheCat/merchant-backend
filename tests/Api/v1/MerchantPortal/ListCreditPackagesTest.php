@@ -46,7 +46,6 @@ class ListCreditPackagesTest extends TestCase
                         'creditAmount',
                         'sellingPrice',
                         'discountPercentage',
-                        'validityDays',
                         'isActive',
                         'purchaseLimitPerUser',
                         'totalQuantity',

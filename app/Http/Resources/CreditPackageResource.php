@@ -19,7 +19,6 @@ class CreditPackageResource extends JsonResource
             'creditAmount' => $this->credit_amount,
             'sellingPrice' => $this->selling_price,
             'discountPercentage' => $this->discount_percentage,
-            'validityDays' => $this->validity_days,
             'isActive' => $this->is_active,
             'purchaseLimitPerUser' => $this->purchase_limit_per_user,
             'totalQuantity' => $this->total_quantity,

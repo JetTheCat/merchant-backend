@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\CreditPackages\Tables;
 
+use App\Models\CreditPackage;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -42,7 +43,7 @@ class CreditPackagesTable
                     ->label('Discount')
                     ->suffix('%')
                     ->numeric(decimalPlaces: 2)
-                    ->sortable(),
+                    ->state(fn (CreditPackage $record) => $record->discount_percentage),
 
                 TextColumn::make('sold_quantity')
                     ->label('Sold')

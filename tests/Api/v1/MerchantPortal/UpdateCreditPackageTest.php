@@ -51,7 +51,6 @@ class UpdateCreditPackageTest extends TestCase
                     'creditAmount',
                     'sellingPrice',
                     'discountPercentage',
-                    'validityDays',
                     'isActive',
                     'purchaseLimitPerUser',
                     'totalQuantity',
@@ -149,10 +148,6 @@ class UpdateCreditPackageTest extends TestCase
             'selling_price below minimum' => [
                 'payload' => ['selling_price' => 0],
                 'expectedErrors' => ['sellingPrice'],
-            ],
-            'validity_days below minimum' => [
-                'payload' => ['validity_days' => 0],
-                'expectedErrors' => ['validityDays'],
             ],
             'is_active not boolean' => [
                 'payload' => ['is_active' => 'yes'],

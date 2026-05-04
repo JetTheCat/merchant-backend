@@ -23,8 +23,6 @@ class CreditPackageFactory extends Factory
             'description' => $this->faker->optional()->sentence(),
             'credit_amount' => $creditAmount,
             'selling_price' => $sellingPrice,
-            'discount_percentage' => 10.00,
-            'validity_days' => null,
             'is_active' => false,
             'purchase_limit_per_user' => null,
             'total_quantity' => null,
@@ -50,13 +48,6 @@ class CreditPackageFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'total_quantity' => $quantity,
-        ]);
-    }
-
-    public function withExpiry(int $days): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'validity_days' => $days,
         ]);
     }
 
