@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,7 +26,6 @@ class CreditPackage extends Model
         'description',
         'credit_amount',
         'selling_price',
-        'discount_percentage',
         'is_active',
         'purchase_limit_per_user',
         'total_quantity',
@@ -35,9 +35,17 @@ class CreditPackage extends Model
     protected $casts = [
         'credit_amount' => 'decimal:2',
         'selling_price' => 'decimal:2',
-        'discount_percentage' => 'decimal:2',
         'is_active' => 'boolean',
     ];
+
+    protected function discountPercentage(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => (float) $this->credit_amount > 0
+                ? round((1 - (float) $this->selling_price / (float) $this->credit_amount) * 100, 2)
+                : 0.0,
+        );
+    }
 
     public function merchant(): BelongsTo
     {

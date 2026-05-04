@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\CreditPackages\Schemas;
 
+use App\Models\CreditPackage;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -48,7 +49,8 @@ class CreditPackageInfolist
                         TextEntry::make('discount_percentage')
                             ->label('Discount')
                             ->suffix('%')
-                            ->numeric(decimalPlaces: 2),
+                            ->numeric(decimalPlaces: 2)
+                            ->state(fn (CreditPackage $record) => $record->discount_percentage),
                     ]),
 
                 Section::make('Availability')

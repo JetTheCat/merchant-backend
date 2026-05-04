@@ -17,7 +17,6 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->decimal('credit_amount', 10, 2);
             $table->decimal('selling_price', 10, 2);
-            $table->decimal('discount_percentage', 5, 2);
             $table->boolean('is_active')->default(false);
             $table->integer('purchase_limit_per_user')->nullable();
             $table->integer('total_quantity')->nullable();

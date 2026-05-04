@@ -33,7 +33,6 @@ class CreateCreditPackageTest extends TestCase
             'description' => 'Get RM 100 credits for RM 90.',
             'credit_amount' => 100.00,
             'selling_price' => 90.00,
-            'discount_percentage' => 10.00,
             'purchase_limit_per_user' => null,
             'total_quantity' => null,
         ];

@@ -20,7 +20,6 @@ class CreateCreditPackageRequest extends FormRequest
             'credit_amount' => ['required', 'numeric', 'min:0.01'],
             'selling_price' => ['required', 'numeric', 'min:0.01'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'discount_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'purchase_limit_per_user' => ['nullable', 'integer', 'min:1'],
             'total_quantity' => ['nullable', 'integer', 'min:1'],
         ];

@@ -23,7 +23,6 @@ class CreditPackageFactory extends Factory
             'description' => $this->faker->optional()->sentence(),
             'credit_amount' => $creditAmount,
             'selling_price' => $sellingPrice,
-            'discount_percentage' => 10.00,
             'is_active' => false,
             'purchase_limit_per_user' => null,
             'total_quantity' => null,
