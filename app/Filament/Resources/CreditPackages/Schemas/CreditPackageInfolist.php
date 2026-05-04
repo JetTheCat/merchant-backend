@@ -49,11 +49,6 @@ class CreditPackageInfolist
                             ->label('Discount')
                             ->suffix('%')
                             ->numeric(decimalPlaces: 2),
-
-                        TextEntry::make('validity_days')
-                            ->label('Validity')
-                            ->suffix(' days')
-                            ->placeholder('No expiry'),
                     ]),
 
                 Section::make('Availability')

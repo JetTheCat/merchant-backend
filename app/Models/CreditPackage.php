@@ -26,7 +26,6 @@ class CreditPackage extends Model
         'credit_amount',
         'selling_price',
         'discount_percentage',
-        'validity_days',
         'is_active',
         'purchase_limit_per_user',
         'total_quantity',

@@ -21,7 +21,6 @@ class UpdateCreditPackageRequest extends FormRequest
             'credit_amount' => ['sometimes', 'numeric', 'min:0.01'],
             'selling_price' => ['sometimes', 'numeric', 'min:0.01'],
             'discount_percentage' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:100'],
-            'validity_days' => ['sometimes', 'nullable', 'integer', 'min:1'],
             'is_active' => ['sometimes', 'boolean'],
             'purchase_limit_per_user' => ['sometimes', 'nullable', 'integer', 'min:1'],
             'total_quantity' => ['sometimes', 'nullable', 'integer', 'min:1'],
