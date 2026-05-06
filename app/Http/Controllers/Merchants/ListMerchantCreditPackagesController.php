@@ -18,6 +18,8 @@ class ListMerchantCreditPackagesController extends Controller
 
         $packages = $merchant->creditPackages()
             ->active()
+            ->notSoldOut()
+            ->notAtUserPurchaseLimit($request->user())
             ->orderByDesc('credit_amount')
             ->get();
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\TransactionStatus;
+use App\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -67,5 +69,44 @@ class CreditPackage extends Model
     protected function byMerchant(Builder $query, string $merchantId): void
     {
         $query->where('merchant_id', $merchantId);
+    }
+
+    #[Scope]
+    protected function notSoldOut(Builder $query): void
+    {
+        $query->where(function (Builder $q) {
+            $q->whereNull('total_quantity')
+                ->orWhereColumn('sold_quantity', '<', 'total_quantity');
+        });
+    }
+
+    #[Scope]
+    protected function notAtUserPurchaseLimit(Builder $query, User $user): void
+    {
+        $query->where(function (Builder $q) use ($user) {
+            $q->whereNull('purchase_limit_per_user')
+                ->orWhereRaw(
+                    '(
+                        SELECT COUNT(*) FROM transactions
+                        WHERE transactions.credit_package_id = credit_packages.id
+                        AND transactions.user_id = ?
+                        AND transactions.type = ?
+                        AND transactions.status IN (?, ?)
+                    ) < credit_packages.purchase_limit_per_user',
+                    [
+                        $user->id,
+                        TransactionType::CREDIT_PURCHASE->value,
+                        ...self::activePurchaseStatuses()
+                    ]
+                );
+        });
+    }
+
+    public static function activePurchaseStatuses(): array
+    {
+        return [
+            TransactionStatus::PENDING->value,
+            TransactionStatus::COMPLETED->value,
+        ];
     }
 }
