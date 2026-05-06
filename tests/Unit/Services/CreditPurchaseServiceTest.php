@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\UserCredit;
 use App\Services\CreditPurchaseService;
 use App\Services\StripeService;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class CreditPurchaseServiceTest extends TestCase
@@ -178,6 +179,94 @@ class CreditPurchaseServiceTest extends TestCase
             'id' => $package->id,
             'sold_quantity' => 1,
         ]);
+    }
+
+    public function testProcessPurchaseFailsWhenPackageIsSoldOut(): void
+    {
+        $user = User::factory()->create();
+        $package = CreditPackage::factory()->active()->create([
+            'total_quantity' => 2,
+            'sold_quantity' => 2,
+        ]);
+
+        $this->expectException(ValidationException::class);
+
+        $this->service->processPurchase($user, $package);
+    }
+
+    public function testProcessPurchaseFailsWhenUserExceedsPurchaseLimit(): void
+    {
+        $user = User::factory()->create();
+        $package = CreditPackage::factory()->active()->create([
+            'purchase_limit_per_user' => 1,
+        ]);
+
+        $package->transactions()->create([
+            'user_id' => $user->id,
+            'merchant_id' => $package->merchant_id,
+            'category' => 'credit',
+            'type' => 'credit_purchase',
+            'reference_code' => 'TXN-TEST-LIMIT',
+            'status' => TransactionStatus::COMPLETED,
+            'amount' => $package->credit_amount,
+            'paid_amount' => $package->selling_price,
+            'balance_before' => 0,
+            'balance_after' => $package->credit_amount,
+        ]);
+
+        $this->expectException(ValidationException::class);
+
+        $this->service->processPurchase($user, $package);
+    }
+
+    public function testPendingPurchasesCountTowardsUserLimit(): void
+    {
+        $user = User::factory()->create();
+        $package = CreditPackage::factory()->active()->create([
+            'purchase_limit_per_user' => 1,
+        ]);
+
+        $package->transactions()->create([
+            'user_id' => $user->id,
+            'merchant_id' => $package->merchant_id,
+            'category' => 'credit',
+            'type' => 'credit_purchase',
+            'reference_code' => 'TXN-TEST-PENDING',
+            'status' => TransactionStatus::PENDING,
+            'amount' => $package->credit_amount,
+            'paid_amount' => $package->selling_price,
+            'balance_before' => 0,
+            'balance_after' => $package->credit_amount,
+        ]);
+
+        $this->expectException(ValidationException::class);
+
+        $this->service->processPurchase($user, $package);
+    }
+
+    public function testFailedPurchasesDoNotCountTowardsUserLimit(): void
+    {
+        $user = User::factory()->create();
+        $package = CreditPackage::factory()->active()->create([
+            'purchase_limit_per_user' => 1,
+        ]);
+
+        $package->transactions()->create([
+            'user_id' => $user->id,
+            'merchant_id' => $package->merchant_id,
+            'category' => 'credit',
+            'type' => 'credit_purchase',
+            'reference_code' => 'TXN-TEST-FAILED',
+            'status' => TransactionStatus::FAILED,
+            'amount' => $package->credit_amount,
+            'paid_amount' => $package->selling_price,
+            'balance_before' => 0,
+            'balance_after' => $package->credit_amount,
+        ]);
+
+        $result = $this->service->processPurchase($user, $package);
+
+        $this->assertInstanceOf(PaymentIntentResult::class, $result);
     }
 
     public function testFailPurchaseMarksTransactionAsFailed(): void

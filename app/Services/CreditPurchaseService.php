@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Models\UserCredit;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class CreditPurchaseService
 {
@@ -28,6 +29,25 @@ class CreditPurchaseService
     public function processPurchase(User $user, CreditPackage $package): PaymentIntentResult
     {
         return DB::transaction(function () use ($user, $package) {
+            if ($package->total_quantity !== null && $package->sold_quantity >= $package->total_quantity) {
+                throw ValidationException::withMessages([
+                    'package' => ['This package is no longer available.'],
+                ]);
+            }
+
+            if ($package->purchase_limit_per_user !== null) {
+                $purchaseCount = CreditTransaction::where('user_id', $user->id)
+                    ->where('credit_package_id', $package->id)
+                    ->whereIn('status', [TransactionStatus::PENDING, TransactionStatus::COMPLETED])
+                    ->count();
+
+                if ($purchaseCount >= $package->purchase_limit_per_user) {
+                    throw ValidationException::withMessages([
+                        'package' => ['You have reached the purchase limit for this package.'],
+                    ]);
+                }
+            }
+
             $userCredit = UserCredit::firstOrCreate(
                 ['user_id' => $user->id, 'merchant_id' => $package->merchant_id],
                 ['balance' => 0, 'total_purchased' => 0, 'total_redeemed' => 0],
