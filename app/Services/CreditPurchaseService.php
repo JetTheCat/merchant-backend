@@ -28,11 +28,24 @@ class CreditPurchaseService
 
     public function processPurchase(User $user, CreditPackage $package): PaymentIntentResult
     {
+        // TODO: Move Stripe call outside the DB transaction to reduce lock contention on
+        // limited packages. Requires a compensation strategy for Stripe failures after commit
+        // (cancel orphaned records or expire stale PENDING records via a cleanup job).
         return DB::transaction(function () use ($user, $package) {
-            if ($package->total_quantity !== null && $package->sold_quantity >= $package->total_quantity) {
-                throw ValidationException::withMessages([
-                    'package' => ['This package is no longer available.'],
-                ]);
+            $package = CreditPackage::where('id', $package->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($package->total_quantity !== null) {
+                $activeCount = CreditTransaction::where('credit_package_id', $package->id)
+                    ->whereIn('status', [TransactionStatus::PENDING, TransactionStatus::COMPLETED])
+                    ->count();
+
+                if ($activeCount >= $package->total_quantity) {
+                    throw ValidationException::withMessages([
+                        'package' => ['This package is no longer available.'],
+                    ]);
+                }
             }
 
             if ($package->purchase_limit_per_user !== null) {
