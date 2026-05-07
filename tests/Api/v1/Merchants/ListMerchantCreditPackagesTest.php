@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Api\v1\Merchants;
 
 use App\Models\CreditPackage;
+use App\Models\CreditTransaction;
 use App\Models\Merchant;
 use App\Models\User;
 use Symfony\Component\HttpFoundation\Response;
@@ -79,6 +80,106 @@ class ListMerchantCreditPackagesTest extends TestCase
 
         $response->assertStatus(Response::HTTP_OK)
             ->assertJsonCount(2, 'data');
+    }
+
+    public function testSoldOutPackagesAreExcluded(): void
+    {
+        CreditPackage::factory()->for($this->merchant)->active()->create([
+            'total_quantity' => 10,
+            'sold_quantity' => 5,
+        ]);
+        CreditPackage::factory()->for($this->merchant)->active()->create([
+            'total_quantity' => 2,
+            'sold_quantity' => 2,
+        ]);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->getJson(self::listMerchantCreditPackagesEndpoint((string) $this->merchant->id));
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(1, 'data');
+    }
+
+    public function testPackagesWithNoQuantityLimitAreAlwaysIncluded(): void
+    {
+        CreditPackage::factory()->count(3)->for($this->merchant)->active()->create([
+            'total_quantity' => null,
+        ]);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->getJson(self::listMerchantCreditPackagesEndpoint((string) $this->merchant->id));
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(3, 'data');
+    }
+
+    public function testPackagesWhereUserReachedPurchaseLimitAreExcluded(): void
+    {
+        $availablePackage = CreditPackage::factory()->for($this->merchant)->active()->create([
+            'purchase_limit_per_user' => 2,
+        ]);
+        $limitReachedPackage = CreditPackage::factory()->for($this->merchant)->active()->create([
+            'purchase_limit_per_user' => 1,
+        ]);
+
+        CreditTransaction::factory()
+            ->purchase()
+            ->completed()
+            ->for($this->user)
+            ->for($limitReachedPackage)
+            ->for($this->merchant)
+            ->create();
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->getJson(self::listMerchantCreditPackagesEndpoint((string) $this->merchant->id));
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $availablePackage->id);
+    }
+
+    public function testFailedPurchasesDoNotCountTowardsPurchaseLimitFilter(): void
+    {
+        $package = CreditPackage::factory()->for($this->merchant)->active()->create([
+            'purchase_limit_per_user' => 1,
+        ]);
+
+        CreditTransaction::factory()
+            ->purchase()
+            ->failed()
+            ->for($this->user)
+            ->for($package)
+            ->for($this->merchant)
+            ->create();
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->getJson(self::listMerchantCreditPackagesEndpoint((string) $this->merchant->id));
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(1, 'data');
+    }
+
+    public function testPurchaseLimitFilterIsPerUser(): void
+    {
+        $package = CreditPackage::factory()->for($this->merchant)->active()->create([
+            'purchase_limit_per_user' => 1,
+        ]);
+
+        $otherUser = User::factory()->create();
+
+        CreditTransaction::factory()
+            ->purchase()
+            ->completed()
+            ->for($otherUser)
+            ->for($package)
+            ->for($this->merchant)
+            ->create();
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->getJson(self::listMerchantCreditPackagesEndpoint((string) $this->merchant->id));
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(1, 'data');
     }
 
     public function testReturnsNotFoundForInactiveMerchant(): void

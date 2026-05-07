@@ -8,12 +8,14 @@ use App\DataTransferObjects\PaymentIntentResult;
 use App\Enums\PaymentStatus;
 use App\Enums\TransactionStatus;
 use App\Models\CreditPackage;
+use App\Models\CreditTransaction;
 use App\Models\Merchant;
 use App\Models\Payment;
 use App\Models\User;
 use App\Models\UserCredit;
 use App\Services\CreditPurchaseService;
 use App\Services\StripeService;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class CreditPurchaseServiceTest extends TestCase
@@ -104,15 +106,12 @@ class CreditPurchaseServiceTest extends TestCase
             'status' => PaymentStatus::PROCESSING,
         ]);
 
-        $transaction = $package->transactions()->create([
+        $transaction = CreditTransaction::factory()->purchase()->pending()->create([
             'user_id' => $user->id,
+            'credit_package_id' => $package->id,
             'merchant_id' => $package->merchant_id,
             'user_credit_id' => $userCredit->id,
             'payment_id' => $payment->id,
-            'category' => 'credit',
-            'type' => 'credit_purchase',
-            'reference_code' => 'TXN-TEST-001',
-            'status' => TransactionStatus::PENDING,
             'amount' => 100,
             'paid_amount' => 90,
             'balance_before' => 50,
@@ -157,19 +156,14 @@ class CreditPurchaseServiceTest extends TestCase
             'status' => PaymentStatus::PROCESSING,
         ]);
 
-        $package->transactions()->create([
+        CreditTransaction::factory()->purchase()->pending()->create([
             'user_id' => $user->id,
+            'credit_package_id' => $package->id,
             'merchant_id' => $package->merchant_id,
             'user_credit_id' => $userCredit->id,
             'payment_id' => $payment->id,
-            'category' => 'credit',
-            'type' => 'credit_purchase',
-            'reference_code' => 'TXN-TEST-003',
-            'status' => TransactionStatus::PENDING,
             'amount' => 100,
             'paid_amount' => 90,
-            'balance_before' => 0,
-            'balance_after' => 100,
         ]);
 
         $this->service->grantCredits($payment);
@@ -178,6 +172,81 @@ class CreditPurchaseServiceTest extends TestCase
             'id' => $package->id,
             'sold_quantity' => 1,
         ]);
+    }
+
+    public function testProcessPurchaseFailsWhenPackageIsSoldOut(): void
+    {
+        $user = User::factory()->create();
+        $package = CreditPackage::factory()->active()->create([
+            'total_quantity' => 2,
+        ]);
+
+        CreditTransaction::factory()->purchase()->count(2)->sequence(
+            ['status' => TransactionStatus::COMPLETED],
+            ['status' => TransactionStatus::PENDING],
+        )->create([
+            'user_id' => $user->id,
+            'credit_package_id' => $package->id,
+            'merchant_id' => $package->merchant_id,
+        ]);
+
+        $this->expectException(ValidationException::class);
+
+        $this->service->processPurchase($user, $package);
+    }
+
+    public function testProcessPurchaseFailsWhenUserExceedsPurchaseLimit(): void
+    {
+        $user = User::factory()->create();
+        $package = CreditPackage::factory()->active()->create([
+            'purchase_limit_per_user' => 1,
+        ]);
+
+        CreditTransaction::factory()->purchase()->completed()->create([
+            'user_id' => $user->id,
+            'credit_package_id' => $package->id,
+            'merchant_id' => $package->merchant_id,
+        ]);
+
+        $this->expectException(ValidationException::class);
+
+        $this->service->processPurchase($user, $package);
+    }
+
+    public function testPendingPurchasesCountTowardsUserLimit(): void
+    {
+        $user = User::factory()->create();
+        $package = CreditPackage::factory()->active()->create([
+            'purchase_limit_per_user' => 1,
+        ]);
+
+        CreditTransaction::factory()->purchase()->pending()->create([
+            'user_id' => $user->id,
+            'credit_package_id' => $package->id,
+            'merchant_id' => $package->merchant_id,
+        ]);
+
+        $this->expectException(ValidationException::class);
+
+        $this->service->processPurchase($user, $package);
+    }
+
+    public function testFailedPurchasesDoNotCountTowardsUserLimit(): void
+    {
+        $user = User::factory()->create();
+        $package = CreditPackage::factory()->active()->create([
+            'purchase_limit_per_user' => 1,
+        ]);
+
+        CreditTransaction::factory()->purchase()->failed()->create([
+            'user_id' => $user->id,
+            'credit_package_id' => $package->id,
+            'merchant_id' => $package->merchant_id,
+        ]);
+
+        $result = $this->service->processPurchase($user, $package);
+
+        $this->assertInstanceOf(PaymentIntentResult::class, $result);
     }
 
     public function testFailPurchaseMarksTransactionAsFailed(): void
@@ -195,19 +264,12 @@ class CreditPurchaseServiceTest extends TestCase
             ->for($package->merchant)
             ->create();
 
-        $transaction = $package->transactions()->create([
+        $transaction = CreditTransaction::factory()->purchase()->pending()->create([
             'user_id' => $user->id,
+            'credit_package_id' => $package->id,
             'merchant_id' => $package->merchant_id,
             'user_credit_id' => $userCredit->id,
             'payment_id' => $payment->id,
-            'category' => 'credit',
-            'type' => 'credit_purchase',
-            'reference_code' => 'TXN-TEST-002',
-            'status' => TransactionStatus::PENDING,
-            'amount' => 100,
-            'paid_amount' => 90,
-            'balance_before' => 0,
-            'balance_after' => 100,
         ]);
 
         $this->service->failPurchase($payment);
