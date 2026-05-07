@@ -96,7 +96,7 @@ class CreditPackage extends Model
                     [
                         $user->id,
                         TransactionType::CREDIT_PURCHASE->value,
-                        ...self::activePurchaseStatuses()
+                        ...self::activePurchaseStatuses(),
                     ]
                 );
         });
