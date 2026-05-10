@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Api\v1\Merchants;
 
+use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Models\CreditTransaction;
 use App\Models\Merchant;
@@ -144,6 +145,30 @@ class ListMerchantTransactionsTest extends TestCase
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
             ->assertJsonValidationErrors(['merchantUserId']);
+    }
+
+    public function testItCanFilterByStatus(): void
+    {
+        CreditTransaction::factory()->count(2)->for($this->merchant)->create(['status' => TransactionStatus::COMPLETED]);
+        CreditTransaction::factory()->count(3)->for($this->merchant)->create(['status' => TransactionStatus::PENDING]);
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint().'?status=completed');
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function testItCanFilterByReference(): void
+    {
+        CreditTransaction::factory()->count(2)->for($this->merchant)->create(['reference_code' => 'TXN-MATCH-001']);
+        CreditTransaction::factory()->count(3)->for($this->merchant)->create(['reference_code' => 'TXN-OTHER-001']);
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint().'?reference=TXN-MATCH');
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
     }
 
     public function testItCanFilterByDateFrom(): void

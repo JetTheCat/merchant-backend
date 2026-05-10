@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\MerchantPortal;
 
+use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MerchantPortal\ListMerchantTransactionsRequest;
@@ -30,6 +31,14 @@ class ListMerchantTransactionsController extends Controller
 
         if (isset($validated['type'])) {
             $query->where('type', TransactionType::from($validated['type']));
+        }
+
+        if (isset($validated['status'])) {
+            $query->where('status', TransactionStatus::from($validated['status']));
+        }
+
+        if (isset($validated['reference'])) {
+            $query->where('reference_code', 'like', $validated['reference'].'%');
         }
 
         if (isset($validated['merchant_user_id'])) {

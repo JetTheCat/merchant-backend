@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\MerchantPortal;
 
+use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
@@ -23,6 +24,8 @@ class ListMerchantTransactionsRequest extends FormRequest
     {
         return [
             'type' => ['nullable', new Enum(TransactionType::class)],
+            'status' => ['nullable', new Enum(TransactionStatus::class)],
+            'reference' => ['nullable', 'string', 'max:50'],
             'merchant_user_id' => ['nullable', 'uuid', 'exists:merchant_users,id'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
