@@ -150,6 +150,43 @@ class ListCreditTransactionsTest extends TestCase
             ->assertJsonCount(2, 'data');
     }
 
+    public function testItCanFilterByDateFrom(): void
+    {
+        CreditTransaction::factory()->count(2)->for($this->user)->create(['created_at' => now()->subDays(3)]);
+        CreditTransaction::factory()->count(3)->for($this->user)->create(['created_at' => now()->subDays(10)]);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->getJson(self::listCreditTransactionsEndpoint().'?date_from='.now()->subDays(5)->toDateString());
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function testItCanFilterByDateTo(): void
+    {
+        CreditTransaction::factory()->count(2)->for($this->user)->create(['created_at' => now()->subDays(10)]);
+        CreditTransaction::factory()->count(3)->for($this->user)->create(['created_at' => now()->subDays(3)]);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->getJson(self::listCreditTransactionsEndpoint().'?date_to='.now()->subDays(5)->toDateString());
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function testItCanFilterByDateRange(): void
+    {
+        CreditTransaction::factory()->count(2)->for($this->user)->create(['created_at' => now()->subDays(5)]);
+        CreditTransaction::factory()->count(3)->for($this->user)->create(['created_at' => now()->subDays(15)]);
+        CreditTransaction::factory()->count(4)->for($this->user)->create(['created_at' => now()->subDay()]);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->getJson(self::listCreditTransactionsEndpoint().'?date_from='.now()->subDays(10)->toDateString().'&date_to='.now()->subDays(3)->toDateString());
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
+    }
+
     public function testPaginationRespectsLimitParameter(): void
     {
         CreditTransaction::factory()->count(10)->for($this->user)->create([

@@ -24,6 +24,8 @@ class ListCreditTransactionsRequest extends FormRequest
         return [
             'merchant_id' => ['nullable', 'uuid', 'exists:merchants,id'],
             'type' => ['nullable', new Enum(TransactionType::class)],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
             'limit' => ['nullable', 'integer', 'min:1', 'max:'.self::MAX_LIMIT],
             'cursor' => ['nullable', 'string'],
         ];
