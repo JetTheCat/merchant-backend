@@ -162,14 +162,15 @@ class ListMerchantTransactionsTest extends TestCase
 
     public function testItCanFilterByReference(): void
     {
-        CreditTransaction::factory()->count(2)->for($this->merchant)->create(['reference_code' => 'TXN-MATCH-001']);
-        CreditTransaction::factory()->count(3)->for($this->merchant)->create(['reference_code' => 'TXN-OTHER-001']);
+        $match = CreditTransaction::factory()->for($this->merchant)->create(['reference_code' => 'TXN-MATCH-001']);
+        CreditTransaction::factory()->for($this->merchant)->create(['reference_code' => 'TXN-OTHER-001']);
 
         $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
             ->getJson(self::listMerchantTransactionsEndpoint().'?reference=TXN-MATCH');
 
         $response->assertStatus(Response::HTTP_OK)
-            ->assertJsonCount(2, 'data');
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.referenceCode', $match->reference_code);
     }
 
     public function testDateFiltersConvertTimezoneToUtc(): void
