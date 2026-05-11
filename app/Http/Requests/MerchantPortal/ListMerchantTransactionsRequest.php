@@ -6,6 +6,8 @@ namespace App\Http\Requests\MerchantPortal;
 
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
+use App\Support\DateTimeParser;
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 
@@ -27,6 +29,7 @@ class ListMerchantTransactionsRequest extends FormRequest
             'status' => ['nullable', new Enum(TransactionStatus::class)],
             'reference' => ['nullable', 'string', 'max:50'],
             'merchant_user_id' => ['nullable', 'uuid', 'exists:merchant_users,id'],
+            'timezone' => ['nullable', 'timezone'],
             'date_from' => ['nullable', 'date'],
             'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
             'cursor' => ['nullable', 'string'],
@@ -37,5 +40,12 @@ class ListMerchantTransactionsRequest extends FormRequest
     public function getLimit(): int
     {
         return (int) ($this->validated('limit') ?? self::DEFAULT_LIMIT);
+    }
+
+    public function parseDate(string $field): ?Carbon
+    {
+        $value = $this->validated($field);
+
+        return $value !== null ? DateTimeParser::toUtc($value, $this->validated('timezone')) : null;
     }
 }

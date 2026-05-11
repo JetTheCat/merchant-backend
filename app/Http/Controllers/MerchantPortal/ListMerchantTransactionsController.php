@@ -51,12 +51,12 @@ class ListMerchantTransactionsController extends Controller
             $query->where('merchant_user_id', $validated['merchant_user_id']);
         }
 
-        if (isset($validated['date_from'])) {
-            $query->whereDate('created_at', '>=', $validated['date_from']);
+        if ($from = $request->parseDate('date_from')) {
+            $query->where('created_at', '>=', $from);
         }
 
-        if (isset($validated['date_to'])) {
-            $query->whereDate('created_at', '<=', $validated['date_to']);
+        if ($to = $request->parseDate('date_to')) {
+            $query->where('created_at', '<=', $to);
         }
 
         $transactions = $query->cursorPaginate($request->getLimit());
