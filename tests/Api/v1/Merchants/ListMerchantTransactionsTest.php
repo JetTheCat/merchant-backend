@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Api\v1\Merchants;
 
+use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Models\CreditTransaction;
 use App\Models\Merchant;
 use App\Models\MerchantUser;
 use App\Models\Transaction;
 use App\Models\User;
+use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\Api\v1\Traits\MerchantPortalEndpoints;
 use Tests\TestCase;
@@ -144,6 +146,92 @@ class ListMerchantTransactionsTest extends TestCase
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
             ->assertJsonValidationErrors(['merchantUserId']);
+    }
+
+    public function testItCanFilterByStatus(): void
+    {
+        CreditTransaction::factory()->count(2)->for($this->merchant)->create(['status' => TransactionStatus::COMPLETED]);
+        CreditTransaction::factory()->count(3)->for($this->merchant)->create(['status' => TransactionStatus::PENDING]);
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint().'?status=completed');
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function testItCanFilterByReference(): void
+    {
+        $match = CreditTransaction::factory()->for($this->merchant)->create(['reference_code' => 'TXN-MATCH-001']);
+        CreditTransaction::factory()->for($this->merchant)->create(['reference_code' => 'TXN-OTHER-001']);
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint().'?reference=TXN-MATCH');
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.referenceCode', $match->reference_code);
+    }
+
+    public function testDateFiltersConvertTimezoneToUtc(): void
+    {
+        $timezone = 'Asia/Kuala_Lumpur';
+        $windowStart = Carbon::parse('2026-05-08 00:00:00', $timezone)->utc();
+        $windowEnd = Carbon::parse('2026-05-08 23:59:59', $timezone)->utc();
+
+        CreditTransaction::factory()->for($this->merchant)->count(4)->sequence(
+            ['created_at' => $windowStart->clone()->subSecond()],
+            ['created_at' => $windowStart],
+            ['created_at' => $windowEnd],
+            ['created_at' => $windowEnd->clone()->addSecond()],
+        )->create();
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint().'?'.http_build_query([
+                'date_from' => '2026-05-08 00:00:00',
+                'date_to' => '2026-05-08 23:59:59',
+                'timezone' => $timezone,
+            ]));
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function testItCanFilterByDateFrom(): void
+    {
+        CreditTransaction::factory()->count(2)->for($this->merchant)->create(['created_at' => now()->subDays(3)]);
+        CreditTransaction::factory()->count(3)->for($this->merchant)->create(['created_at' => now()->subDays(10)]);
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint().'?date_from='.now()->subDays(5)->toDateString());
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function testItCanFilterByDateTo(): void
+    {
+        CreditTransaction::factory()->count(2)->for($this->merchant)->create(['created_at' => now()->subDays(10)]);
+        CreditTransaction::factory()->count(3)->for($this->merchant)->create(['created_at' => now()->subDays(3)]);
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint().'?date_to='.now()->subDays(5)->toDateString());
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function testItCanFilterByDateRange(): void
+    {
+        CreditTransaction::factory()->count(2)->for($this->merchant)->create(['created_at' => now()->subDays(5)]);
+        CreditTransaction::factory()->count(3)->for($this->merchant)->create(['created_at' => now()->subDays(15)]);
+        CreditTransaction::factory()->count(4)->for($this->merchant)->create(['created_at' => now()->subDay()]);
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint().'?date_from='.now()->subDays(10)->toDateString().'&date_to='.now()->subDays(3)->toDateString());
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
     }
 
     public function testPaginationRespectsLimitParameter(): void

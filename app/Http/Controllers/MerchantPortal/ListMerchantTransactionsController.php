@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\MerchantPortal;
 
+use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MerchantPortal\ListMerchantTransactionsRequest;
@@ -32,6 +33,14 @@ class ListMerchantTransactionsController extends Controller
             $query->where('type', TransactionType::from($validated['type']));
         }
 
+        if (isset($validated['status'])) {
+            $query->where('status', TransactionStatus::from($validated['status']));
+        }
+
+        if (isset($validated['reference'])) {
+            $query->where('reference_code', 'like', $validated['reference'].'%');
+        }
+
         if (isset($validated['merchant_user_id'])) {
             if (! MerchantUser::where('id', $validated['merchant_user_id'])->where('merchant_id', $merchant->id)->exists()) {
                 throw ValidationException::withMessages([
@@ -40,6 +49,14 @@ class ListMerchantTransactionsController extends Controller
             }
 
             $query->where('merchant_user_id', $validated['merchant_user_id']);
+        }
+
+        if ($from = $request->parseDate('date_from')) {
+            $query->where('created_at', '>=', $from);
+        }
+
+        if ($to = $request->parseDate('date_to')) {
+            $query->where('created_at', '<=', $to);
         }
 
         $transactions = $query->cursorPaginate($request->getLimit());

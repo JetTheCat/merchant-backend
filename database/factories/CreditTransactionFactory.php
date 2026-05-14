@@ -45,6 +45,7 @@ class CreditTransactionFactory extends TransactionFactory
                 'paid_amount' => null,
                 'balance_after' => round((float) $attributes['balance_before'] - $amount, 2),
                 'qr_code' => $this->faker->uuid(),
+                'redeemed_at' => now(),
             ];
         });
     }

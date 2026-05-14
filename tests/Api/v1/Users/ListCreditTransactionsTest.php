@@ -11,6 +11,7 @@ use App\Models\CreditTransaction;
 use App\Models\Merchant;
 use App\Models\MerchantUser;
 use App\Models\User;
+use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\Api\v1\Traits\UserEndpoints;
 use Tests\TestCase;
@@ -145,6 +146,67 @@ class ListCreditTransactionsTest extends TestCase
 
         $response = $this->actingAs($this->user, 'sanctum')
             ->getJson(self::listCreditTransactionsEndpoint().'?type=credit_purchase');
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function testItCanFilterByDateFrom(): void
+    {
+        CreditTransaction::factory()->count(2)->for($this->user)->create(['created_at' => now()->subDays(3)]);
+        CreditTransaction::factory()->count(3)->for($this->user)->create(['created_at' => now()->subDays(10)]);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->getJson(self::listCreditTransactionsEndpoint().'?date_from='.now()->subDays(5)->toDateString());
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function testItCanFilterByDateTo(): void
+    {
+        CreditTransaction::factory()->count(2)->for($this->user)->create(['created_at' => now()->subDays(10)]);
+        CreditTransaction::factory()->count(3)->for($this->user)->create(['created_at' => now()->subDays(3)]);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->getJson(self::listCreditTransactionsEndpoint().'?date_to='.now()->subDays(5)->toDateString());
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function testItCanFilterByDateRange(): void
+    {
+        CreditTransaction::factory()->count(2)->for($this->user)->create(['created_at' => now()->subDays(5)]);
+        CreditTransaction::factory()->count(3)->for($this->user)->create(['created_at' => now()->subDays(15)]);
+        CreditTransaction::factory()->count(4)->for($this->user)->create(['created_at' => now()->subDay()]);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->getJson(self::listCreditTransactionsEndpoint().'?date_from='.now()->subDays(10)->toDateString().'&date_to='.now()->subDays(3)->toDateString());
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function testDateFiltersConvertTimezoneToUtc(): void
+    {
+        $timezone = 'Asia/Kuala_Lumpur';
+        $windowStart = Carbon::parse('2026-05-08 00:00:00', $timezone)->utc();
+        $windowEnd = Carbon::parse('2026-05-08 23:59:59', $timezone)->utc();
+
+        CreditTransaction::factory()->for($this->user)->count(4)->sequence(
+            ['created_at' => $windowStart->clone()->subSecond()],
+            ['created_at' => $windowStart],
+            ['created_at' => $windowEnd],
+            ['created_at' => $windowEnd->clone()->addSecond()],
+        )->create();
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->getJson(self::listCreditTransactionsEndpoint().'?'.http_build_query([
+                'date_from' => '2026-05-08 00:00:00',
+                'date_to' => '2026-05-08 23:59:59',
+                'timezone' => $timezone,
+            ]));
 
         $response->assertStatus(Response::HTTP_OK)
             ->assertJsonCount(2, 'data');

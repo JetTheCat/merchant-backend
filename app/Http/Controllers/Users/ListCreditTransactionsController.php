@@ -33,6 +33,14 @@ class ListCreditTransactionsController extends Controller
             $query->where('type', TransactionType::from($validated['type']));
         }
 
+        if ($from = $request->parseDate('date_from')) {
+            $query->where('created_at', '>=', $from);
+        }
+
+        if ($to = $request->parseDate('date_to')) {
+            $query->where('created_at', '<=', $to);
+        }
+
         $transactions = $query->cursorPaginate($request->getLimit());
 
         return response()->json([
