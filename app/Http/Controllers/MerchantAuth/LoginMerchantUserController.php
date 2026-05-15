@@ -33,6 +33,10 @@ class LoginMerchantUserController extends Controller
             ], Response::HTTP_FORBIDDEN);
         }
 
+        $merchantUser->update([
+            'last_login_at' => now()
+        ]);
+
         $token = $merchantUser->createToken(
             name: config('sanctum.token_name'),
             abilities: ['*'],

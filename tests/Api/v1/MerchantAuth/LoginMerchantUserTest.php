@@ -214,6 +214,18 @@ class LoginMerchantUserTest extends TestCase
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
 
+    public function testLoginUpdatesLastLoginAt(): void
+    {
+        $this->merchantUser->update(['last_login_at' => null]);
+
+        $this->postJson(self::merchantLoginEndpoint(), [
+            'email' => $this->merchantUser->email,
+            'password' => self::TEST_PASSWORD,
+        ]);
+
+        $this->assertNotNull($this->merchantUser->fresh()->last_login_at);
+    }
+
     public function testLoginIsRateLimited(): void
     {
         for ($i = 0; $i < config('rate_limiting.login.attempts'); $i++) {
