@@ -8,6 +8,11 @@ trait MerchantPortalEndpoints
 {
     protected const MERCHANT_USER_GUARD = 'merchant_user';
 
+    protected static function getAuthenticatedMerchantUserEndpoint(): string
+    {
+        return '/api/v1/merchant/users/me';
+    }
+
     protected static function getMerchantProfileEndpoint(): string
     {
         return '/api/v1/merchant';
