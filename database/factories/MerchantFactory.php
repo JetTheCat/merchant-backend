@@ -22,6 +22,7 @@ class MerchantFactory extends Factory
 
         return [
             'name' => fake()->company(),
+            'code' => strtoupper(fake()->unique()->lexify('????##')),
             'business_name' => fake()->company().' Sdn Bhd',
             'business_registration_number' => fake()->numerify('##########'),
             'category_id' => $category?->id ?? Category::factory(),

@@ -23,6 +23,7 @@ class Merchant extends Model
 
     protected $fillable = [
         'name',
+        'code',
         'business_name',
         'business_registration_number',
         'category_id',

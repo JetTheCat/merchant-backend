@@ -24,6 +24,7 @@ class MerchantUser extends Authenticatable
     protected $fillable = [
         'merchant_id',
         'name',
+        'username',
         'email',
         'phone',
         'password',
@@ -99,6 +100,11 @@ class MerchantUser extends Authenticatable
     public function isOwner(): bool
     {
         return $this->role === MerchantUserRole::OWNER;
+    }
+
+    public function hasUsername(): bool
+    {
+        return $this->username !== null;
     }
 
     public function isStaff(): bool

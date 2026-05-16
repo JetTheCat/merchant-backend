@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('merchants', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name', 255);
+            $table->string('code', 10)->nullable()->unique();
             $table->string('business_name', 255);
             $table->text('business_registration_number')->nullable();
             $table->foreignUuid('category_id')->constrained()->onDelete('restrict');

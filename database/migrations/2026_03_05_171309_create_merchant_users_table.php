@@ -17,8 +17,9 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('merchant_id')->constrained()->onDelete('cascade');
             $table->string('name', 100);
-            $table->string('email', 100)->unique();
-            $table->string('phone', 20);
+            $table->string('username', 50)->nullable();
+            $table->string('email', 100)->nullable();
+            $table->string('phone', 20)->nullable();
             $table->string('password');
             $table->string('role', 20)->default('staff');
             $table->string('status', 20)->default('pending_verification');
@@ -28,8 +29,9 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
+            $table->unique(['username', 'merchant_id']);
+            $table->unique('email');
             $table->index('merchant_id');
-            $table->index('email');
             $table->index('status');
         });
     }

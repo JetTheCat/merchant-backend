@@ -43,6 +43,9 @@ class MerchantUserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'role' => MerchantUserRole::STAFF->value,
+            'username' => fake()->unique()->userName(),
+            'email' => null,
+            'email_verified_at' => null,
         ]);
     }
 
