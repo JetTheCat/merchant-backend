@@ -12,7 +12,7 @@ class UpdateMerchantUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->isOwner();
+        return true;
     }
 
     public function rules(): array

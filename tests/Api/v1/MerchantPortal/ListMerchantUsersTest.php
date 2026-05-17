@@ -19,6 +19,7 @@ class ListMerchantUsersTest extends TestCase
         'id',
         'merchantId',
         'name',
+        'username',
         'email',
         'phone',
         'role',
@@ -63,7 +64,7 @@ class ListMerchantUsersTest extends TestCase
             ]);
     }
 
-    public function testStaffCanListMerchantUsers(): void
+    public function testStaffCannotListMerchantUsers(): void
     {
         $staff = MerchantUser::factory()->staff()->active()->create([
             'merchant_id' => $this->merchant->id,
@@ -72,7 +73,8 @@ class ListMerchantUsersTest extends TestCase
         $response = $this->actingAs($staff, self::MERCHANT_USER_GUARD)
             ->getJson(self::getMerchantUsersEndpoint());
 
-        $response->assertStatus(Response::HTTP_OK);
+        $response->assertStatus(Response::HTTP_FORBIDDEN)
+            ->assertJson(['message' => 'Only the merchant owner can perform this action.']);
     }
 
     public function testOnlyReturnsMerchantUsersFromOwnMerchant(): void

@@ -13,10 +13,6 @@ class RemoveMerchantUserController extends Controller
 {
     public function __invoke(Request $request, string $id): JsonResponse
     {
-        if (! $request->user()->isOwner()) {
-            return response()->json(['message' => 'Only the merchant owner can remove users.'], Response::HTTP_FORBIDDEN);
-        }
-
         $merchant = $request->user()->merchant()->firstOrFail();
 
         $merchantUser = $merchant->merchantUsers()->find($id);

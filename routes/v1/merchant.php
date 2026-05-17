@@ -60,9 +60,12 @@ Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function ()
 
     Route::prefix('users')->group(function () {
         Route::get('/me', GetAuthenticatedMerchantUserController::class);
-        Route::get('/', ListMerchantUsersController::class);
-        Route::patch('/{id}', UpdateMerchantUserController::class);
-        Route::delete('/{id}', RemoveMerchantUserController::class);
+
+        Route::middleware('merchant.owner')->group(function () {
+            Route::get('/', ListMerchantUsersController::class);
+            Route::patch('/{id}', UpdateMerchantUserController::class);
+            Route::delete('/{id}', RemoveMerchantUserController::class);
+        });
     });
 
     Route::get('/stats', GetMerchantStatsController::class);

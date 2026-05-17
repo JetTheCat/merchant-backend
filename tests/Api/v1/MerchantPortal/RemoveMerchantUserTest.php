@@ -103,7 +103,7 @@ class RemoveMerchantUserTest extends TestCase
             ->deleteJson(self::deleteMerchantUserEndpoint($anotherStaff->id));
 
         $response->assertStatus(Response::HTTP_FORBIDDEN)
-            ->assertJson(['message' => 'Only the merchant owner can remove users.']);
+            ->assertJson(['message' => 'Only the merchant owner can perform this action.']);
     }
 
     public function testReturnsNotFoundForNonExistentUser(): void
