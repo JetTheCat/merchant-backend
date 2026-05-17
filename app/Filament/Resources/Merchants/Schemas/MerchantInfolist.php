@@ -20,6 +20,10 @@ class MerchantInfolist
                     ->schema([
                         TextEntry::make('name'),
 
+                        TextEntry::make('code')
+                            ->label('Merchant Code')
+                            ->copyable(),
+
                         TextEntry::make('business_name')
                             ->label('Business Name'),
 
