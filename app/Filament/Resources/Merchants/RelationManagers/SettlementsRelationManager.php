@@ -6,6 +6,7 @@ namespace App\Filament\Resources\Merchants\RelationManagers;
 
 use App\Enums\SettlementStatus;
 use App\Filament\Actions\DownloadSettlementInvoiceAction;
+use App\Support\Filament\Placeholder;
 use App\Filament\Actions\MarkSettlementAsPaidAction;
 use App\Filament\Resources\Settlements\SettlementResource;
 use App\Models\Settlement;
@@ -63,7 +64,7 @@ class SettlementsRelationManager extends RelationManager
                 TextColumn::make('paid_at')
                     ->label('Paid At')
                     ->dateTime('d M Y, H:i')
-                    ->placeholder('—')
+                    ->placeholder(Placeholder::EMPTY)
                     ->sortable(),
             ])
             ->filters([

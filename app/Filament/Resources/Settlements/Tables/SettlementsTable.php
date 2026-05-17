@@ -6,6 +6,7 @@ namespace App\Filament\Resources\Settlements\Tables;
 
 use App\Enums\SettlementStatus;
 use App\Filament\Actions\DownloadSettlementInvoiceAction;
+use App\Support\Filament\Placeholder;
 use App\Filament\Actions\MarkSettlementAsPaidAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
@@ -60,7 +61,7 @@ class SettlementsTable
                 TextColumn::make('paid_at')
                     ->label('Paid At')
                     ->dateTime('d M Y, H:i')
-                    ->placeholder('—')
+                    ->placeholder(Placeholder::EMPTY)
                     ->sortable(),
 
                 TextColumn::make('created_at')

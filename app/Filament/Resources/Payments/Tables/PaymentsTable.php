@@ -6,6 +6,7 @@ namespace App\Filament\Resources\Payments\Tables;
 
 use App\Enums\PaymentStatus;
 use App\Enums\PaymentType;
+use App\Support\Filament\Placeholder;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -39,12 +40,12 @@ class PaymentsTable
 
                 TextColumn::make('payment_method')
                     ->label('Method')
-                    ->formatStateUsing(fn (?PaymentType $state) => $state?->label() ?? '—'),
+                    ->formatStateUsing(fn (?PaymentType $state) => $state?->label() ?? Placeholder::EMPTY),
 
                 TextColumn::make('paid_at')
                     ->label('Paid At')
                     ->dateTime('d M Y, H:i')
-                    ->placeholder('—')
+                    ->placeholder(Placeholder::EMPTY)
                     ->sortable(),
 
                 TextColumn::make('created_at')

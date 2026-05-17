@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Merchants\Schemas;
 
 use App\Enums\MerchantStatus;
+use App\Support\Filament\Placeholder;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -33,7 +34,7 @@ class MerchantInfolist
 
                         TextEntry::make('business_registration_number')
                             ->label('Business Registration No.')
-                            ->default('—'),
+                            ->default(Placeholder::EMPTY),
 
                         TextEntry::make('status')
                             ->badge()
@@ -45,7 +46,7 @@ class MerchantInfolist
 
                         TextEntry::make('description')
                             ->columnSpanFull()
-                            ->default('—'),
+                            ->default(Placeholder::EMPTY),
                     ]),
 
                 Section::make('Contact')
@@ -54,7 +55,7 @@ class MerchantInfolist
                         TextEntry::make('phone'),
 
                         TextEntry::make('website')
-                            ->default('—'),
+                            ->default(Placeholder::EMPTY),
                     ]),
 
                 Section::make('Location')
@@ -70,10 +71,10 @@ class MerchantInfolist
                         TextEntry::make('postcode'),
 
                         TextEntry::make('latitude')
-                            ->default('—'),
+                            ->default(Placeholder::EMPTY),
 
                         TextEntry::make('longitude')
-                            ->default('—'),
+                            ->default(Placeholder::EMPTY),
                     ]),
 
                 Section::make('Business Settings')
@@ -98,16 +99,16 @@ class MerchantInfolist
                     ->schema([
                         TextEntry::make('bank_name')
                             ->label('Bank Name')
-                            ->default('—'),
+                            ->default(Placeholder::EMPTY),
 
                         TextEntry::make('bank_account_number')
                             ->label('Account Number')
-                            ->default('—')
+                            ->default(Placeholder::EMPTY)
                             ->copyable(),
 
                         TextEntry::make('bank_account_name')
                             ->label('Account Name')
-                            ->default('—'),
+                            ->default(Placeholder::EMPTY),
                     ]),
             ]);
     }

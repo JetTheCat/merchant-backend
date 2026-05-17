@@ -6,6 +6,7 @@ namespace App\Filament\Resources\Transactions\Schemas;
 
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
+use App\Support\Filament\Placeholder;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -50,7 +51,7 @@ class TransactionInfolist
 
                         TextEntry::make('merchantUser.name')
                             ->label('Staff')
-                            ->placeholder('—'),
+                            ->placeholder(Placeholder::EMPTY),
                     ]),
 
                 Section::make('Amounts')
@@ -65,7 +66,7 @@ class TransactionInfolist
                             ->label('Amount Paid')
                             ->prefix('RM ')
                             ->numeric(decimalPlaces: 2)
-                            ->placeholder('—'),
+                            ->placeholder(Placeholder::EMPTY),
 
                         TextEntry::make('balance_before')
                             ->label('Balance Before')
@@ -79,13 +80,13 @@ class TransactionInfolist
 
                         TextEntry::make('platform_fee_rate')
                             ->label('Fee Rate')
-                            ->formatStateUsing(fn ($state) => $state ? number_format((float) $state * 100, 2).'%' : '—'),
+                            ->formatStateUsing(fn ($state) => $state ? number_format((float) $state * 100, 2).'%' : Placeholder::EMPTY),
 
                         TextEntry::make('platform_fee')
                             ->label('Platform Fee')
                             ->prefix('RM ')
                             ->numeric(decimalPlaces: 2)
-                            ->placeholder('—'),
+                            ->placeholder(Placeholder::EMPTY),
                     ]),
 
                 Section::make('Related')
@@ -93,11 +94,11 @@ class TransactionInfolist
                     ->schema([
                         TextEntry::make('creditPackage.name')
                             ->label('Credit Package')
-                            ->placeholder('—'),
+                            ->placeholder(Placeholder::EMPTY),
 
                         TextEntry::make('settlement.reference_code')
                             ->label('Settlement')
-                            ->placeholder('—'),
+                            ->placeholder(Placeholder::EMPTY),
                     ]),
             ]);
     }
