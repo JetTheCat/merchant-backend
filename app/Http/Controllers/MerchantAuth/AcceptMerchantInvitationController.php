@@ -17,7 +17,7 @@ class AcceptMerchantInvitationController extends Controller
     {
         $merchantUser = MerchantUser::find($id);
 
-        if (! $merchantUser || sha1($merchantUser->email) !== $hash) {
+        if (! $merchantUser || ! $merchantUser->isOwner() || sha1($merchantUser->email) !== $hash) {
             return response()->json([
                 'message' => 'Invalid or expired invitation link.',
             ], Response::HTTP_FORBIDDEN);
