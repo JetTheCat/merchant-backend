@@ -16,7 +16,7 @@ class ResetMerchantPasswordController extends Controller
     {
         $merchantUser = MerchantUser::find($id);
 
-        if (! $merchantUser) {
+        if (! $merchantUser || ! $merchantUser->isOwner()) {
             return response()->json([
                 'message' => 'Invalid password reset link.',
             ], Response::HTTP_FORBIDDEN);

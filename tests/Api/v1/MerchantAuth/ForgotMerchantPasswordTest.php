@@ -22,9 +22,9 @@ class ForgotMerchantPasswordTest extends TestCase
         Bus::fake([SendMerchantUserPasswordResetNotificationJob::class]);
     }
 
-    public function testMerchantCanRequestPasswordReset(): void
+    public function testOwnerCanRequestPasswordReset(): void
     {
-        $merchantUser = MerchantUser::factory()->create([
+        $merchantUser = MerchantUser::factory()->owner()->create([
             'email' => 'user@example.com',
         ]);
 
@@ -78,10 +78,10 @@ class ForgotMerchantPasswordTest extends TestCase
         Bus::assertNotDispatched(SendMerchantUserPasswordResetNotificationJob::class);
     }
 
-    public function testMultipleMerchantUsersCanRequestPasswordResetIndependently(): void
+    public function testMultipleOwnersCanRequestPasswordResetIndependently(): void
     {
-        $merchantUser1 = MerchantUser::factory()->create(['email' => 'user1@example.com']);
-        $merchantUser2 = MerchantUser::factory()->create(['email' => 'user2@example.com']);
+        $merchantUser1 = MerchantUser::factory()->owner()->create(['email' => 'user1@example.com']);
+        $merchantUser2 = MerchantUser::factory()->owner()->create(['email' => 'user2@example.com']);
 
         $this->postJson(self::merchantForgotPasswordEndpoint(), ['email' => 'user1@example.com'])
             ->assertStatus(Response::HTTP_OK);
@@ -98,6 +98,24 @@ class ForgotMerchantPasswordTest extends TestCase
         });
 
         Bus::assertDispatchedTimes(SendMerchantUserPasswordResetNotificationJob::class, 2);
+    }
+
+    public function testPasswordResetIsNotSentForStaffAccounts(): void
+    {
+        $staff = MerchantUser::factory()->staff()->create([
+            'email' => 'staff@example.com',
+        ]);
+
+        $response = $this->postJson(self::merchantForgotPasswordEndpoint(), [
+            'email' => $staff->email,
+        ]);
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJson([
+                'message' => 'If an account exists with that email, a password reset link has been sent.',
+            ]);
+
+        Bus::assertNotDispatched(SendMerchantUserPasswordResetNotificationJob::class);
     }
 
     public function testForgotPasswordIsRateLimited(): void
