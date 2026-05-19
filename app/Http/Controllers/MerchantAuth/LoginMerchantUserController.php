@@ -36,7 +36,7 @@ class LoginMerchantUserController extends Controller
         }
 
         $merchantUser->update([
-            'last_login_at' => now()
+            'last_login_at' => now(),
         ]);
 
         $token = $merchantUser->createToken(

@@ -6,10 +6,10 @@ namespace App\Filament\Resources\Merchants\RelationManagers;
 
 use App\Enums\SettlementStatus;
 use App\Filament\Actions\DownloadSettlementInvoiceAction;
-use App\Support\Filament\Placeholder;
 use App\Filament\Actions\MarkSettlementAsPaidAction;
 use App\Filament\Resources\Settlements\SettlementResource;
 use App\Models\Settlement;
+use App\Support\Filament\Placeholder;
 use Filament\Actions\ViewAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;

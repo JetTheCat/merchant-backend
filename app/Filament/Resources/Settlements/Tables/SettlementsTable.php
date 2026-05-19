@@ -6,8 +6,8 @@ namespace App\Filament\Resources\Settlements\Tables;
 
 use App\Enums\SettlementStatus;
 use App\Filament\Actions\DownloadSettlementInvoiceAction;
-use App\Support\Filament\Placeholder;
 use App\Filament\Actions\MarkSettlementAsPaidAction;
+use App\Support\Filament\Placeholder;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
