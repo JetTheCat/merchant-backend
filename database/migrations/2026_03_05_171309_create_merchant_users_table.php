@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -29,11 +30,12 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->unique(['username', 'merchant_id']);
             $table->unique('email');
             $table->index('merchant_id');
             $table->index('status');
         });
+
+        DB::statement('CREATE UNIQUE INDEX merchant_users_username_merchant_id_unique ON merchant_users (username, merchant_id) WHERE deleted_at IS NULL');
     }
 
     /**

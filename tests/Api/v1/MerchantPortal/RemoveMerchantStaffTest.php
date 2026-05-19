@@ -4,17 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Api\v1\MerchantPortal;
 
-use App\Enums\MerchantUserRole;
 use App\Models\Merchant;
 use App\Models\MerchantUser;
 use App\Models\User;
 use Illuminate\Support\Str;
-use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\Api\v1\Traits\MerchantPortalEndpoints;
 use Tests\TestCase;
 
-class RemoveMerchantUserTest extends TestCase
+class RemoveMerchantStaffTest extends TestCase
 {
     use MerchantPortalEndpoints;
 
@@ -30,7 +28,7 @@ class RemoveMerchantUserTest extends TestCase
         $this->owner = MerchantUser::factory()->owner()->active()->for($this->merchant)->create();
     }
 
-    public function testOwnerCanRemoveMerchantUser(): void
+    public function testOwnerCanRemoveStaffUser(): void
     {
         $staff = MerchantUser::factory()
             ->staff()
@@ -39,7 +37,7 @@ class RemoveMerchantUserTest extends TestCase
             ->create();
 
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
-            ->deleteJson(self::deleteMerchantUserEndpoint($staff->id));
+            ->deleteJson(self::deleteMerchantStaffEndpoint($staff->id));
 
         $response->assertStatus(Response::HTTP_OK)
             ->assertJson(['message' => 'Merchant user removed successfully.']);
@@ -50,10 +48,9 @@ class RemoveMerchantUserTest extends TestCase
     public function testOwnerCannotRemoveOwnAccount(): void
     {
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
-            ->deleteJson(self::deleteMerchantUserEndpoint($this->owner->id));
+            ->deleteJson(self::deleteMerchantStaffEndpoint($this->owner->id));
 
-        $response->assertStatus(Response::HTTP_FORBIDDEN)
-            ->assertJson(['message' => 'Cannot remove the owner account.']);
+        $response->assertStatus(Response::HTTP_NOT_FOUND);
     }
 
     public function testOwnerCannotRemoveAnotherOwner(): void
@@ -61,36 +58,24 @@ class RemoveMerchantUserTest extends TestCase
         $anotherOwner = MerchantUser::factory()->owner()->active()->for($this->merchant)->create();
 
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
-            ->deleteJson(self::deleteMerchantUserEndpoint($anotherOwner->id));
-
-        $response->assertStatus(Response::HTTP_FORBIDDEN)
-            ->assertJson(['message' => 'Cannot remove the owner account.']);
-    }
-
-    #[DataProvider('providesOtherMerchantUserRoles')]
-    public function testOwnerCannotRemoveUserFromAnotherMerchant(MerchantUserRole $role): void
-    {
-        $otherMerchant = Merchant::factory()->create();
-        $otherUser = MerchantUser::factory()->active()->for($otherMerchant)->create([
-            'role' => $role,
-        ]);
-
-        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
-            ->deleteJson(self::deleteMerchantUserEndpoint($otherUser->id));
+            ->deleteJson(self::deleteMerchantStaffEndpoint($anotherOwner->id));
 
         $response->assertStatus(Response::HTTP_NOT_FOUND);
-        $this->assertNotSoftDeleted('merchant_users', ['id' => $otherUser->id]);
     }
 
-    public static function providesOtherMerchantUserRoles(): array
+    public function testOwnerCannotRemoveStaffUserFromAnotherMerchant(): void
     {
-        return [
-            'owner from another merchant' => [MerchantUserRole::OWNER],
-            'staff from another merchant' => [MerchantUserRole::STAFF],
-        ];
+        $otherMerchant = Merchant::factory()->create();
+        $otherStaff = MerchantUser::factory()->staff()->active()->for($otherMerchant)->create();
+
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->deleteJson(self::deleteMerchantStaffEndpoint($otherStaff->id));
+
+        $response->assertStatus(Response::HTTP_NOT_FOUND);
+        $this->assertNotSoftDeleted('merchant_users', ['id' => $otherStaff->id]);
     }
 
-    public function testStaffCannotRemoveMerchantUser(): void
+    public function testStaffCannotRemoveStaffUser(): void
     {
         [$staff, $anotherStaff] = MerchantUser::factory()
             ->staff()
@@ -100,37 +85,37 @@ class RemoveMerchantUserTest extends TestCase
             ->create();
 
         $response = $this->actingAs($staff, self::MERCHANT_USER_GUARD)
-            ->deleteJson(self::deleteMerchantUserEndpoint($anotherStaff->id));
+            ->deleteJson(self::deleteMerchantStaffEndpoint($anotherStaff->id));
 
         $response->assertStatus(Response::HTTP_FORBIDDEN)
             ->assertJson(['message' => 'Only the merchant owner can perform this action.']);
     }
 
-    public function testReturnsNotFoundForNonExistentUser(): void
+    public function testReturnsNotFoundForNonExistentStaffUser(): void
     {
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
-            ->deleteJson(self::deleteMerchantUserEndpoint(Str::uuid()->toString()));
+            ->deleteJson(self::deleteMerchantStaffEndpoint(Str::uuid()->toString()));
 
         $response->assertStatus(Response::HTTP_NOT_FOUND);
     }
 
-    public function testRemoveMerchantUserRequiresAuthentication(): void
+    public function testRemoveStaffUserRequiresAuthentication(): void
     {
         $staff = MerchantUser::factory()->staff()->active()->for($this->merchant)->create();
 
-        $response = $this->deleteJson(self::deleteMerchantUserEndpoint($staff->id));
+        $response = $this->deleteJson(self::deleteMerchantStaffEndpoint($staff->id));
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
 
-    public function testCustomerCannotRemoveMerchantUser(): void
+    public function testCustomerCannotRemoveStaffUser(): void
     {
         $staff = MerchantUser::factory()->staff()->active()->for($this->merchant)->create();
 
         $customer = User::factory()->create();
 
         $response = $this->actingAs($customer, 'sanctum')
-            ->deleteJson(self::deleteMerchantUserEndpoint($staff->id));
+            ->deleteJson(self::deleteMerchantStaffEndpoint($staff->id));
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }

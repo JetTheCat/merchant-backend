@@ -28,14 +28,19 @@ trait MerchantPortalEndpoints
         return '/api/v1/merchant/users';
     }
 
-    protected static function patchMerchantUserEndpoint(string $id): string
+    protected static function createMerchantStaffEndpoint(): string
     {
-        return "/api/v1/merchant/users/{$id}";
+        return '/api/v1/merchant/staff';
     }
 
-    protected static function deleteMerchantUserEndpoint(string $id): string
+    protected static function patchMerchantStaffEndpoint(string $id): string
     {
-        return "/api/v1/merchant/users/{$id}";
+        return "/api/v1/merchant/staff/{$id}";
+    }
+
+    protected static function deleteMerchantStaffEndpoint(string $id): string
+    {
+        return "/api/v1/merchant/staff/{$id}";
     }
 
     protected static function listMerchantCreditPackagesEndpoint(string $merchantId): string
