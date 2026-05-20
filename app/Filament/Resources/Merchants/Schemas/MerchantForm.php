@@ -28,10 +28,10 @@ class MerchantForm
                         TextInput::make('code')
                             ->label('Merchant Code')
                             ->required()
-                            ->maxLength(15)
+                            ->maxLength(20)
                             ->rules(['alpha_num'])
-                            ->dehydrateStateUsing(fn ($state) => strtoupper((string) $state))
-                            ->helperText('Short unique code for staff login (e.g. KOPI88). Cannot be changed after creation.')
+                            ->dehydrateStateUsing(fn ($state) => strtolower((string) $state))
+                            ->helperText('Short unique code for staff login (e.g. kopi88). Cannot be changed after creation.')
                             ->readOnlyOn('edit'),
 
                         TextInput::make('business_name')

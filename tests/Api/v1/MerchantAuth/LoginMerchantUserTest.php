@@ -56,7 +56,7 @@ class LoginMerchantUserTest extends TestCase
 
     public function testStaffCanLoginWithCompositeUsername(): void
     {
-        $merchant = Merchant::factory()->active()->create(['code' => 'KOPI88']);
+        $merchant = Merchant::factory()->active()->create(['code' => 'kopi88']);
 
         $staff = MerchantUser::factory()->staff()->active()->for($merchant)->create([
             'username' => 'cashier1',
@@ -64,7 +64,7 @@ class LoginMerchantUserTest extends TestCase
         ]);
 
         $response = $this->postJson(self::merchantLoginEndpoint(), [
-            'credential' => 'cashier1@KOPI88',
+            'credential' => 'cashier1@kopi88',
             'password' => self::TEST_PASSWORD,
         ]);
 
@@ -197,7 +197,7 @@ class LoginMerchantUserTest extends TestCase
 
     public function testNonActiveStaffCannotLogin(): void
     {
-        $merchant = Merchant::factory()->active()->create(['code' => 'SHOP01']);
+        $merchant = Merchant::factory()->active()->create(['code' => 'shop01']);
 
         MerchantUser::factory()->staff()->for($merchant)->create([
             'username' => 'cashier1',
@@ -206,7 +206,7 @@ class LoginMerchantUserTest extends TestCase
         ]);
 
         $response = $this->postJson(self::merchantLoginEndpoint(), [
-            'credential' => 'cashier1@SHOP01',
+            'credential' => 'cashier1@shop01',
             'password' => self::TEST_PASSWORD,
         ]);
 

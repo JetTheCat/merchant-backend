@@ -16,6 +16,13 @@ class UpdateMerchantStaffRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('username')) {
+            $this->merge(['username' => strtolower($this->input('username'))]);
+        }
+    }
+
     public function rules(): array
     {
         return [

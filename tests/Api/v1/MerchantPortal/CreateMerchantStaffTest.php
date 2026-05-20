@@ -74,6 +74,23 @@ class CreateMerchantStaffTest extends TestCase
         ]);
     }
 
+    public function testUsernameIsNormalisedToLowercase(): void
+    {
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->postJson(self::createMerchantStaffEndpoint(), [
+                'name' => 'Jane Staff',
+                'username' => 'JaneStaff',
+                'password' => self::VALID_PASSWORD,
+            ]);
+
+        $response->assertStatus(Response::HTTP_CREATED)
+            ->assertJsonPath('data.username', 'janestaff');
+
+        $this->assertDatabaseHas('merchant_users', [
+            'username' => 'janestaff',
+        ]);
+    }
+
     public function testOwnerCanCreateStaffUserWithPhone(): void
     {
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)

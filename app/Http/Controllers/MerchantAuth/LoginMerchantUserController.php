@@ -66,9 +66,9 @@ class LoginMerchantUserController extends Controller
 
         [$username, $merchantCode] = $parts;
 
-        return MerchantUser::where('username', $username)
+        return MerchantUser::where('username', strtolower($username))
             ->whereHas('merchant', function (Builder $query) use ($merchantCode) {
-                $query->where('code', $merchantCode);
+                $query->where('code', strtolower($merchantCode));
             })
             ->first();
     }

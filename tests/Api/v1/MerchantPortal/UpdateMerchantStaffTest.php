@@ -134,6 +134,26 @@ class UpdateMerchantStaffTest extends TestCase
         ]);
     }
 
+    public function testUsernameIsNormalisedToLowercase(): void
+    {
+        $staff = MerchantUser::factory()->staff()->active()->for($this->merchant)->create([
+            'username' => 'janestaff',
+        ]);
+
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->patchJson(self::patchMerchantStaffEndpoint($staff->id), [
+                'username' => 'NewUsername',
+            ]);
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonPath('data.username', 'newusername');
+
+        $this->assertDatabaseHas('merchant_users', [
+            'id' => $staff->id,
+            'username' => 'newusername',
+        ]);
+    }
+
     public function testOwnerCanUpdateStaffToSameUsername(): void
     {
         $staff = MerchantUser::factory()->staff()->active()->for($this->merchant)->create([
