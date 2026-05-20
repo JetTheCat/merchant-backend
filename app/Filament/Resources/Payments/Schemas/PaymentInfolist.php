@@ -6,6 +6,7 @@ namespace App\Filament\Resources\Payments\Schemas;
 
 use App\Enums\PaymentStatus;
 use App\Enums\PaymentType;
+use App\Support\Filament\Placeholder;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -25,7 +26,7 @@ class PaymentInfolist
 
                         TextEntry::make('stripe_charge_id')
                             ->label('Charge ID')
-                            ->placeholder('—')
+                            ->placeholder(Placeholder::EMPTY)
                             ->copyable(),
 
                         TextEntry::make('status')
@@ -35,7 +36,7 @@ class PaymentInfolist
 
                         TextEntry::make('payment_method')
                             ->label('Method')
-                            ->formatStateUsing(fn (?PaymentType $state) => $state?->label() ?? '—'),
+                            ->formatStateUsing(fn (?PaymentType $state) => $state?->label() ?? Placeholder::EMPTY),
 
                         TextEntry::make('currency')
                             ->formatStateUsing(fn ($state) => strtoupper($state->value)),
@@ -55,11 +56,11 @@ class PaymentInfolist
                         TextEntry::make('paid_at')
                             ->label('Paid At')
                             ->dateTime('d M Y, H:i')
-                            ->placeholder('—'),
+                            ->placeholder(Placeholder::EMPTY),
 
                         TextEntry::make('failure_reason')
                             ->label('Failure Reason')
-                            ->placeholder('—')
+                            ->placeholder(Placeholder::EMPTY)
                             ->columnSpanFull(),
                     ]),
 
@@ -74,7 +75,7 @@ class PaymentInfolist
 
                         TextEntry::make('transaction.reference_code')
                             ->label('Transaction Reference')
-                            ->placeholder('—'),
+                            ->placeholder(Placeholder::EMPTY),
                     ]),
             ]);
     }

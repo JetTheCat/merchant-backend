@@ -140,6 +140,30 @@ class AcceptMerchantInvitationTest extends TestCase
         $this->assertEquals(MerchantUserStatus::PENDING_VERIFICATION, $merchantUser->fresh()->status);
     }
 
+    public function testAcceptInvitationFailsForStaffAccounts(): void
+    {
+        $staff = MerchantUser::factory()->staff()->pendingVerification()->create();
+
+        $url = URL::temporarySignedRoute(
+            'merchant.invitation.setup',
+            now()->addHours(72),
+            [
+                'id' => $staff->getKey(),
+                'hash' => sha1((string) $staff->email),
+            ]
+        );
+
+        $response = $this->postJson($url, [
+            'password' => 'NewPassword123!@#',
+            'password_confirmation' => 'NewPassword123!@#',
+        ]);
+
+        $response->assertStatus(Response::HTTP_FORBIDDEN)
+            ->assertJson([
+                'message' => 'Invalid or expired invitation link.',
+            ]);
+    }
+
     public function testAcceptInvitationFailsIfUserDoesNotExist(): void
     {
         $nonExistentId = Str::uuid()->toString();

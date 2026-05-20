@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Settlements\Schemas;
 
 use App\Enums\SettlementStatus;
+use App\Support\Filament\Placeholder;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -69,15 +70,15 @@ class SettlementInfolist
                     ->schema([
                         TextEntry::make('bank_name')
                             ->label('Bank')
-                            ->placeholder('—'),
+                            ->placeholder(Placeholder::EMPTY),
 
                         TextEntry::make('bank_account_name')
                             ->label('Account Name')
-                            ->placeholder('—'),
+                            ->placeholder(Placeholder::EMPTY),
 
                         TextEntry::make('bank_account_number')
                             ->label('Account Number')
-                            ->placeholder('—'),
+                            ->placeholder(Placeholder::EMPTY),
                     ]),
 
                 Section::make('Payment')
@@ -85,15 +86,15 @@ class SettlementInfolist
                     ->schema([
                         TextEntry::make('payment_reference')
                             ->label('Payment Reference')
-                            ->placeholder('—'),
+                            ->placeholder(Placeholder::EMPTY),
 
                         TextEntry::make('paid_at')
                             ->label('Paid At')
                             ->dateTime('d M Y, H:i')
-                            ->placeholder('—'),
+                            ->placeholder(Placeholder::EMPTY),
 
                         TextEntry::make('notes')
-                            ->placeholder('—')
+                            ->placeholder(Placeholder::EMPTY)
                             ->columnSpanFull(),
                     ]),
             ]);

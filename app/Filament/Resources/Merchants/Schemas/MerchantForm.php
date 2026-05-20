@@ -25,6 +25,15 @@ class MerchantForm
                             ->required()
                             ->maxLength(255),
 
+                        TextInput::make('code')
+                            ->label('Merchant Code')
+                            ->required()
+                            ->maxLength(20)
+                            ->rules(['alpha_num'])
+                            ->dehydrateStateUsing(fn ($state) => strtolower((string) $state))
+                            ->helperText('Short unique code for staff login (e.g. kopi88). Cannot be changed after creation.')
+                            ->readOnlyOn('edit'),
+
                         TextInput::make('business_name')
                             ->label('Business Name')
                             ->required()

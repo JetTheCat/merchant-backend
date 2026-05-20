@@ -17,7 +17,7 @@ class ForgotMerchantPasswordController extends Controller
     {
         $merchantUser = MerchantUser::where('email', $request->input('email'))->first();
 
-        if ($merchantUser) {
+        if ($merchantUser && $merchantUser->isOwner()) {
             SendMerchantUserPasswordResetNotificationJob::dispatch($merchantUser);
         }
 

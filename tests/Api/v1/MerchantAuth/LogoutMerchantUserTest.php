@@ -30,7 +30,7 @@ class LogoutMerchantUserTest extends TestCase
         ]);
 
         $loginResponse = $this->postJson(self::merchantLoginEndpoint(), [
-            'email' => $this->merchantUser->email,
+            'credential' => $this->merchantUser->email,
             'password' => self::TEST_PASSWORD,
         ]);
 

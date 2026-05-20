@@ -7,6 +7,7 @@ namespace App\Filament\Resources\MerchantUsers\Schemas;
 use App\Enums\MerchantUserRole;
 use App\Enums\MerchantUserStatus;
 use App\Models\MerchantUser;
+use App\Support\Filament\Placeholder;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -41,16 +42,24 @@ class MerchantUserInfolist
                     ->columns(2)
                     ->schema([
                         TextEntry::make('email')
-                            ->label('Email'),
+                            ->label('Email')
+                            ->visible(fn (MerchantUser $record) => $record->isOwner())
+                            ->default(Placeholder::EMPTY),
+
+                        TextEntry::make('username')
+                            ->label('Username')
+                            ->visible(fn (MerchantUser $record) => ! $record->isOwner())
+                            ->default(Placeholder::EMPTY),
 
                         TextEntry::make('phone')
                             ->label('Phone')
-                            ->default('—'),
+                            ->default(Placeholder::EMPTY),
 
                         TextEntry::make('email_verified_at')
                             ->label('Email Verified')
                             ->dateTime('d M Y, H:i')
-                            ->placeholder('Not verified'),
+                            ->placeholder('Not verified')
+                            ->visible(fn (MerchantUser $record) => $record->isOwner()),
                     ]),
 
                 Section::make('Activity')

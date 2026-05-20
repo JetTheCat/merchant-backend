@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'snake.request' => \App\Http\Middleware\ConvertRequestKeysToSnakeCase::class,
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'user.active' => \App\Http\Middleware\EnsureUserIsActive::class,
+            'merchant.owner' => \App\Http\Middleware\EnsureIsMerchantOwner::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

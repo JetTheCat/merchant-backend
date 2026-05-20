@@ -9,6 +9,7 @@ use App\Enums\MerchantUserStatus;
 use App\Notifications\MerchantUserInvitationNotification;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,6 +25,7 @@ class MerchantUser extends Authenticatable
     protected $fillable = [
         'merchant_id',
         'name',
+        'username',
         'email',
         'phone',
         'password',
@@ -45,6 +47,13 @@ class MerchantUser extends Authenticatable
         'status' => MerchantUserStatus::class,
         'password' => 'hashed',
     ];
+
+    protected function username(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value) => $value !== null ? strtolower($value) : null,
+        );
+    }
 
     public function merchant(): BelongsTo
     {
@@ -99,6 +108,11 @@ class MerchantUser extends Authenticatable
     public function isOwner(): bool
     {
         return $this->role === MerchantUserRole::OWNER;
+    }
+
+    public function hasUsername(): bool
+    {
+        return $this->username !== null;
     }
 
     public function isStaff(): bool

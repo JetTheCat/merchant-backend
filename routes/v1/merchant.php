@@ -8,8 +8,10 @@ use App\Http\Controllers\MerchantAuth\LoginMerchantUserController;
 use App\Http\Controllers\MerchantAuth\LogoutMerchantUserController;
 use App\Http\Controllers\MerchantAuth\ResetMerchantPasswordController;
 use App\Http\Controllers\MerchantPortal\CreateCreditPackageController;
+use App\Http\Controllers\MerchantPortal\CreateMerchantStaffController;
 use App\Http\Controllers\MerchantPortal\DeleteCreditPackageController;
 use App\Http\Controllers\MerchantPortal\GenerateRedemptionQrController;
+use App\Http\Controllers\MerchantPortal\GetAuthenticatedMerchantUserController;
 use App\Http\Controllers\MerchantPortal\GetMerchantProfileController;
 use App\Http\Controllers\MerchantPortal\GetMerchantStatsController;
 use App\Http\Controllers\MerchantPortal\GetSettlementController;
@@ -21,10 +23,10 @@ use App\Http\Controllers\MerchantPortal\ListMerchantTransactionsController;
 use App\Http\Controllers\MerchantPortal\ListMerchantUsersController;
 use App\Http\Controllers\MerchantPortal\ListSettlementsController;
 use App\Http\Controllers\MerchantPortal\RefundRedemptionController;
-use App\Http\Controllers\MerchantPortal\RemoveMerchantUserController;
+use App\Http\Controllers\MerchantPortal\RemoveMerchantStaffController;
 use App\Http\Controllers\MerchantPortal\UpdateCreditPackageController;
 use App\Http\Controllers\MerchantPortal\UpdateMerchantProfileController;
-use App\Http\Controllers\MerchantPortal\UpdateMerchantUserController;
+use App\Http\Controllers\MerchantPortal\UpdateMerchantStaffController;
 use App\Http\Controllers\Merchants\GetMerchantController;
 use App\Http\Controllers\Merchants\GetMerchantsController;
 use App\Http\Controllers\Merchants\ListMerchantCreditPackagesController;
@@ -58,9 +60,15 @@ Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function ()
     Route::patch('/', UpdateMerchantProfileController::class);
 
     Route::prefix('users')->group(function () {
+        Route::get('/me', GetAuthenticatedMerchantUserController::class);
+
         Route::get('/', ListMerchantUsersController::class);
-        Route::patch('/{id}', UpdateMerchantUserController::class);
-        Route::delete('/{id}', RemoveMerchantUserController::class);
+    });
+
+    Route::prefix('staff')->middleware('merchant.owner')->group(function () {
+        Route::post('/', CreateMerchantStaffController::class);
+        Route::patch('/{id}', UpdateMerchantStaffController::class);
+        Route::delete('/{id}', RemoveMerchantStaffController::class);
     });
 
     Route::get('/stats', GetMerchantStatsController::class);

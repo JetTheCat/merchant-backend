@@ -8,6 +8,7 @@ use App\Enums\MerchantUserRole;
 use App\Enums\MerchantUserStatus;
 use App\Filament\Actions\SendMerchantUserInvitationAction;
 use App\Models\MerchantUser;
+use App\Support\Filament\Placeholder;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -36,7 +37,11 @@ class MerchantUsersTable
                     ->searchable(),
                 TextColumn::make('email')
                     ->label('Email address')
-                    ->searchable(),
+                    ->searchable()
+                    ->placeholder(Placeholder::EMPTY),
+                TextColumn::make('username')
+                    ->searchable()
+                    ->placeholder(Placeholder::EMPTY),
                 TextColumn::make('phone')
                     ->searchable(),
                 TextColumn::make('role')

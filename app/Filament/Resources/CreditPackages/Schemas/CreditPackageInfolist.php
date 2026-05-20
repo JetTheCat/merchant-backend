@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\CreditPackages\Schemas;
 
 use App\Models\CreditPackage;
+use App\Support\Filament\Placeholder;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -25,7 +26,7 @@ class CreditPackageInfolist
                             ->label('Merchant'),
 
                         TextEntry::make('description')
-                            ->placeholder('—')
+                            ->placeholder(Placeholder::EMPTY)
                             ->columnSpanFull(),
 
                         IconEntry::make('is_active')

@@ -6,6 +6,7 @@ namespace App\Filament\Resources\Transactions\Tables;
 
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
+use App\Support\Filament\Placeholder;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -48,14 +49,14 @@ class TransactionsTable
                     ->label('Paid')
                     ->prefix('RM ')
                     ->numeric(decimalPlaces: 2)
-                    ->placeholder('—')
+                    ->placeholder(Placeholder::EMPTY)
                     ->sortable(),
 
                 TextColumn::make('platform_fee')
                     ->label('Platform Fee')
                     ->prefix('RM ')
                     ->numeric(decimalPlaces: 2)
-                    ->placeholder('—')
+                    ->placeholder(Placeholder::EMPTY)
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 

@@ -30,6 +30,11 @@ class MerchantsTable
                     ->sortable()
                     ->weight('bold'),
 
+                TextColumn::make('code')
+                    ->label('Code')
+                    ->searchable()
+                    ->copyable(),
+
                 TextColumn::make('business_name')
                     ->label('Business Name')
                     ->searchable()

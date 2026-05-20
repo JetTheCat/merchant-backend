@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\MerchantAuth;
 
+use App\Rules\ValidMerchantCredential;
 use Illuminate\Foundation\Http\FormRequest;
 
 class LoginMerchantUserRequest extends FormRequest
@@ -16,7 +17,7 @@ class LoginMerchantUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'credential' => ['required', 'string', new ValidMerchantCredential],
             'password' => ['required', 'string'],
         ];
     }

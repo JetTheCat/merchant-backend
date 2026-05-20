@@ -16,9 +16,9 @@ class ResetMerchantPasswordTest extends TestCase
 {
     use MerchantAuthEndpoints;
 
-    public function testMerchantUserCanResetPasswordWithValidSignedUrl(): void
+    public function testOwnerCanResetPasswordWithValidSignedUrl(): void
     {
-        $merchantUser = MerchantUser::factory()->active()->create([
+        $merchantUser = MerchantUser::factory()->owner()->active()->create([
             'password' => Hash::make('OldPassword123!@#'),
         ]);
 
@@ -42,7 +42,7 @@ class ResetMerchantPasswordTest extends TestCase
 
     public function testPasswordResetFailsWithTamperedSignature(): void
     {
-        $merchantUser = MerchantUser::factory()->active()->create([
+        $merchantUser = MerchantUser::factory()->owner()->active()->create([
             'password' => Hash::make('OldPassword123!@#'),
         ]);
 
@@ -62,7 +62,7 @@ class ResetMerchantPasswordTest extends TestCase
 
     public function testPasswordResetFailsWithExpiredUrl(): void
     {
-        $merchantUser = MerchantUser::factory()->active()->create([
+        $merchantUser = MerchantUser::factory()->owner()->active()->create([
             'password' => Hash::make('OldPassword123!@#'),
         ]);
 
@@ -81,6 +81,23 @@ class ResetMerchantPasswordTest extends TestCase
 
         $merchantUser->refresh();
         $this->assertTrue(Hash::check('OldPassword123!@#', $merchantUser->password));
+    }
+
+    public function testPasswordResetFailsForStaffAccounts(): void
+    {
+        $staff = MerchantUser::factory()->staff()->active()->create();
+
+        $url = $this->merchantResetPasswordUrl($staff);
+
+        $response = $this->postJson($url, [
+            'password' => 'NewPassword123!@#',
+            'password_confirmation' => 'NewPassword123!@#',
+        ]);
+
+        $response->assertStatus(Response::HTTP_FORBIDDEN)
+            ->assertJson([
+                'message' => 'Invalid password reset link.',
+            ]);
     }
 
     public function testPasswordResetFailsIfUserDoesNotExist(): void
@@ -104,7 +121,7 @@ class ResetMerchantPasswordTest extends TestCase
 
     public function testPasswordResetFailsWithMissingPassword(): void
     {
-        $merchantUser = MerchantUser::factory()->active()->create();
+        $merchantUser = MerchantUser::factory()->owner()->active()->create();
 
         $url = $this->merchantResetPasswordUrl($merchantUser);
 
@@ -116,7 +133,7 @@ class ResetMerchantPasswordTest extends TestCase
 
     public function testPasswordResetFailsWithPasswordMismatch(): void
     {
-        $merchantUser = MerchantUser::factory()->active()->create();
+        $merchantUser = MerchantUser::factory()->owner()->active()->create();
 
         $url = $this->merchantResetPasswordUrl($merchantUser);
 
