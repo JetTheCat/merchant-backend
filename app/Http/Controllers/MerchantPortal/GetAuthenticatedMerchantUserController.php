@@ -15,7 +15,7 @@ class GetAuthenticatedMerchantUserController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         return response()->json([
-            'data' => new MerchantUserResource($request->user()),
+            'data' => new MerchantUserResource($request->user()->load('merchant')),
         ], Response::HTTP_OK);
     }
 }

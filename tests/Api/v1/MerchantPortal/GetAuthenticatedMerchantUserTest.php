@@ -23,7 +23,9 @@ class GetAuthenticatedMerchantUserTest extends TestCase
         'data' => [
             'id',
             'merchantId',
+            'merchant',
             'name',
+            'username',
             'email',
             'phone',
             'role',
@@ -49,11 +51,13 @@ class GetAuthenticatedMerchantUserTest extends TestCase
     {
         $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
             ->getJson(self::getAuthenticatedMerchantUserEndpoint());
-
+        
         $response->assertStatus(Response::HTTP_OK)
             ->assertJsonStructure(self::VALID_STRUCTURE)
             ->assertJsonPath('data.id', $this->merchantUser->id)
-            ->assertJsonPath('data.merchantId', $this->merchant->id);
+            ->assertJsonPath('data.merchantId', $this->merchant->id)
+            ->assertJsonPath('data.merchant.id', $this->merchant->id)
+            ->assertJsonPath('data.merchant.code', $this->merchant->code);
     }
 
     public function testRequiresAuthentication(): void
