@@ -19,7 +19,11 @@ class MerchantUserResource extends JsonResource
         return [
             'id' => $this->id,
             'merchantId' => $this->merchant_id,
-            'merchant' => new MerchantResource($this->whenLoaded('merchant')),
+            'merchant' => $this->whenLoaded('merchant', fn () => [
+                'id' => $this->merchant->id,
+                'name' => $this->merchant->name,
+                'code' => $this->merchant->code,
+            ]),
             'name' => $this->name,
             'username' => $this->username,
             'email' => $this->email,
