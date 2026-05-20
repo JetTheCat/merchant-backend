@@ -20,6 +20,7 @@ class MerchantResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'code' => $this->code,
             'businessName' => $this->business_name,
             'businessRegistrationNumber' => $this->when(
                 $this->business_registration_number,
