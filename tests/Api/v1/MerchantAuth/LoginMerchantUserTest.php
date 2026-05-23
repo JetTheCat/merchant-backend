@@ -44,6 +44,7 @@ class LoginMerchantUserTest extends TestCase
                 'user' => [
                     'id',
                     'merchantId',
+                    'merchant',
                     'name',
                     'email',
                     'role',
