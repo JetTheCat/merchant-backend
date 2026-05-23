@@ -54,8 +54,10 @@ class LoginMerchantUserController extends Controller
 
     private function resolveUser(string $credential): ?MerchantUser
     {
+        $query = MerchantUser::with('merchant');
+
         if (filter_var($credential, FILTER_VALIDATE_EMAIL)) {
-            return MerchantUser::where('email', $credential)->first();
+            return $query->where('email', $credential)->first();
         }
 
         $parts = explode('@', $credential, 2);
@@ -66,7 +68,7 @@ class LoginMerchantUserController extends Controller
 
         [$username, $merchantCode] = $parts;
 
-        return MerchantUser::where('username', strtolower($username))
+        return $query->where('username', strtolower($username))
             ->whereHas('merchant', function (Builder $query) use ($merchantCode) {
                 $query->where('code', strtolower($merchantCode));
             })
