@@ -74,4 +74,16 @@ class GetSettlementInvoiceTest extends TestCase
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
+
+    public function testStaffCannotGetSettlementInvoice(): void
+    {
+        $staff = MerchantUser::factory()->staff()->active()->for($this->merchant)->create();
+        $settlement = Settlement::factory()->for($this->merchant)->create();
+
+        $response = $this->actingAs($staff, self::MERCHANT_USER_GUARD)
+            ->getJson(self::getSettlementInvoiceEndpoint($settlement->id));
+
+        $response->assertStatus(Response::HTTP_FORBIDDEN)
+            ->assertJson(['message' => 'Only the merchant owner can perform this action.']);
+    }
 }

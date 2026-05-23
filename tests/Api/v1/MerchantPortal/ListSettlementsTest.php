@@ -139,4 +139,15 @@ class ListSettlementsTest extends TestCase
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
+
+    public function testStaffCannotListSettlements(): void
+    {
+        $staff = MerchantUser::factory()->staff()->active()->for($this->merchant)->create();
+
+        $response = $this->actingAs($staff, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listSettlementsEndpoint());
+
+        $response->assertStatus(Response::HTTP_FORBIDDEN)
+            ->assertJson(['message' => 'Only the merchant owner can perform this action.']);
+    }
 }

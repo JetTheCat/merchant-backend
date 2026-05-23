@@ -79,19 +79,20 @@ Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function ()
 
     Route::prefix('redemptions')->group(function () {
         Route::post('/qr', GenerateRedemptionQrController::class)->middleware('throttle:redemption-qr');
-        Route::post('/{id}/refund', RefundRedemptionController::class);
+        Route::post('/{id}/refund', RefundRedemptionController::class)->middleware('merchant.owner');
         Route::get('/', ListMerchantRedemptionsController::class);
         Route::get('/today', GetTodayRedemptionSummaryController::class);
     });
 
-    Route::prefix('settlements')->group(function () {
+    Route::prefix('settlements')->middleware('merchant.owner')->group(function () {
         Route::get('/', ListSettlementsController::class);
         Route::get('/{id}', GetSettlementController::class);
         Route::get('/{id}/invoice', GetSettlementInvoiceController::class);
     });
 
-    Route::prefix('packages')->group(function () {
-        Route::get('/', ListCreditPackagesController::class);
+    Route::get('/packages', ListCreditPackagesController::class);
+
+    Route::prefix('packages')->middleware('merchant.owner')->group(function () {
         Route::post('/', CreateCreditPackageController::class);
         Route::patch('/{id}', UpdateCreditPackageController::class);
         Route::delete('/{id}', DeleteCreditPackageController::class);
