@@ -27,6 +27,7 @@ use App\Http\Controllers\MerchantPortal\RemoveMerchantStaffController;
 use App\Http\Controllers\MerchantPortal\UpdateCreditPackageController;
 use App\Http\Controllers\MerchantPortal\UpdateMerchantProfileController;
 use App\Http\Controllers\MerchantPortal\UpdateMerchantStaffController;
+use App\Http\Controllers\MerchantPortal\UpdateMerchantUserPasswordController;
 use App\Http\Controllers\Merchants\GetMerchantController;
 use App\Http\Controllers\Merchants\GetMerchantsController;
 use App\Http\Controllers\Merchants\ListMerchantCreditPackagesController;
@@ -61,6 +62,8 @@ Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function ()
 
     Route::prefix('users')->group(function () {
         Route::get('/me', GetAuthenticatedMerchantUserController::class);
+        Route::patch('/me/password', UpdateMerchantUserPasswordController::class)
+            ->middleware('merchant.owner');
 
         Route::get('/', ListMerchantUsersController::class);
     });

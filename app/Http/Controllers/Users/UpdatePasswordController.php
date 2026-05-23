@@ -15,7 +15,7 @@ class UpdatePasswordController extends Controller
     public function __invoke(UpdatePasswordRequest $request): JsonResponse
     {
         $request->user()->update([
-            'password' => Hash::make($request->password),
+            'password' => Hash::make($request->validated('password')),
         ]);
 
         return response()->json([
