@@ -17,8 +17,8 @@ class ConfirmRedemptionController extends Controller
 
     public function __invoke(ConfirmRedemptionRequest $request): JsonResponse
     {
-        $transaction = $this->redemptionService->confirmRedemption(
-            $request->validated('token'),
+        $transaction = $this->redemptionService->redeemWithFallbackCode(
+            $request->validated('code'),
             $request->user(),
         );
 

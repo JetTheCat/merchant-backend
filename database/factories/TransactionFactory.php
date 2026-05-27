@@ -36,14 +36,6 @@ class TransactionFactory extends Factory
             'paid_amount' => $amount,
             'balance_before' => $balanceBefore,
             'balance_after' => round($balanceBefore + $amount, 2),
-            'qr_code' => null,
-            'qr_expires_at' => null,
-            'redemption_code' => null,
-            'redeemed_at' => null,
-            'expires_at' => null,
-            'expired_at' => null,
-            'metadata' => null,
-            'notes' => null,
         ];
     }
 

@@ -44,8 +44,7 @@ class CreditTransactionFactory extends TransactionFactory
                 'amount' => $amount,
                 'paid_amount' => null,
                 'balance_after' => round((float) $attributes['balance_before'] - $amount, 2),
-                'qr_code' => $this->faker->uuid(),
-                'redeemed_at' => now(),
+                'expires_at' => now()->addMinutes(config('app.fallback_code_expiry_minutes', 5)),
             ];
         });
     }

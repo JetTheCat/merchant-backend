@@ -63,9 +63,9 @@ trait MerchantPortalEndpoints
         return '/api/v1/merchant/transactions';
     }
 
-    protected static function generateRedemptionQrEndpoint(): string
+    protected static function generateFallbackCodeEndpoint(): string
     {
-        return '/api/v1/merchant/redemptions/qr';
+        return '/api/v1/merchant/redemptions/code';
     }
 
     protected static function listMerchantRedemptionsEndpoint(): string

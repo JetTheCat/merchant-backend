@@ -10,7 +10,7 @@ use App\Http\Controllers\MerchantAuth\ResetMerchantPasswordController;
 use App\Http\Controllers\MerchantPortal\CreateCreditPackageController;
 use App\Http\Controllers\MerchantPortal\CreateMerchantStaffController;
 use App\Http\Controllers\MerchantPortal\DeleteCreditPackageController;
-use App\Http\Controllers\MerchantPortal\GenerateRedemptionQrController;
+use App\Http\Controllers\MerchantPortal\GenerateFallbackCodeController;
 use App\Http\Controllers\MerchantPortal\GetAuthenticatedMerchantUserController;
 use App\Http\Controllers\MerchantPortal\GetMerchantProfileController;
 use App\Http\Controllers\MerchantPortal\GetMerchantStatsController;
@@ -78,7 +78,7 @@ Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function ()
     Route::get('/transactions', ListMerchantTransactionsController::class);
 
     Route::prefix('redemptions')->group(function () {
-        Route::post('/qr', GenerateRedemptionQrController::class)->middleware('throttle:redemption-qr');
+        Route::post('/code', GenerateFallbackCodeController::class);
         Route::post('/{id}/refund', RefundRedemptionController::class)->middleware('merchant.owner');
         Route::get('/', ListMerchantRedemptionsController::class);
         Route::get('/today', GetTodayRedemptionSummaryController::class);

@@ -26,12 +26,12 @@ class RedemptionServiceTest extends TestCase
         $this->service = app(RedemptionService::class);
     }
 
-    public function testGenerateQrCreatesPendingTransaction(): void
+    public function testGenerateFallbackCodeCreatesPendingTransaction(): void
     {
         $merchant = Merchant::factory()->active()->create();
         $merchantUser = MerchantUser::factory()->for($merchant)->create();
 
-        $transaction = $this->service->generateQr($merchantUser, 50.00);
+        $transaction = $this->service->generateFallbackCode($merchantUser, 50.00);
 
         $this->assertDatabaseHas('transactions', [
             'id' => $transaction->id,
@@ -42,13 +42,12 @@ class RedemptionServiceTest extends TestCase
             'amount' => '50.00',
         ]);
 
-        $this->assertNotNull($transaction->qr_code);
-        $this->assertNotNull($transaction->redemption_code);
-        $this->assertNotNull($transaction->qr_expires_at);
-        $this->assertTrue($transaction->qr_expires_at->isFuture());
+        $this->assertNotNull($transaction->fallback_code);
+        $this->assertNotNull($transaction->expires_at);
+        $this->assertTrue($transaction->expires_at->isFuture());
     }
 
-    public function testGenerateQrCancelsPreviousPendingQrForSameMerchantUser(): void
+    public function testGenerateFallbackCodeCancelsPreviousPendingForSameMerchantUser(): void
     {
         $merchant = Merchant::factory()->active()->create();
         $merchantUser = MerchantUser::factory()->for($merchant)->create();
@@ -59,12 +58,12 @@ class RedemptionServiceTest extends TestCase
             ->for($merchantUser, 'merchantUser')
             ->create(['status' => TransactionStatus::PENDING]);
 
-        $this->service->generateQr($merchantUser, 30.00);
+        $this->service->generateFallbackCode($merchantUser, 30.00);
 
         $this->assertEquals(TransactionStatus::CANCELLED, $existing->fresh()->status);
     }
 
-    public function testGenerateQrDoesNotCancelPendingQrsForOtherMerchantUsers(): void
+    public function testGenerateFallbackCodeDoesNotCancelPendingForOtherMerchantUsers(): void
     {
         $merchant = Merchant::factory()->active()->create();
         $merchantUser = MerchantUser::factory()->for($merchant)->create();
@@ -76,20 +75,23 @@ class RedemptionServiceTest extends TestCase
             ->for($otherMerchantUser, 'merchantUser')
             ->create(['status' => TransactionStatus::PENDING]);
 
-        $this->service->generateQr($merchantUser, 30.00);
+        $this->service->generateFallbackCode($merchantUser, 30.00);
 
         $this->assertEquals(TransactionStatus::PENDING, $otherPending->fresh()->status);
     }
 
-    public function testGenerateQrReturnsUniqueRedemptionCode(): void
+    public function testGenerateFallbackCodeReturnsUniqueCode(): void
     {
         $merchant = Merchant::factory()->active()->create();
-        $merchantUser = MerchantUser::factory()->for($merchant)->create();
+        [$firstMerchantUser, $secondMerchantUser] = MerchantUser::factory()
+            ->for($merchant)
+            ->count(2)
+            ->create();
 
-        $first = $this->service->generateQr($merchantUser, 10.00);
-        $second = $this->service->generateQr($merchantUser, 20.00);
+        $first = $this->service->generateFallbackCode($firstMerchantUser, 10.00);
+        $second = $this->service->generateFallbackCode($secondMerchantUser, 20.00);
 
-        $this->assertNotEquals($first->redemption_code, $second->redemption_code);
+        $this->assertNotEquals($first->fallback_code, $second->fallback_code);
     }
 
     public function testRefundRedemptionCreatesRefundTransactionAndRestoresBalance(): void

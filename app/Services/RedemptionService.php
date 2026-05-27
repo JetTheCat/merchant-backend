@@ -17,7 +17,7 @@ use Illuminate\Validation\ValidationException;
 
 class RedemptionService
 {
-    public function generateQr(MerchantUser $merchantUser, float $amount): CreditTransaction
+    public function generateFallbackCode(MerchantUser $merchantUser, float $amount): CreditTransaction
     {
         return DB::transaction(function () use ($merchantUser, $amount) {
             CreditTransaction::pending()
@@ -35,47 +35,29 @@ class RedemptionService
                 'amount' => $amount,
                 'balance_before' => 0,
                 'balance_after' => 0,
-                'qr_code' => $this->generateToken(),
-                'qr_expires_at' => now()->addMinutes(config('app.qr_expiry_minutes', 5)),
-                'redemption_code' => $this->generateRedemptionCode(),
+                'fallback_code' => $this->generateShortCode(),
+                'expires_at' => now()->addMinutes(config('app.fallback_code_expiry_minutes'))
             ]);
         });
     }
 
-    public function confirmRedemption(string $token, User $user): CreditTransaction
+    public function redeemWithFallbackCode(string $code, User $user): CreditTransaction
     {
-        return DB::transaction(function () use ($token, $user) {
-            $transaction = CreditTransaction::where('qr_code', $token)
+        return DB::transaction(function () use ($code, $user) {
+            $transaction = CreditTransaction::pending()
+                ->where('fallback_code', $code)
                 ->where('type', TransactionType::CREDIT_REDEMPTION)
                 ->first();
 
             if ($transaction === null) {
                 throw ValidationException::withMessages([
-                    'token' => ['Invalid redemption token.'],
+                    'code' => ['Invalid code.'],
                 ]);
             }
 
-            if ($transaction->status === TransactionStatus::COMPLETED) {
+            if ($transaction->expires_at->isPast()) {
                 throw ValidationException::withMessages([
-                    'token' => ['This QR code has already been redeemed.'],
-                ]);
-            }
-
-            if ($transaction->status === TransactionStatus::CANCELLED) {
-                throw ValidationException::withMessages([
-                    'token' => ['This QR code has been cancelled.'],
-                ]);
-            }
-
-            if ($transaction->status !== TransactionStatus::PENDING) {
-                throw ValidationException::withMessages([
-                    'token' => ['This QR code is no longer valid.'],
-                ]);
-            }
-
-            if ($transaction->qr_expires_at->isPast()) {
-                throw ValidationException::withMessages([
-                    'token' => ['This QR code has expired.'],
+                    'code' => ['This code has expired.'],
                 ]);
             }
 
@@ -86,13 +68,13 @@ class RedemptionService
 
             if ($userCredit === null) {
                 throw ValidationException::withMessages([
-                    'token' => ['You do not have a wallet for this merchant.'],
+                    'code' => ['You do not have a wallet for this merchant.'],
                 ]);
             }
 
             if (bccomp((string) $userCredit->balance, (string) $transaction->amount, 2) < 0) {
                 throw ValidationException::withMessages([
-                    'token' => ['Insufficient balance.'],
+                    'code' => ['Insufficient balance.'],
                 ]);
             }
 
@@ -174,17 +156,12 @@ class RedemptionService
         });
     }
 
-    private function generateToken(): string
-    {
-        return bin2hex(random_bytes(20));
-    }
-
-    private function generateRedemptionCode(): string
+    private function generateShortCode(): string
     {
         $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         do {
             $code = implode('', array_map(fn () => $chars[random_int(0, 31)], range(0, 5)));
-        } while (CreditTransaction::pending()->where('redemption_code', $code)->exists());
+        } while (CreditTransaction::pending()->where('fallback_code', $code)->exists());
 
         return $code;
     }

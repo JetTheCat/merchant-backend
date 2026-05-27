@@ -6,7 +6,7 @@ namespace App\Http\Requests\MerchantPortal;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class GenerateRedemptionQrRequest extends FormRequest
+class GenerateFallbackCodeRequest extends FormRequest
 {
     public function authorize(): bool
     {

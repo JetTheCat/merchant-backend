@@ -44,7 +44,7 @@ class Transaction extends Model
         'platform_fee',
         'qr_code',
         'qr_expires_at',
-        'redemption_code',
+        'fallback_code',
         'redeemed_at',
         'expires_at',
         'expired_at',

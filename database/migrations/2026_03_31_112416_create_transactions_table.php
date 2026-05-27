@@ -29,7 +29,7 @@ return new class extends Migration
             $table->decimal('platform_fee', 10, 2)->nullable();
             $table->string('qr_code', 100)->nullable();
             $table->timestamp('qr_expires_at')->nullable();
-            $table->string('redemption_code', 10)->nullable();
+            $table->string('fallback_code', 10)->nullable();
             $table->timestamp('redeemed_at')->nullable();
             $table->timestamp('expires_at')->nullable();
             $table->timestamp('expired_at')->nullable();
@@ -45,7 +45,7 @@ return new class extends Migration
             $table->index('status');
             $table->index('reference_code');
             $table->index('qr_code');
-            $table->index('redemption_code');
+            $table->index('fallback_code');
             $table->index('created_at');
         });
     }
