@@ -24,6 +24,7 @@ class MerchantUser extends Authenticatable
 
     protected $fillable = [
         'merchant_id',
+        'merchant_location_id',
         'name',
         'username',
         'email',
@@ -58,6 +59,11 @@ class MerchantUser extends Authenticatable
     public function merchant(): BelongsTo
     {
         return $this->belongsTo(Merchant::class);
+    }
+
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(MerchantLocation::class, 'merchant_location_id');
     }
 
     #[Scope]
