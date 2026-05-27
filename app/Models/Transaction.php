@@ -42,12 +42,9 @@ class Transaction extends Model
         'balance_after',
         'platform_fee_rate',
         'platform_fee',
-        'qr_code',
-        'qr_expires_at',
         'fallback_code',
         'redeemed_at',
         'expires_at',
-        'expired_at',
         'metadata',
         'notes',
     ];
@@ -62,10 +59,8 @@ class Transaction extends Model
         'balance_after' => 'decimal:2',
         'platform_fee_rate' => 'decimal:4',
         'platform_fee' => 'decimal:2',
-        'qr_expires_at' => 'datetime',
         'redeemed_at' => 'datetime',
         'expires_at' => 'datetime',
-        'expired_at' => 'datetime',
         'metadata' => 'array',
     ];
 
