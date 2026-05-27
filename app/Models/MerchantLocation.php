@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\MerchantArea;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +25,7 @@ class MerchantLocation extends Model
     ];
 
     protected $casts = [
+        'area' => MerchantArea::class,
         'is_active' => 'boolean',
     ];
 

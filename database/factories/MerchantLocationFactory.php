@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\MerchantArea;
 use App\Models\Merchant;
 use App\Models\MerchantLocation;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,20 +23,7 @@ class MerchantLocationFactory extends Factory
             'merchant_id' => Merchant::factory(),
             'name' => fake()->randomElement(['Main Branch', 'Branch 2', 'Outlet', 'Kiosk']),
             'redemption_code' => Str::uuid()->toString(),
-            'area' => fake()->randomElement([
-                'Bukit Jalil',
-                'Bangsar',
-                'Cheras',
-                'Damansara',
-                'Kepong',
-                'Klang',
-                'Kuala Lumpur',
-                'Mont Kiara',
-                'Petaling Jaya',
-                'Puchong',
-                'Shah Alam',
-                'Subang Jaya',
-            ]),
+            'area' => fake()->randomElement(MerchantArea::cases()),
             'is_active' => true,
         ];
     }
