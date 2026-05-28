@@ -24,8 +24,15 @@ class MerchantLocationFactory extends Factory
             'name' => fake()->randomElement(['Main Branch', 'Branch 2', 'Outlet', 'Kiosk']),
             'redemption_code' => Str::uuid()->toString(),
             'area' => fake()->randomElement(MerchantArea::cases()),
-            'is_active' => true,
+            'is_active' => false,
         ];
+    }
+
+    public function active(): static
+    {
+        return $this->state(fn () => [
+            'is_active' => true,
+        ]);
     }
 
     public function inactive(): static

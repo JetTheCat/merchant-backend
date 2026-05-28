@@ -86,7 +86,7 @@ class ListMerchantLocationsTest extends TestCase
 
     public function testInactiveLocationsAreIncluded(): void
     {
-        MerchantLocation::factory()->for($this->merchant)->create();
+        MerchantLocation::factory()->active()->for($this->merchant)->create();
         MerchantLocation::factory()->inactive()->for($this->merchant)->create();
 
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)

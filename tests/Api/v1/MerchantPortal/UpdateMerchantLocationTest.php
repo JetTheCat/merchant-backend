@@ -31,7 +31,7 @@ class UpdateMerchantLocationTest extends TestCase
 
         $this->merchant = Merchant::factory()->create();
         $this->owner = MerchantUser::factory()->owner()->active()->for($this->merchant)->create();
-        $this->location = MerchantLocation::factory()->for($this->merchant)->create([
+        $this->location = MerchantLocation::factory()->active()->for($this->merchant)->create([
             'name' => 'Main Branch',
             'area' => MerchantArea::PETALING_JAYA,
         ]);
@@ -136,7 +136,45 @@ class UpdateMerchantLocationTest extends TestCase
                 'payload' => ['area' => 'Atlantis'],
                 'expectedErrors' => ['area'],
             ],
+            'is_active not boolean' => [
+                'payload' => ['is_active' => 'yes'],
+                'expectedErrors' => ['isActive'],
+            ],
         ];
+    }
+
+    public function testOwnerCanActivateLocation(): void
+    {
+        $this->location->update(['is_active' => false]);
+
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->patchJson(self::updateMerchantLocationEndpoint($this->location->id), [
+                'is_active' => true,
+            ]);
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonPath('data.isActive', true);
+
+        $this->assertDatabaseHas('merchant_locations', [
+            'id' => $this->location->id,
+            'is_active' => true,
+        ]);
+    }
+
+    public function testOwnerCanDeactivateLocation(): void
+    {
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->patchJson(self::updateMerchantLocationEndpoint($this->location->id), [
+                'is_active' => false,
+            ]);
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonPath('data.isActive', false);
+
+        $this->assertDatabaseHas('merchant_locations', [
+            'id' => $this->location->id,
+            'is_active' => false,
+        ]);
     }
 
     public function testStaffCannotUpdateLocation(): void

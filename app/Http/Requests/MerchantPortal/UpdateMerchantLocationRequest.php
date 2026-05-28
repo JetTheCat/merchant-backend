@@ -20,6 +20,7 @@ class UpdateMerchantLocationRequest extends FormRequest
         return [
             'name' => ['sometimes', 'string', 'max:100'],
             'area' => ['sometimes', 'string', Rule::enum(MerchantArea::class)],
+            'is_active' => ['sometimes', 'boolean'],
         ];
     }
 }

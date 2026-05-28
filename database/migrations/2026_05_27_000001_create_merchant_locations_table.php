@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name', 100);
             $table->uuid('redemption_code')->unique();
             $table->string('area', 100);
-            $table->boolean('is_active')->default(true);
+            $table->boolean('is_active')->default(false);
             $table->timestamps();
 
             $table->index('merchant_id');

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Api\v1\MerchantPortal;
 
-use App\Enums\MerchantArea;
 use App\Models\Merchant;
 use App\Models\MerchantUser;
 use App\Models\User;
@@ -84,13 +83,13 @@ class CreateMerchantLocationTest extends TestCase
         ]);
     }
 
-    public function testLocationIsActiveByDefault(): void
+    public function testLocationIsInactiveByDefault(): void
     {
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
             ->postJson(self::createMerchantLocationEndpoint(), self::VALID_PAYLOAD);
 
         $response->assertStatus(Response::HTTP_CREATED)
-            ->assertJsonPath('data.isActive', true);
+            ->assertJsonPath('data.isActive', false);
     }
 
     public function testRedemptionCodeIsUniquePerLocation(): void
