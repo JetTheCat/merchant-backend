@@ -17,6 +17,7 @@ use App\Http\Controllers\MerchantPortal\GetMerchantStatsController;
 use App\Http\Controllers\MerchantPortal\GetSettlementController;
 use App\Http\Controllers\MerchantPortal\GetSettlementInvoiceController;
 use App\Http\Controllers\MerchantPortal\GetTodayRedemptionSummaryController;
+use App\Http\Controllers\MerchantPortal\CreateMerchantLocationController;
 use App\Http\Controllers\MerchantPortal\ListCreditPackagesController;
 use App\Http\Controllers\MerchantPortal\ListMerchantLocationsController;
 use App\Http\Controllers\MerchantPortal\ListMerchantRedemptionsController;
@@ -75,7 +76,13 @@ Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function ()
         Route::delete('/{id}', RemoveMerchantStaffController::class);
     });
 
-    Route::get('/locations', ListMerchantLocationsController::class);
+    Route::prefix('locations')->group(function () {
+        Route::get('/', ListMerchantLocationsController::class);
+
+        Route::middleware('merchant.owner')->group(function () {
+            Route::post('/', CreateMerchantLocationController::class);
+        });
+    });
 
     Route::get('/stats', GetMerchantStatsController::class);
     Route::get('/transactions', ListMerchantTransactionsController::class);
@@ -93,11 +100,13 @@ Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function ()
         Route::get('/{id}/invoice', GetSettlementInvoiceController::class);
     });
 
-    Route::get('/packages', ListCreditPackagesController::class);
+    Route::prefix('packages')->group(function () {
+        Route::get('/', ListCreditPackagesController::class);
 
-    Route::prefix('packages')->middleware('merchant.owner')->group(function () {
-        Route::post('/', CreateCreditPackageController::class);
-        Route::patch('/{id}', UpdateCreditPackageController::class);
-        Route::delete('/{id}', DeleteCreditPackageController::class);
+        Route::middleware('merchant.owner')->group(function () {
+            Route::post('/', CreateCreditPackageController::class);
+            Route::patch('/{id}', UpdateCreditPackageController::class);
+            Route::delete('/{id}', DeleteCreditPackageController::class);
+        });
     });
 });

@@ -88,6 +88,11 @@ trait MerchantPortalEndpoints
         return '/api/v1/merchant/locations';
     }
 
+    protected static function createMerchantLocationEndpoint(): string
+    {
+        return '/api/v1/merchant/locations';
+    }
+
     protected static function listSettlementsEndpoint(): string
     {
         return '/api/v1/merchant/settlements';
