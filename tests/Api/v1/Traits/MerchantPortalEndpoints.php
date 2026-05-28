@@ -93,6 +93,11 @@ trait MerchantPortalEndpoints
         return '/api/v1/merchant/locations';
     }
 
+    protected static function updateMerchantLocationEndpoint(string $id): string
+    {
+        return "/api/v1/merchant/locations/{$id}";
+    }
+
     protected static function listSettlementsEndpoint(): string
     {
         return '/api/v1/merchant/settlements';
