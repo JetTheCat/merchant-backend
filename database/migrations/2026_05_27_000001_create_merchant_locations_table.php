@@ -15,11 +15,15 @@ return new class extends Migration
             $table->foreignUuid('merchant_id')->constrained()->onDelete('cascade');
             $table->string('name', 100);
             $table->uuid('redemption_code')->unique();
-            $table->string('area', 100);
+            $table->string('street', 255);
+            $table->string('city', 100);
+            $table->string('postcode', 10);
+            $table->string('state', 100);
             $table->boolean('is_active')->default(false);
             $table->timestamps();
 
             $table->index('merchant_id');
+            $table->index('state');
             $table->index('is_active');
         });
     }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\MerchantArea;
+use App\Enums\MalaysianState;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,12 +20,15 @@ class MerchantLocation extends Model
         'merchant_id',
         'name',
         'redemption_code',
-        'area',
+        'street',
+        'city',
+        'postcode',
+        'state',
         'is_active',
     ];
 
     protected $casts = [
-        'area' => MerchantArea::class,
+        'state' => MalaysianState::class,
         'is_active' => 'boolean',
     ];
 

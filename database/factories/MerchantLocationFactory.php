@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Enums\MerchantArea;
+use App\Enums\MalaysianState;
 use App\Models\Merchant;
 use App\Models\MerchantLocation;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -23,7 +23,10 @@ class MerchantLocationFactory extends Factory
             'merchant_id' => Merchant::factory(),
             'name' => fake()->randomElement(['Main Branch', 'Branch 2', 'Outlet', 'Kiosk']),
             'redemption_code' => Str::uuid()->toString(),
-            'area' => fake()->randomElement(MerchantArea::cases()),
+            'street' => fake()->streetAddress(),
+            'city' => fake()->city(),
+            'postcode' => fake()->numerify('#####'),
+            'state' => fake()->randomElement(MalaysianState::cases()),
             'is_active' => false,
         ];
     }
