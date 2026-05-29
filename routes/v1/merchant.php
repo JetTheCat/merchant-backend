@@ -20,6 +20,7 @@ use App\Http\Controllers\MerchantPortal\GetTodayRedemptionSummaryController;
 use App\Http\Controllers\MerchantPortal\CreateMerchantLocationController;
 use App\Http\Controllers\MerchantPortal\ListCreditPackagesController;
 use App\Http\Controllers\MerchantPortal\ListMerchantLocationsController;
+use App\Http\Controllers\MerchantPortal\ListMerchantStatesController;
 use App\Http\Controllers\MerchantPortal\UpdateMerchantLocationController;
 use App\Http\Controllers\MerchantPortal\ListMerchantRedemptionsController;
 use App\Http\Controllers\MerchantPortal\ListMerchantTransactionsController;
@@ -78,6 +79,7 @@ Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function ()
     });
 
     Route::prefix('locations')->group(function () {
+        Route::get('/states', ListMerchantStatesController::class);
         Route::get('/', ListMerchantLocationsController::class);
 
         Route::middleware('merchant.owner')->group(function () {
