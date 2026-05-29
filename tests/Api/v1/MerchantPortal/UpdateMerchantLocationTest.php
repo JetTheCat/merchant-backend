@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Api\v1\MerchantPortal;
 
-use App\Enums\MerchantArea;
 use App\Models\Merchant;
 use App\Models\MerchantLocation;
 use App\Models\MerchantUser;
@@ -33,7 +32,10 @@ class UpdateMerchantLocationTest extends TestCase
         $this->owner = MerchantUser::factory()->owner()->active()->for($this->merchant)->create();
         $this->location = MerchantLocation::factory()->active()->for($this->merchant)->create([
             'name' => 'Main Branch',
-            'area' => MerchantArea::PETALING_JAYA,
+            'street' => 'No. 12, Jalan SS15/4a',
+            'city' => 'Subang Jaya',
+            'postcode' => '47500',
+            'state' => 'Selangor',
         ]);
     }
 
@@ -46,8 +48,7 @@ class UpdateMerchantLocationTest extends TestCase
 
         $response->assertStatus(Response::HTTP_OK)
             ->assertJson(['message' => 'Location updated successfully.'])
-            ->assertJsonPath('data.name', 'Updated Branch')
-            ->assertJsonPath('data.area', 'Petaling Jaya');
+            ->assertJsonPath('data.name', 'Updated Branch');
 
         $this->assertDatabaseHas('merchant_locations', [
             'id' => $this->location->id,
@@ -55,20 +56,30 @@ class UpdateMerchantLocationTest extends TestCase
         ]);
     }
 
-    public function testOwnerCanUpdateLocationArea(): void
+    public function testOwnerCanUpdateLocationAddress(): void
     {
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
             ->patchJson(self::updateMerchantLocationEndpoint($this->location->id), [
-                'area' => 'Bangsar',
+                'street' => 'No. 5, Jalan PJ/1',
+                'city' => 'Petaling Jaya',
+                'postcode' => '46050',
+                'state' => 'Selangor',
             ]);
 
         $response->assertStatus(Response::HTTP_OK)
-            ->assertJsonPath('data.area', 'Bangsar')
-            ->assertJsonPath('data.state', 'Kuala Lumpur');
+            ->assertJsonFragment([
+                'street' => 'No. 5, Jalan PJ/1',
+                'city' => 'Petaling Jaya',
+                'postcode' => '46050',
+                'state' => 'Selangor',
+            ]);
 
         $this->assertDatabaseHas('merchant_locations', [
             'id' => $this->location->id,
-            'area' => 'Bangsar',
+            'street' => 'No. 5, Jalan PJ/1',
+            'city' => 'Petaling Jaya',
+            'postcode' => '46050',
+            'state' => 'Selangor',
         ]);
     }
 
@@ -94,7 +105,7 @@ class UpdateMerchantLocationTest extends TestCase
     public function testOwnerCannotUpdateLocationFromAnotherMerchant(): void
     {
         $otherLocation = MerchantLocation::factory()
-            ->for(Merchant::factory()->create())
+            ->for(Merchant::factory())
             ->create();
 
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
@@ -132,9 +143,25 @@ class UpdateMerchantLocationTest extends TestCase
                 'payload' => ['name' => str_repeat('a', 101)],
                 'expectedErrors' => ['name'],
             ],
-            'invalid area' => [
-                'payload' => ['area' => 'Atlantis'],
-                'expectedErrors' => ['area'],
+            'street too long' => [
+                'payload' => ['street' => str_repeat('a', 256)],
+                'expectedErrors' => ['street'],
+            ],
+            'city too long' => [
+                'payload' => ['city' => str_repeat('a', 101)],
+                'expectedErrors' => ['city'],
+            ],
+            'postcode not digits' => [
+                'payload' => ['postcode' => 'ABCDE'],
+                'expectedErrors' => ['postcode'],
+            ],
+            'postcode wrong length' => [
+                'payload' => ['postcode' => '1234'],
+                'expectedErrors' => ['postcode'],
+            ],
+            'invalid state' => [
+                'payload' => ['state' => 'Atlantis'],
+                'expectedErrors' => ['state'],
             ],
             'is_active not boolean' => [
                 'payload' => ['is_active' => 'yes'],
