@@ -16,10 +16,15 @@ class CreateMerchantLocationController extends Controller
 {
     public function __invoke(CreateMerchantLocationRequest $request): JsonResponse
     {
+        $validated = $request->validated();
+
         $location = MerchantLocation::create([
             'merchant_id' => $request->user()->merchant_id,
-            'name' => $request->validated('name'),
-            'area' => $request->validated('area'),
+            'name' => $validated['name'],
+            'street' => $validated['street'],
+            'city' => $validated['city'],
+            'postcode' => $validated['postcode'],
+            'state' => $validated['state'],
             'redemption_code' => Str::uuid()->toString(),
         ])->fresh();
 

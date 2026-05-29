@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\MerchantPortal;
 
-use App\Enums\MerchantArea;
+use App\Enums\MalaysianState;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,7 +19,10 @@ class CreateMerchantLocationRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:100'],
-            'area' => ['required', 'string', Rule::enum(MerchantArea::class)],
+            'street' => ['required', 'string', 'max:255'],
+            'city' => ['required', 'string', 'max:100'],
+            'postcode' => ['required', 'digits:5'],
+            'state' => ['required', 'string', Rule::enum(MalaysianState::class)],
         ];
     }
 }

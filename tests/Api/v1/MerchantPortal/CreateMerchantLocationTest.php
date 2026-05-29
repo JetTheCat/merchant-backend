@@ -18,7 +18,10 @@ class CreateMerchantLocationTest extends TestCase
 
     private const VALID_PAYLOAD = [
         'name' => 'Main Branch',
-        'area' => 'Petaling Jaya',
+        'street' => 'No. 12, Jalan SS15/4a',
+        'city' => 'Subang Jaya',
+        'postcode' => '47500',
+        'state' => 'Selangor',
     ];
 
     private const VALID_LOCATION_RESPONSE_FIELDS = [
@@ -26,7 +29,9 @@ class CreateMerchantLocationTest extends TestCase
         'merchantId',
         'name',
         'redemptionCode',
-        'area',
+        'street',
+        'city',
+        'postcode',
         'state',
         'isActive',
         'createdAt',
@@ -55,7 +60,9 @@ class CreateMerchantLocationTest extends TestCase
             ->assertJsonStructure(['data' => self::VALID_LOCATION_RESPONSE_FIELDS])
             ->assertJsonFragment([
                 'name' => 'Main Branch',
-                'area' => 'Petaling Jaya',
+                'street' => 'No. 12, Jalan SS15/4a',
+                'city' => 'Subang Jaya',
+                'postcode' => '47500',
                 'state' => 'Selangor',
                 'merchantId' => $this->merchant->id,
             ]);
@@ -63,7 +70,10 @@ class CreateMerchantLocationTest extends TestCase
         $this->assertDatabaseHas('merchant_locations', [
             'merchant_id' => $this->merchant->id,
             'name' => 'Main Branch',
-            'area' => 'Petaling Jaya',
+            'street' => 'No. 12, Jalan SS15/4a',
+            'city' => 'Subang Jaya',
+            'postcode' => '47500',
+            'state' => 'Selangor',
         ]);
     }
 
@@ -98,10 +108,7 @@ class CreateMerchantLocationTest extends TestCase
             ->postJson(self::createMerchantLocationEndpoint(), self::VALID_PAYLOAD);
 
         $secondResponse = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
-            ->postJson(self::createMerchantLocationEndpoint(), [
-                'name' => 'Second Branch',
-                'area' => 'Petaling Jaya',
-            ]);
+            ->postJson(self::createMerchantLocationEndpoint(), self::VALID_PAYLOAD);
 
         $this->assertNotEquals(
             $firstResponse->json('data.redemptionCode'),
@@ -124,23 +131,51 @@ class CreateMerchantLocationTest extends TestCase
         return [
             'missing all fields' => [
                 'payload' => [],
-                'expectedErrors' => ['name', 'area'],
+                'expectedErrors' => ['name', 'street', 'city', 'postcode', 'state'],
             ],
             'missing name' => [
-                'payload' => ['area' => 'Petaling Jaya'],
+                'payload' => array_diff_key(self::VALID_PAYLOAD, ['name' => null]),
                 'expectedErrors' => ['name'],
             ],
-            'missing area' => [
-                'payload' => ['name' => 'Main Branch'],
-                'expectedErrors' => ['area'],
+            'missing street' => [
+                'payload' => array_diff_key(self::VALID_PAYLOAD, ['street' => null]),
+                'expectedErrors' => ['street'],
             ],
-            'invalid area' => [
-                'payload' => ['name' => 'Main Branch', 'area' => 'Atlantis'],
-                'expectedErrors' => ['area'],
+            'missing city' => [
+                'payload' => array_diff_key(self::VALID_PAYLOAD, ['city' => null]),
+                'expectedErrors' => ['city'],
+            ],
+            'missing postcode' => [
+                'payload' => array_diff_key(self::VALID_PAYLOAD, ['postcode' => null]),
+                'expectedErrors' => ['postcode'],
+            ],
+            'missing state' => [
+                'payload' => array_diff_key(self::VALID_PAYLOAD, ['state' => null]),
+                'expectedErrors' => ['state'],
             ],
             'name too long' => [
-                'payload' => ['name' => str_repeat('a', 101), 'area' => 'Petaling Jaya'],
+                'payload' => [...self::VALID_PAYLOAD, 'name' => str_repeat('a', 101)],
                 'expectedErrors' => ['name'],
+            ],
+            'street too long' => [
+                'payload' => [...self::VALID_PAYLOAD, 'street' => str_repeat('a', 256)],
+                'expectedErrors' => ['street'],
+            ],
+            'city too long' => [
+                'payload' => [...self::VALID_PAYLOAD, 'city' => str_repeat('a', 101)],
+                'expectedErrors' => ['city'],
+            ],
+            'postcode not digits' => [
+                'payload' => [...self::VALID_PAYLOAD, 'postcode' => 'ABCDE'],
+                'expectedErrors' => ['postcode'],
+            ],
+            'postcode wrong length' => [
+                'payload' => [...self::VALID_PAYLOAD, 'postcode' => '1234'],
+                'expectedErrors' => ['postcode'],
+            ],
+            'invalid state' => [
+                'payload' => [...self::VALID_PAYLOAD, 'state' => 'Atlantis'],
+                'expectedErrors' => ['state'],
             ],
         ];
     }
