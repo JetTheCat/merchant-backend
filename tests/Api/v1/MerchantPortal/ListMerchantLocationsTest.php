@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Api\v1\MerchantPortal;
 
-use App\Enums\MerchantArea;
+use App\Enums\MalaysianState;
 use App\Models\Merchant;
 use App\Models\MerchantLocation;
 use App\Models\MerchantUser;
@@ -17,12 +17,14 @@ class ListMerchantLocationsTest extends TestCase
 {
     use MerchantPortalEndpoints;
 
-    private const VALID_LOCATION_RESPONSE_FIELDS = [
+    private const array VALID_LOCATION_RESPONSE_FIELDS = [
         'id',
         'merchantId',
         'name',
         'redemptionCode',
-        'area',
+        'street',
+        'city',
+        'postcode',
         'state',
         'isActive',
         'createdAt',
@@ -96,18 +98,25 @@ class ListMerchantLocationsTest extends TestCase
             ->assertJsonCount(2, 'data');
     }
 
-    public function testResponseContainsAreaAndState(): void
+    public function testResponseContainsAddressFields(): void
     {
         MerchantLocation::factory()->for($this->merchant)->create([
-            'area' => MerchantArea::PETALING_JAYA,
+            'street' => 'No. 12, Jalan SS15/4a',
+            'city' => 'Subang Jaya',
+            'postcode' => '47500',
+            'state' => MalaysianState::SELANGOR,
         ]);
 
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
             ->getJson(self::listMerchantLocationsEndpoint());
 
         $response->assertStatus(Response::HTTP_OK)
-            ->assertJsonPath('data.0.area', 'Petaling Jaya')
-            ->assertJsonPath('data.0.state', 'Selangor');
+            ->assertJsonFragment([
+                'street' => 'No. 12, Jalan SS15/4a',
+                'city' => 'Subang Jaya',
+                'postcode' => '47500',
+                'state' => 'Selangor',
+            ]);
     }
 
     public function testEmptyListWhenNoLocations(): void
@@ -117,6 +126,67 @@ class ListMerchantLocationsTest extends TestCase
 
         $response->assertStatus(Response::HTTP_OK)
             ->assertJsonCount(0, 'data');
+    }
+
+    public function testCanFilterByActiveStatus(): void
+    {
+        MerchantLocation::factory()->active()->for($this->merchant)->create();
+        MerchantLocation::factory()->inactive()->for($this->merchant)->create();
+
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantLocationsEndpoint().'?is_active=true');
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.isActive', true);
+    }
+
+    public function testCanFilterByInactiveStatus(): void
+    {
+        MerchantLocation::factory()->active()->for($this->merchant)->create();
+        MerchantLocation::factory()->inactive()->for($this->merchant)->create();
+
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantLocationsEndpoint().'?is_active=false');
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.isActive', false);
+    }
+
+    public function testCanFilterByState(): void
+    {
+        MerchantLocation::factory()->for($this->merchant)->create(['state' => MalaysianState::SELANGOR]);
+        MerchantLocation::factory()->for($this->merchant)->create(['state' => MalaysianState::PENANG]);
+
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantLocationsEndpoint().'?state=Selangor');
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.state', 'Selangor');
+    }
+
+    public function testCanFilterByName(): void
+    {
+        MerchantLocation::factory()->for($this->merchant)->create(['name' => 'Main Branch']);
+        MerchantLocation::factory()->for($this->merchant)->create(['name' => 'Petaling Store']);
+
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantLocationsEndpoint().'?name=main+br');
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Main Branch');
+    }
+
+    public function testInvalidFilterValuesReturnValidationError(): void
+    {
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantLocationsEndpoint().'?state=Atlantis');
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
+            ->assertJsonValidationErrors(['state']);
     }
 
     public function testListMerchantLocationsRequiresAuthentication(): void

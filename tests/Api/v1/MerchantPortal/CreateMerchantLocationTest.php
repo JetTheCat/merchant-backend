@@ -16,7 +16,7 @@ class CreateMerchantLocationTest extends TestCase
 {
     use MerchantPortalEndpoints;
 
-    private const VALID_PAYLOAD = [
+    private const array VALID_PAYLOAD = [
         'name' => 'Main Branch',
         'street' => 'No. 12, Jalan SS15/4a',
         'city' => 'Subang Jaya',
@@ -24,7 +24,7 @@ class CreateMerchantLocationTest extends TestCase
         'state' => 'Selangor',
     ];
 
-    private const VALID_LOCATION_RESPONSE_FIELDS = [
+    private const array VALID_LOCATION_RESPONSE_FIELDS = [
         'id',
         'merchantId',
         'name',
