@@ -37,6 +37,14 @@ class CreateMerchantStaffRequest extends FormRequest
             ],
             'password' => ['required', 'string', Password::defaults()],
             'phone' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'merchant_location_id' => [
+                'sometimes',
+                'nullable',
+                'uuid',
+                Rule::exists('merchant_locations', 'id')
+                    ->where('merchant_id', $this->user()->merchant_id)
+                    ->whereNull('deleted_at'),
+            ],
         ];
     }
 }
