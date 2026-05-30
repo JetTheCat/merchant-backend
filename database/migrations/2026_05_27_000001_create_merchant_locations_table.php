@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('state', 100);
             $table->boolean('is_active')->default(false);
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index('merchant_id');
             $table->index('state');

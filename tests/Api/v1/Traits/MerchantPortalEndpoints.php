@@ -6,7 +6,7 @@ namespace Tests\Api\v1\Traits;
 
 trait MerchantPortalEndpoints
 {
-    protected const MERCHANT_USER_GUARD = 'merchant_user';
+    protected const string MERCHANT_USER_GUARD = 'merchant_user';
 
     protected static function getAuthenticatedMerchantUserEndpoint(): string
     {
@@ -99,6 +99,11 @@ trait MerchantPortalEndpoints
     }
 
     protected static function updateMerchantLocationEndpoint(string $id): string
+    {
+        return "/api/v1/merchant/locations/{$id}";
+    }
+
+    protected static function removeMerchantLocationEndpoint(string $id): string
     {
         return "/api/v1/merchant/locations/{$id}";
     }
