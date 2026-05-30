@@ -93,7 +93,7 @@ class Merchant extends Model
             ->where('role', 'owner');
     }
 
-    public function locations(): HasMany
+    public function merchantLocations(): HasMany
     {
         return $this->hasMany(MerchantLocation::class);
     }

@@ -17,7 +17,7 @@ class RemoveMerchantLocationController extends Controller
     {
         $merchant = $request->user()->merchant()->firstOrFail();
 
-        $location = $merchant->locations()->find($id);
+        $location = $merchant->merchantLocations()->find($id);
 
         if (! $location) {
             return response()->json(['message' => 'Location not found.'], Response::HTTP_NOT_FOUND);

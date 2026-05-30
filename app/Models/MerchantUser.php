@@ -61,9 +61,9 @@ class MerchantUser extends Authenticatable
         return $this->belongsTo(Merchant::class);
     }
 
-    public function location(): BelongsTo
+    public function merchantLocation(): BelongsTo
     {
-        return $this->belongsTo(MerchantLocation::class, 'merchant_location_id');
+        return $this->belongsTo(MerchantLocation::class);
     }
 
     #[Scope]

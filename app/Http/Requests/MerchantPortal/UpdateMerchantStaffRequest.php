@@ -39,6 +39,14 @@ class UpdateMerchantStaffRequest extends FormRequest
             ],
             'password' => ['sometimes', 'string', Password::defaults()],
             'phone' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'merchant_location_id' => [
+                'sometimes',
+                'nullable',
+                'uuid',
+                Rule::exists('merchant_locations', 'id')
+                    ->where('merchant_id', $this->user()->merchant_id)
+                    ->whereNull('deleted_at'),
+            ],
             'status' => ['sometimes', Rule::enum(MerchantUserStatus::class), Rule::notIn([MerchantUserStatus::PENDING_VERIFICATION->value])],
         ];
     }

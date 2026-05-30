@@ -82,9 +82,7 @@ class RemoveMerchantLocationTest extends TestCase
     public function testStaffAssignmentsAreNullifiedOnRemoval(): void
     {
         $location = MerchantLocation::factory()->inactive()->for($this->merchant)->create();
-        $staff = MerchantUser::factory()->staff()->active()->for($this->merchant)->create([
-            'merchant_location_id' => $location->id,
-        ]);
+        $staff = MerchantUser::factory()->staff()->active()->for($this->merchant)->for($location)->create();
 
         $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
             ->deleteJson(self::removeMerchantLocationEndpoint($location->id))
