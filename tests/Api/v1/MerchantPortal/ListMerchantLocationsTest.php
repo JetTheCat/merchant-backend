@@ -17,18 +17,28 @@ class ListMerchantLocationsTest extends TestCase
 {
     use MerchantPortalEndpoints;
 
-    private const array VALID_LOCATION_RESPONSE_FIELDS = [
-        'id',
-        'merchantId',
-        'name',
-        'redemptionCode',
-        'street',
-        'city',
-        'postcode',
-        'state',
-        'isActive',
-        'createdAt',
-        'updatedAt',
+    private const array VALID_LOCATION_RESPONSE_STRUCTURE = [
+        'data' => [
+            '*' => [
+                'id',
+                'merchantId',
+                'name',
+                'redemptionCode',
+                'street',
+                'city',
+                'postcode',
+                'state',
+                'isActive',
+                'createdAt',
+                'updatedAt',
+            ],
+        ],
+        'meta' => [
+            'perPage',
+            'nextCursor',
+            'prevCursor',
+            'hasMore',
+        ],
     ];
 
     private Merchant $merchant;
@@ -52,11 +62,7 @@ class ListMerchantLocationsTest extends TestCase
 
         $response->assertStatus(Response::HTTP_OK)
             ->assertJsonCount(3, 'data')
-            ->assertJsonStructure([
-                'data' => [
-                    '*' => self::VALID_LOCATION_RESPONSE_FIELDS,
-                ],
-            ]);
+            ->assertJsonStructure(self::VALID_LOCATION_RESPONSE_STRUCTURE);
     }
 
     public function testStaffCanListMerchantLocations(): void
@@ -165,6 +171,54 @@ class ListMerchantLocationsTest extends TestCase
         $response->assertStatus(Response::HTTP_OK)
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.state', 'Selangor');
+    }
+
+    public function testPaginationRespectsLimitParameter(): void
+    {
+        MerchantLocation::factory()->count(10)->for($this->merchant)->create();
+
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantLocationsEndpoint().'?limit=5');
+
+        $response->assertOk()
+            ->assertJsonCount(5, 'data')
+            ->assertJson([
+                'meta' => [
+                    'perPage' => 5,
+                    'hasMore' => true
+                ]
+            ]);
+    }
+
+    public function testPaginationCursorNavigatesToNextPage(): void
+    {
+        MerchantLocation::factory()->count(5)->for($this->merchant)->create();
+
+        $firstPage = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantLocationsEndpoint().'?limit=3');
+
+        $nextCursor = $firstPage->json('meta.nextCursor');
+
+        $secondPage = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantLocationsEndpoint().'?'.http_build_query(['limit' => 3, 'cursor' => $nextCursor]));
+
+        $secondPage->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data')
+            ->assertJson([
+                'meta' => [
+                    'hasMore' => false,
+                    'nextCursor' => null
+                ]
+            ]);
+    }
+
+    public function testLimitExceedingMaxReturnsValidationError(): void
+    {
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantLocationsEndpoint().'?limit=101');
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
+            ->assertJsonValidationErrors(['limit']);
     }
 
     public function testCanFilterByName(): void
