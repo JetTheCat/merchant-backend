@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\MerchantPortal;
 
+use App\Rules\ValidMerchantLocation;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -41,9 +42,7 @@ class CreateMerchantStaffRequest extends FormRequest
                 'sometimes',
                 'nullable',
                 'uuid',
-                Rule::exists('merchant_locations', 'id')
-                    ->where('merchant_id', $this->user()->merchant_id)
-                    ->whereNull('deleted_at'),
+                new ValidMerchantLocation($this->user()->merchant_id),
             ],
         ];
     }

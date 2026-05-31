@@ -13,6 +13,11 @@ trait MerchantPortalEndpoints
         return '/api/v1/merchant/users/me';
     }
 
+    protected static function updateMerchantOwnerEndpoint(): string
+    {
+        return '/api/v1/merchant/users/me';
+    }
+
     protected static function patchMerchantUserPasswordEndpoint(): string
     {
         return '/api/v1/merchant/users/me/password';

@@ -10,6 +10,7 @@ use App\Models\Merchant;
 use App\Models\MerchantLocation;
 use App\Models\MerchantUser;
 use App\Models\User;
+use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\Api\v1\Traits\MerchantPortalEndpoints;
@@ -250,7 +251,7 @@ class CreateMerchantStaffTest extends TestCase
                 'expectedErrors' => ['username'],
             ],
             'invalid location id' => [
-                'payload' => [...self::VALID_PAYLOAD, 'merchantLocationId' => 'not-a-uuid'],
+                'payload' => [...self::VALID_PAYLOAD, 'merchantLocationId' => Str::uuid()->toString()],
                 'expectedErrors' => ['merchantLocationId'],
             ],
         ];

@@ -378,7 +378,7 @@ class UpdateMerchantStaffTest extends TestCase
                 'expectedErrors' => ['password'],
             ],
             'invalid location id' => [
-                'payload' => ['merchantLocationId' => 'not-a-uuid'],
+                'payload' => ['merchantLocationId' => Str::uuid()->toString()],
                 'expectedErrors' => ['merchantLocationId'],
             ],
         ];
