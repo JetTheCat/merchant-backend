@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace App\Http\Controllers\MerchantPortal;
 
 use App\Http\Controllers\Controller;
-use App\Models\Transaction;
+use App\Services\MerchantLocationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 class RemoveMerchantLocationController extends Controller
 {
+    public function __construct(private readonly MerchantLocationService $merchantLocationService) {}
+
     public function __invoke(Request $request, string $id): JsonResponse
     {
         $merchant = $request->user()->merchant()->firstOrFail();
@@ -30,15 +31,7 @@ class RemoveMerchantLocationController extends Controller
             );
         }
 
-        DB::transaction(function () use ($location): void {
-            $location->merchantUsers()->update(['merchant_location_id' => null]);
-
-            if (Transaction::where('merchant_location_id', $location->id)->exists()) {
-                $location->delete();
-            } else {
-                $location->forceDelete();
-            }
-        });
+        $this->merchantLocationService->remove($location);
 
         return response()->json(null, Response::HTTP_NO_CONTENT);
     }

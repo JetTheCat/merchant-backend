@@ -9,7 +9,6 @@ use App\Http\Requests\MerchantPortal\CreateMerchantLocationRequest;
 use App\Http\Resources\MerchantLocationResource;
 use App\Models\MerchantLocation;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class CreateMerchantLocationController extends Controller
@@ -25,7 +24,6 @@ class CreateMerchantLocationController extends Controller
             'city' => $validated['city'],
             'postcode' => $validated['postcode'],
             'state' => $validated['state'],
-            'redemption_code' => Str::uuid()->toString(),
         ])->fresh();
 
         return response()->json([

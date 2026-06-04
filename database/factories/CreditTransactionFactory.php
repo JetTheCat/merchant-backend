@@ -7,7 +7,6 @@ namespace Database\Factories;
 use App\Enums\TransactionType;
 use App\Models\CreditPackage;
 use App\Models\CreditTransaction;
-use App\Models\MerchantUser;
 
 /**
  * @extends TransactionFactory<CreditTransaction>
@@ -40,7 +39,6 @@ class CreditTransactionFactory extends TransactionFactory
             return [
                 'type' => TransactionType::CREDIT_REDEMPTION,
                 'credit_package_id' => null,
-                'merchant_user_id' => $attributes['merchant_user_id'] ?? MerchantUser::factory(),
                 'amount' => $amount,
                 'paid_amount' => null,
                 'balance_after' => round((float) $attributes['balance_before'] - $amount, 2),
