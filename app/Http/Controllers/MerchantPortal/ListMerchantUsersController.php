@@ -17,6 +17,7 @@ class ListMerchantUsersController extends Controller
             ->merchant()
             ->firstOrFail()
             ->merchantUsers()
+            ->with('merchantLocation')
             ->orderBy('created_at')
             ->get();
 

@@ -25,6 +25,10 @@ class MerchantUserResource extends JsonResource
                 'name' => $this->merchant->name,
                 'code' => $this->merchant->code,
             ]),
+            'merchantLocation' => $this->whenLoaded('merchantLocation', fn () => [
+                'id' => $this->merchantLocation->id,
+                'name' => $this->merchantLocation->name,
+            ]),
             'name' => $this->name,
             'username' => $this->username,
             'email' => $this->email,

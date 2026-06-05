@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Api\v1\MerchantPortal;
 
 use App\Models\Merchant;
+use App\Models\MerchantLocation;
 use App\Models\MerchantUser;
 use App\Models\User;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,6 +19,8 @@ class ListMerchantUsersTest extends TestCase
     private const VALID_MERCHANT_USER_RESPONSE_FIELDS = [
         'id',
         'merchantId',
+        'merchantLocationId',
+        'merchantLocation',
         'name',
         'username',
         'email',
@@ -72,6 +75,34 @@ class ListMerchantUsersTest extends TestCase
             ->getJson(self::getMerchantUsersEndpoint());
 
         $response->assertStatus(Response::HTTP_OK);
+    }
+
+    public function testUserWithLocationIncludesMerchantLocationData(): void
+    {
+        $location = MerchantLocation::factory()->for($this->merchant)->create();
+        $staff = MerchantUser::factory()->staff()->active()->create([
+            'merchant_id' => $this->merchant->id,
+            'merchant_location_id' => $location->id,
+        ]);
+
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->getJson(self::getMerchantUsersEndpoint());
+
+        $staffData = collect($response->json('data'))->firstWhere('id', $staff->id);
+
+        $this->assertEquals($location->id, $staffData['merchantLocationId']);
+        $this->assertEquals($location->id, $staffData['merchantLocation']['id']);
+        $this->assertEquals($location->name, $staffData['merchantLocation']['name']);
+    }
+
+    public function testUserWithoutLocationHasNullMerchantLocation(): void
+    {
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->getJson(self::getMerchantUsersEndpoint());
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonPath('data.0.merchantLocationId', null)
+            ->assertJsonPath('data.0.merchantLocation', null);
     }
 
     public function testOnlyReturnsMerchantUsersFromOwnMerchant(): void
