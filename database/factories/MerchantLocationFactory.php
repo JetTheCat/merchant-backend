@@ -8,7 +8,6 @@ use App\Enums\MalaysianState;
 use App\Models\Merchant;
 use App\Models\MerchantLocation;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 /**
  * @extends Factory<MerchantLocation>
@@ -22,7 +21,7 @@ class MerchantLocationFactory extends Factory
         return [
             'merchant_id' => Merchant::factory(),
             'name' => fake()->randomElement(['Main Branch', 'Branch 2', 'Outlet', 'Kiosk']),
-            'redemption_code' => Str::uuid()->toString(),
+            'redemption_code' => fake()->uuid(),
             'street' => fake()->streetAddress(),
             'city' => fake()->city(),
             'postcode' => fake()->numerify('#####'),

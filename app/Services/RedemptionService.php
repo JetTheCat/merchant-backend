@@ -7,7 +7,9 @@ namespace App\Services;
 use App\Enums\TransactionCategory;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
+use App\Events\RedemptionCompleted;
 use App\Models\CreditTransaction;
+use App\Models\MerchantLocation;
 use App\Models\MerchantUser;
 use App\Models\Transaction;
 use App\Models\User;
@@ -17,6 +19,68 @@ use Illuminate\Validation\ValidationException;
 
 class RedemptionService
 {
+    public function redeemWithStaticQr(string $code, float $amount, User $user): CreditTransaction
+    {
+        $transaction = DB::transaction(function () use ($code, $amount, $user) {
+            $location = MerchantLocation::where('redemption_code', $code)
+                ->where('is_active', true)
+                ->first();
+
+            if ($location === null) {
+                throw ValidationException::withMessages([
+                    'code' => ['Invalid QR code.'],
+                ]);
+            }
+
+            $userCredit = UserCredit::where('user_id', $user->id)
+                ->where('merchant_id', $location->merchant_id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($userCredit === null) {
+                throw ValidationException::withMessages([
+                    'code' => ['You do not have a wallet for this merchant.'],
+                ]);
+            }
+
+            if (bccomp((string) $userCredit->balance, (string) $amount, 2) < 0) {
+                throw ValidationException::withMessages([
+                    'amount' => ['Insufficient balance.'],
+                ]);
+            }
+
+            $balanceBefore = $userCredit->balance;
+            $balanceAfter = bcsub((string) $balanceBefore, (string) $amount, 2);
+
+            $transaction = CreditTransaction::create([
+                'user_id' => $user->id,
+                'merchant_id' => $location->merchant_id,
+                'merchant_location_id' => $location->id,
+                'user_credit_id' => $userCredit->id,
+                'category' => TransactionCategory::CREDIT,
+                'type' => TransactionType::CREDIT_REDEMPTION,
+                'reference_code' => Transaction::generateUniqueReferenceCode(),
+                'status' => TransactionStatus::COMPLETED,
+                'amount' => $amount,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'redeemed_at' => now(),
+            ]);
+
+            $userCredit->update([
+                'balance' => $balanceAfter,
+                'total_redeemed' => bcadd((string) $userCredit->total_redeemed, (string) $amount, 2),
+                'last_redemption_at' => now(),
+            ]);
+
+            return $transaction->fresh();
+        });
+
+        RedemptionCompleted::dispatch($transaction);
+
+        return $transaction;
+    }
+
     public function generateFallbackCode(MerchantUser $merchantUser, float $amount): CreditTransaction
     {
         return DB::transaction(function () use ($merchantUser, $amount) {
@@ -28,6 +92,7 @@ class RedemptionService
             return CreditTransaction::create([
                 'merchant_id' => $merchantUser->merchant_id,
                 'merchant_user_id' => $merchantUser->id,
+                'merchant_location_id' => $merchantUser->merchant_location_id,
                 'category' => TransactionCategory::CREDIT,
                 'type' => TransactionType::CREDIT_REDEMPTION,
                 'reference_code' => Transaction::generateUniqueReferenceCode(),
@@ -43,7 +108,7 @@ class RedemptionService
 
     public function redeemWithFallbackCode(string $code, User $user): CreditTransaction
     {
-        return DB::transaction(function () use ($code, $user) {
+        $transaction = DB::transaction(function () use ($code, $user) {
             $transaction = CreditTransaction::pending()
                 ->where('fallback_code', $code)
                 ->where('type', TransactionType::CREDIT_REDEMPTION)
@@ -98,6 +163,12 @@ class RedemptionService
 
             return $transaction->fresh();
         });
+
+        if ($transaction->merchant_location_id !== null) {
+            RedemptionCompleted::dispatch($transaction);
+        }
+
+        return $transaction;
     }
 
     public function refundRedemption(CreditTransaction $redemption, MerchantUser $byUser, ?string $notes = null): CreditTransaction
