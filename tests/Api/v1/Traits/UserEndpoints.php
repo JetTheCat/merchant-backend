@@ -6,6 +6,8 @@ namespace Tests\Api\v1\Traits;
 
 trait UserEndpoints
 {
+    protected const string USER_GUARD = 'sanctum';
+
     protected static function getUserEndpoint(): string
     {
         return '/api/v1/user';
@@ -44,5 +46,10 @@ trait UserEndpoints
     protected static function confirmRedemptionEndpoint(): string
     {
         return '/api/v1/user/credits/redeem';
+    }
+
+    protected static function lookupRedemptionQrEndpoint(string $code): string
+    {
+        return "/api/v1/user/credits/redeem/{$code}";
     }
 }
