@@ -75,6 +75,14 @@ class LookupRedemptionQrTest extends TestCase
             ->assertJsonPath('data.availableBalance', '0.00');
     }
 
+    public function testRedemptionCodeMustBeUuid(): void
+    {
+        $response = $this->actingAs($this->user, self::USER_GUARD)
+            ->getJson(self::lookupRedemptionQrEndpoint('not-a-uuid'));
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
     public function testInvalidCodeReturns404(): void
     {
         $response = $this->actingAs($this->user, self::USER_GUARD)
