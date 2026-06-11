@@ -16,6 +16,8 @@ services:
     depends_on:
       octane:
         condition: service_started
+      reverb:
+        condition: service_started
 
   workspace:
     container_name: workspace
@@ -64,6 +66,34 @@ services:
       - ./:/var/www
     ports:
       - "8000:8000"
+    networks:
+      - web-network
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+
+  reverb:
+    container_name: reverb-server
+    build:
+      context: .
+      dockerfile: ./docker/octane/Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+        XDEBUG_ENABLED: ${XDEBUG_ENABLED:-false}
+        XDEBUG_MODE: develop,coverage,debug,profile
+        XDEBUG_HOST: ${XDEBUG_HOST:-host.docker.internal}
+        XDEBUG_IDE_KEY: ${XDEBUG_IDE_KEY:-DOCKER}
+        XDEBUG_LOG: /dev/stdout
+        XDEBUG_LOG_LEVEL: 0
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    user: "${UID:-1000}:${GID:-1000}"
+    tty: true
+    stdin_open: true
+    volumes:
+      - ./:/var/www
     networks:
       - web-network
     depends_on:
