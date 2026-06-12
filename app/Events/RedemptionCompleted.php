@@ -33,7 +33,7 @@ class RedemptionCompleted implements ShouldBroadcastNow
     {
         return [
             'transactionId' => $this->transaction->id,
-            'customerName' => $this->transaction->user->name,
+            'customerName' => $this->transaction->user->full_name,
             'amount' => $this->transaction->amount,
             'redeemedAt' => $this->transaction->redeemed_at,
         ];

@@ -12,7 +12,7 @@ class MerchantLocationObserver
     public function creating(MerchantLocation $location): void
     {
         if (! isset($location->redemption_code)) {
-            $location->redemption_code = Str::uuid()->toString();
+            $location->redemption_code = Str::uuid7()->toString();
         }
     }
 }
