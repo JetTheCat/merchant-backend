@@ -29,7 +29,7 @@ class ListMerchantLocationsController extends Controller
 
         return response()->json([
             'data' => MerchantLocationResource::collection($locations),
-            'meta' => CursorPaginationMeta::build($locations, $request->getLimit())
+            'meta' => CursorPaginationMeta::build($locations, $request->getLimit()),
         ], Response::HTTP_OK);
     }
 }

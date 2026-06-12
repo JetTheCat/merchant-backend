@@ -185,8 +185,8 @@ class ListMerchantLocationsTest extends TestCase
             ->assertJson([
                 'meta' => [
                     'perPage' => 5,
-                    'hasMore' => true
-                ]
+                    'hasMore' => true,
+                ],
             ]);
     }
 
@@ -207,8 +207,8 @@ class ListMerchantLocationsTest extends TestCase
             ->assertJson([
                 'meta' => [
                     'hasMore' => false,
-                    'nextCursor' => null
-                ]
+                    'nextCursor' => null,
+                ],
             ]);
     }
 

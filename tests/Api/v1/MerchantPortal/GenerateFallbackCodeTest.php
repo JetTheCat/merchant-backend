@@ -66,7 +66,7 @@ class GenerateFallbackCodeTest extends TestCase
             'id' => $secondTransactionId,
             'type' => TransactionType::CREDIT_REDEMPTION,
             'status' => TransactionStatus::PENDING,
-            'amount' => '20.00'
+            'amount' => '20.00',
         ]);
 
         $this->assertDatabaseMissing('transactions', [

@@ -7,5 +7,6 @@ namespace App\Constants;
 class CacheTags
 {
     public const string CATEGORIES = 'categories';
+
     public const string STATES = 'states';
 }

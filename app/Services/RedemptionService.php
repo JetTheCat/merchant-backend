@@ -101,7 +101,7 @@ class RedemptionService
                 'balance_before' => 0,
                 'balance_after' => 0,
                 'fallback_code' => $this->generateShortCode(),
-                'expires_at' => now()->addMinutes(config('app.fallback_code_expiry_minutes'))
+                'expires_at' => now()->addMinutes(config('app.fallback_code_expiry_minutes')),
             ]);
         });
     }

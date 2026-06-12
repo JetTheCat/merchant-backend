@@ -21,7 +21,7 @@ class RedemptionCompleted implements ShouldBroadcastNow
 
     public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel('merchant-location.' . $this->transaction->merchant_location_id);
+        return new PrivateChannel('merchant-location.'.$this->transaction->merchant_location_id);
     }
 
     public function broadcastAs(): string
