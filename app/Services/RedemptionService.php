@@ -7,7 +7,9 @@ namespace App\Services;
 use App\Enums\TransactionCategory;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
+use App\Events\RedemptionCompleted;
 use App\Models\CreditTransaction;
+use App\Models\MerchantLocation;
 use App\Models\MerchantUser;
 use App\Models\Transaction;
 use App\Models\User;
@@ -17,7 +19,69 @@ use Illuminate\Validation\ValidationException;
 
 class RedemptionService
 {
-    public function generateQr(MerchantUser $merchantUser, float $amount): CreditTransaction
+    public function redeemWithStaticQr(string $code, float $amount, User $user): CreditTransaction
+    {
+        $transaction = DB::transaction(function () use ($code, $amount, $user) {
+            $location = MerchantLocation::where('redemption_code', $code)
+                ->where('is_active', true)
+                ->first();
+
+            if ($location === null) {
+                throw ValidationException::withMessages([
+                    'code' => ['Invalid QR code.'],
+                ]);
+            }
+
+            $userCredit = UserCredit::where('user_id', $user->id)
+                ->where('merchant_id', $location->merchant_id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($userCredit === null) {
+                throw ValidationException::withMessages([
+                    'code' => ['You do not have a wallet for this merchant.'],
+                ]);
+            }
+
+            if (bccomp((string) $userCredit->balance, (string) $amount, 2) < 0) {
+                throw ValidationException::withMessages([
+                    'amount' => ['Insufficient balance.'],
+                ]);
+            }
+
+            $balanceBefore = $userCredit->balance;
+            $balanceAfter = bcsub((string) $balanceBefore, (string) $amount, 2);
+
+            $transaction = CreditTransaction::create([
+                'user_id' => $user->id,
+                'merchant_id' => $location->merchant_id,
+                'merchant_location_id' => $location->id,
+                'user_credit_id' => $userCredit->id,
+                'category' => TransactionCategory::CREDIT,
+                'type' => TransactionType::CREDIT_REDEMPTION,
+                'reference_code' => Transaction::generateUniqueReferenceCode(),
+                'status' => TransactionStatus::COMPLETED,
+                'amount' => $amount,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'redeemed_at' => now(),
+            ]);
+
+            $userCredit->update([
+                'balance' => $balanceAfter,
+                'total_redeemed' => bcadd((string) $userCredit->total_redeemed, (string) $amount, 2),
+                'last_redemption_at' => now(),
+            ]);
+
+            return $transaction->fresh();
+        });
+
+        RedemptionCompleted::dispatch($transaction);
+
+        return $transaction;
+    }
+
+    public function generateFallbackCode(MerchantUser $merchantUser, float $amount): CreditTransaction
     {
         return DB::transaction(function () use ($merchantUser, $amount) {
             CreditTransaction::pending()
@@ -28,6 +92,7 @@ class RedemptionService
             return CreditTransaction::create([
                 'merchant_id' => $merchantUser->merchant_id,
                 'merchant_user_id' => $merchantUser->id,
+                'merchant_location_id' => $merchantUser->merchant_location_id,
                 'category' => TransactionCategory::CREDIT,
                 'type' => TransactionType::CREDIT_REDEMPTION,
                 'reference_code' => Transaction::generateUniqueReferenceCode(),
@@ -35,47 +100,29 @@ class RedemptionService
                 'amount' => $amount,
                 'balance_before' => 0,
                 'balance_after' => 0,
-                'qr_code' => $this->generateToken(),
-                'qr_expires_at' => now()->addMinutes(config('app.qr_expiry_minutes', 5)),
-                'redemption_code' => $this->generateRedemptionCode(),
+                'fallback_code' => $this->generateShortCode(),
+                'expires_at' => now()->addMinutes(config('app.fallback_code_expiry_minutes')),
             ]);
         });
     }
 
-    public function confirmRedemption(string $token, User $user): CreditTransaction
+    public function redeemWithFallbackCode(string $code, User $user): CreditTransaction
     {
-        return DB::transaction(function () use ($token, $user) {
-            $transaction = CreditTransaction::where('qr_code', $token)
+        $transaction = DB::transaction(function () use ($code, $user) {
+            $transaction = CreditTransaction::pending()
+                ->where('fallback_code', $code)
                 ->where('type', TransactionType::CREDIT_REDEMPTION)
                 ->first();
 
             if ($transaction === null) {
                 throw ValidationException::withMessages([
-                    'token' => ['Invalid redemption token.'],
+                    'code' => ['Invalid code.'],
                 ]);
             }
 
-            if ($transaction->status === TransactionStatus::COMPLETED) {
+            if ($transaction->expires_at->isPast()) {
                 throw ValidationException::withMessages([
-                    'token' => ['This QR code has already been redeemed.'],
-                ]);
-            }
-
-            if ($transaction->status === TransactionStatus::CANCELLED) {
-                throw ValidationException::withMessages([
-                    'token' => ['This QR code has been cancelled.'],
-                ]);
-            }
-
-            if ($transaction->status !== TransactionStatus::PENDING) {
-                throw ValidationException::withMessages([
-                    'token' => ['This QR code is no longer valid.'],
-                ]);
-            }
-
-            if ($transaction->qr_expires_at->isPast()) {
-                throw ValidationException::withMessages([
-                    'token' => ['This QR code has expired.'],
+                    'code' => ['This code has expired.'],
                 ]);
             }
 
@@ -86,13 +133,13 @@ class RedemptionService
 
             if ($userCredit === null) {
                 throw ValidationException::withMessages([
-                    'token' => ['You do not have a wallet for this merchant.'],
+                    'code' => ['You do not have a wallet for this merchant.'],
                 ]);
             }
 
             if (bccomp((string) $userCredit->balance, (string) $transaction->amount, 2) < 0) {
                 throw ValidationException::withMessages([
-                    'token' => ['Insufficient balance.'],
+                    'code' => ['Insufficient balance.'],
                 ]);
             }
 
@@ -116,6 +163,12 @@ class RedemptionService
 
             return $transaction->fresh();
         });
+
+        if ($transaction->merchant_location_id !== null) {
+            RedemptionCompleted::dispatch($transaction);
+        }
+
+        return $transaction;
     }
 
     public function refundRedemption(CreditTransaction $redemption, MerchantUser $byUser, ?string $notes = null): CreditTransaction
@@ -174,17 +227,12 @@ class RedemptionService
         });
     }
 
-    private function generateToken(): string
-    {
-        return bin2hex(random_bytes(20));
-    }
-
-    private function generateRedemptionCode(): string
+    private function generateShortCode(): string
     {
         $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         do {
             $code = implode('', array_map(fn () => $chars[random_int(0, 31)], range(0, 5)));
-        } while (CreditTransaction::pending()->where('redemption_code', $code)->exists());
+        } while (CreditTransaction::pending()->where('fallback_code', $code)->exists());
 
         return $code;
     }

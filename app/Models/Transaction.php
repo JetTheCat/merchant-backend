@@ -30,6 +30,7 @@ class Transaction extends Model
         'user_credit_id',
         'credit_package_id',
         'merchant_user_id',
+        'merchant_location_id',
         'settlement_id',
         'payment_id',
         'category',
@@ -42,12 +43,9 @@ class Transaction extends Model
         'balance_after',
         'platform_fee_rate',
         'platform_fee',
-        'qr_code',
-        'qr_expires_at',
-        'redemption_code',
+        'fallback_code',
         'redeemed_at',
         'expires_at',
-        'expired_at',
         'metadata',
         'notes',
     ];
@@ -62,10 +60,8 @@ class Transaction extends Model
         'balance_after' => 'decimal:2',
         'platform_fee_rate' => 'decimal:4',
         'platform_fee' => 'decimal:2',
-        'qr_expires_at' => 'datetime',
         'redeemed_at' => 'datetime',
         'expires_at' => 'datetime',
-        'expired_at' => 'datetime',
         'metadata' => 'array',
     ];
 
@@ -92,6 +88,11 @@ class Transaction extends Model
     public function merchantUser(): BelongsTo
     {
         return $this->belongsTo(MerchantUser::class, 'merchant_user_id');
+    }
+
+    public function merchantLocation(): BelongsTo
+    {
+        return $this->belongsTo(MerchantLocation::class, 'merchant_location_id');
     }
 
     public function payment(): BelongsTo

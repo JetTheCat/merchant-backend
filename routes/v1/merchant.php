@@ -8,9 +8,10 @@ use App\Http\Controllers\MerchantAuth\LoginMerchantUserController;
 use App\Http\Controllers\MerchantAuth\LogoutMerchantUserController;
 use App\Http\Controllers\MerchantAuth\ResetMerchantPasswordController;
 use App\Http\Controllers\MerchantPortal\CreateCreditPackageController;
+use App\Http\Controllers\MerchantPortal\CreateMerchantLocationController;
 use App\Http\Controllers\MerchantPortal\CreateMerchantStaffController;
 use App\Http\Controllers\MerchantPortal\DeleteCreditPackageController;
-use App\Http\Controllers\MerchantPortal\GenerateRedemptionQrController;
+use App\Http\Controllers\MerchantPortal\GenerateFallbackCodeController;
 use App\Http\Controllers\MerchantPortal\GetAuthenticatedMerchantUserController;
 use App\Http\Controllers\MerchantPortal\GetMerchantProfileController;
 use App\Http\Controllers\MerchantPortal\GetMerchantStatsController;
@@ -18,13 +19,18 @@ use App\Http\Controllers\MerchantPortal\GetSettlementController;
 use App\Http\Controllers\MerchantPortal\GetSettlementInvoiceController;
 use App\Http\Controllers\MerchantPortal\GetTodayRedemptionSummaryController;
 use App\Http\Controllers\MerchantPortal\ListCreditPackagesController;
+use App\Http\Controllers\MerchantPortal\ListMerchantLocationsController;
 use App\Http\Controllers\MerchantPortal\ListMerchantRedemptionsController;
+use App\Http\Controllers\MerchantPortal\ListMerchantStatesController;
 use App\Http\Controllers\MerchantPortal\ListMerchantTransactionsController;
 use App\Http\Controllers\MerchantPortal\ListMerchantUsersController;
 use App\Http\Controllers\MerchantPortal\ListSettlementsController;
 use App\Http\Controllers\MerchantPortal\RefundRedemptionController;
+use App\Http\Controllers\MerchantPortal\RemoveMerchantLocationController;
 use App\Http\Controllers\MerchantPortal\RemoveMerchantStaffController;
 use App\Http\Controllers\MerchantPortal\UpdateCreditPackageController;
+use App\Http\Controllers\MerchantPortal\UpdateMerchantLocationController;
+use App\Http\Controllers\MerchantPortal\UpdateMerchantOwnerController;
 use App\Http\Controllers\MerchantPortal\UpdateMerchantProfileController;
 use App\Http\Controllers\MerchantPortal\UpdateMerchantStaffController;
 use App\Http\Controllers\MerchantPortal\UpdateMerchantUserPasswordController;
@@ -62,8 +68,10 @@ Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function ()
 
     Route::prefix('users')->group(function () {
         Route::get('/me', GetAuthenticatedMerchantUserController::class);
-        Route::patch('/me/password', UpdateMerchantUserPasswordController::class)
-            ->middleware('merchant.owner');
+        Route::middleware('merchant.owner')->group(function () {
+            Route::patch('/me', UpdateMerchantOwnerController::class);
+            Route::patch('/me/password', UpdateMerchantUserPasswordController::class);
+        });
 
         Route::get('/', ListMerchantUsersController::class);
     });
@@ -74,11 +82,22 @@ Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function ()
         Route::delete('/{id}', RemoveMerchantStaffController::class);
     });
 
+    Route::prefix('locations')->group(function () {
+        Route::get('/states', ListMerchantStatesController::class);
+        Route::get('/', ListMerchantLocationsController::class);
+
+        Route::middleware('merchant.owner')->group(function () {
+            Route::post('/', CreateMerchantLocationController::class);
+            Route::patch('/{id}', UpdateMerchantLocationController::class);
+            Route::delete('/{id}', RemoveMerchantLocationController::class);
+        });
+    });
+
     Route::get('/stats', GetMerchantStatsController::class);
     Route::get('/transactions', ListMerchantTransactionsController::class);
 
     Route::prefix('redemptions')->group(function () {
-        Route::post('/qr', GenerateRedemptionQrController::class)->middleware('throttle:redemption-qr');
+        Route::post('/code', GenerateFallbackCodeController::class);
         Route::post('/{id}/refund', RefundRedemptionController::class)->middleware('merchant.owner');
         Route::get('/', ListMerchantRedemptionsController::class);
         Route::get('/today', GetTodayRedemptionSummaryController::class);
@@ -90,11 +109,13 @@ Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function ()
         Route::get('/{id}/invoice', GetSettlementInvoiceController::class);
     });
 
-    Route::get('/packages', ListCreditPackagesController::class);
+    Route::prefix('packages')->group(function () {
+        Route::get('/', ListCreditPackagesController::class);
 
-    Route::prefix('packages')->middleware('merchant.owner')->group(function () {
-        Route::post('/', CreateCreditPackageController::class);
-        Route::patch('/{id}', UpdateCreditPackageController::class);
-        Route::delete('/{id}', DeleteCreditPackageController::class);
+        Route::middleware('merchant.owner')->group(function () {
+            Route::post('/', CreateCreditPackageController::class);
+            Route::patch('/{id}', UpdateCreditPackageController::class);
+            Route::delete('/{id}', DeleteCreditPackageController::class);
+        });
     });
 });

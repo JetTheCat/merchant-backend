@@ -7,8 +7,10 @@ namespace Tests\Api\v1\MerchantPortal;
 use App\Enums\MerchantUserRole;
 use App\Enums\MerchantUserStatus;
 use App\Models\Merchant;
+use App\Models\MerchantLocation;
 use App\Models\MerchantUser;
 use App\Models\User;
+use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\Api\v1\Traits\MerchantPortalEndpoints;
@@ -18,11 +20,18 @@ class CreateMerchantStaffTest extends TestCase
 {
     use MerchantPortalEndpoints;
 
-    private const VALID_PASSWORD = 'SecurePass123!@#';
+    private const string VALID_PASSWORD = 'SecurePass123!@#';
 
-    private const VALID_MERCHANT_STAFF_RESPONSE_FIELDS = [
+    private const array VALID_PAYLOAD = [
+        'name' => 'Jane Staff',
+        'username' => 'janestaff',
+        'password' => self::VALID_PASSWORD,
+    ];
+
+    private const array VALID_MERCHANT_STAFF_RESPONSE_FIELDS = [
         'id',
         'merchantId',
+        'merchantLocationId',
         'name',
         'username',
         'email',
@@ -52,11 +61,7 @@ class CreateMerchantStaffTest extends TestCase
     public function testOwnerCanCreateStaffUser(): void
     {
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
-            ->postJson(self::createMerchantStaffEndpoint(), [
-                'name' => 'Jane Staff',
-                'username' => 'janestaff',
-                'password' => self::VALID_PASSWORD,
-            ]);
+            ->postJson(self::createMerchantStaffEndpoint(), self::VALID_PAYLOAD);
 
         $response->assertStatus(Response::HTTP_CREATED)
             ->assertJson(['message' => 'Merchant user created successfully.'])
@@ -77,11 +82,7 @@ class CreateMerchantStaffTest extends TestCase
     public function testUsernameIsNormalisedToLowercase(): void
     {
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
-            ->postJson(self::createMerchantStaffEndpoint(), [
-                'name' => 'Jane Staff',
-                'username' => 'JaneStaff',
-                'password' => self::VALID_PASSWORD,
-            ]);
+            ->postJson(self::createMerchantStaffEndpoint(), [...self::VALID_PAYLOAD, 'username' => 'JaneStaff']);
 
         $response->assertStatus(Response::HTTP_CREATED)
             ->assertJsonPath('data.username', 'janestaff');
@@ -94,12 +95,7 @@ class CreateMerchantStaffTest extends TestCase
     public function testOwnerCanCreateStaffUserWithPhone(): void
     {
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
-            ->postJson(self::createMerchantStaffEndpoint(), [
-                'name' => 'Jane Staff',
-                'username' => 'janestaff',
-                'password' => self::VALID_PASSWORD,
-                'phone' => '+60123456789',
-            ]);
+            ->postJson(self::createMerchantStaffEndpoint(), [...self::VALID_PAYLOAD, 'phone' => '+60123456789']);
 
         $response->assertStatus(Response::HTTP_CREATED);
 
@@ -109,6 +105,55 @@ class CreateMerchantStaffTest extends TestCase
         ]);
     }
 
+    public function testOwnerCanCreateStaffWithLocation(): void
+    {
+        $location = MerchantLocation::factory()->for($this->merchant)->create();
+
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->postJson(self::createMerchantStaffEndpoint(), [...self::VALID_PAYLOAD, 'merchantLocationId' => $location->id]);
+
+        $response->assertStatus(Response::HTTP_CREATED)
+            ->assertJsonPath('data.merchantLocationId', $location->id);
+
+        $this->assertDatabaseHas('merchant_users', [
+            'username' => 'janestaff',
+            'merchant_location_id' => $location->id,
+        ]);
+    }
+
+    public function testMerchantLocationIdIsNullWhenNotProvided(): void
+    {
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->postJson(self::createMerchantStaffEndpoint(), self::VALID_PAYLOAD);
+
+        $response->assertStatus(Response::HTTP_CREATED)
+            ->assertJsonPath('data.merchantLocationId', null);
+    }
+
+    public function testOwnerCannotAssignStaffToAnotherMerchantsLocation(): void
+    {
+        $otherMerchant = Merchant::factory()->create();
+        $otherLocation = MerchantLocation::factory()->for($otherMerchant)->create();
+
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->postJson(self::createMerchantStaffEndpoint(), [...self::VALID_PAYLOAD, 'merchantLocationId' => $otherLocation->id]);
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
+            ->assertJsonValidationErrors(['merchantLocationId']);
+    }
+
+    public function testOwnerCannotAssignStaffToARemovedLocation(): void
+    {
+        $location = MerchantLocation::factory()->inactive()->for($this->merchant)->create();
+        $location->delete();
+
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->postJson(self::createMerchantStaffEndpoint(), [...self::VALID_PAYLOAD, 'merchantLocationId' => $location->id]);
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
+            ->assertJsonValidationErrors(['merchantLocationId']);
+    }
+
     public function testUsernamesMustBeUniqueWithinMerchant(): void
     {
         MerchantUser::factory()->staff()->active()->for($this->merchant)->create([
@@ -116,11 +161,7 @@ class CreateMerchantStaffTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
-            ->postJson(self::createMerchantStaffEndpoint(), [
-                'name' => 'Another Jane',
-                'username' => 'janestaff',
-                'password' => self::VALID_PASSWORD,
-            ]);
+            ->postJson(self::createMerchantStaffEndpoint(), [...self::VALID_PAYLOAD, 'name' => 'Another Jane']);
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
             ->assertJsonValidationErrors(['username']);
@@ -134,11 +175,7 @@ class CreateMerchantStaffTest extends TestCase
         $staff->delete();
 
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
-            ->postJson(self::createMerchantStaffEndpoint(), [
-                'name' => 'New Jane',
-                'username' => 'janestaff',
-                'password' => self::VALID_PASSWORD,
-            ]);
+            ->postJson(self::createMerchantStaffEndpoint(), [...self::VALID_PAYLOAD, 'name' => 'New Jane']);
 
         $response->assertStatus(Response::HTTP_CREATED);
     }
@@ -151,16 +188,12 @@ class CreateMerchantStaffTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
-            ->postJson(self::createMerchantStaffEndpoint(), [
-                'name' => 'Jane Staff',
-                'username' => 'janestaff',
-                'password' => self::VALID_PASSWORD,
-            ]);
+            ->postJson(self::createMerchantStaffEndpoint(), self::VALID_PAYLOAD);
 
         $response->assertStatus(Response::HTTP_CREATED);
     }
 
-    #[DataProvider('invalidStaffPayloads')]
+    #[DataProvider('providesInvalidStaffPayload')]
     public function testOwnerCannotCreateStaffWithInvalidData(array $payload, array $expectedErrors): void
     {
         $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
@@ -170,7 +203,7 @@ class CreateMerchantStaffTest extends TestCase
             ->assertJsonValidationErrors($expectedErrors);
     }
 
-    public static function invalidStaffPayloads(): array
+    public static function providesInvalidStaffPayload(): array
     {
         return [
             'missing all fields' => [
@@ -178,44 +211,48 @@ class CreateMerchantStaffTest extends TestCase
                 'expectedErrors' => ['name', 'username', 'password'],
             ],
             'missing name' => [
-                'payload' => ['username' => 'janestaff', 'password' => 'SecurePass123!@#'],
+                'payload' => array_diff_key(self::VALID_PAYLOAD, ['name' => null]),
                 'expectedErrors' => ['name'],
             ],
             'missing username' => [
-                'payload' => ['name' => 'Jane Staff', 'password' => 'SecurePass123!@#'],
+                'payload' => array_diff_key(self::VALID_PAYLOAD, ['username' => null]),
                 'expectedErrors' => ['username'],
             ],
             'missing password' => [
-                'payload' => ['name' => 'Jane Staff', 'username' => 'janestaff'],
+                'payload' => array_diff_key(self::VALID_PAYLOAD, ['password' => null]),
                 'expectedErrors' => ['password'],
             ],
             'weak password' => [
-                'payload' => ['name' => 'Jane Staff', 'username' => 'janestaff', 'password' => 'weak'],
+                'payload' => [...self::VALID_PAYLOAD, 'password' => 'weak'],
                 'expectedErrors' => ['password'],
             ],
             'password too short' => [
-                'payload' => ['name' => 'Jane Staff', 'username' => 'janestaff', 'password' => 'Short1!'],
+                'payload' => [...self::VALID_PAYLOAD, 'password' => 'Short1!'],
                 'expectedErrors' => ['password'],
             ],
             'password without symbols' => [
-                'payload' => ['name' => 'Jane Staff', 'username' => 'janestaff', 'password' => 'NoSymbols123'],
+                'payload' => [...self::VALID_PAYLOAD, 'password' => 'NoSymbols123'],
                 'expectedErrors' => ['password'],
             ],
             'password without numbers' => [
-                'payload' => ['name' => 'Jane Staff', 'username' => 'janestaff', 'password' => 'NoNumbers!@#'],
+                'payload' => [...self::VALID_PAYLOAD, 'password' => 'NoNumbers!@#'],
                 'expectedErrors' => ['password'],
             ],
             'password without mixed case' => [
-                'payload' => ['name' => 'Jane Staff', 'username' => 'janestaff', 'password' => 'nouppercase123!'],
+                'payload' => [...self::VALID_PAYLOAD, 'password' => 'nouppercase123!'],
                 'expectedErrors' => ['password'],
             ],
             'username with spaces' => [
-                'payload' => ['name' => 'Jane Staff', 'username' => 'jane staff', 'password' => 'SecurePass123!@#'],
+                'payload' => [...self::VALID_PAYLOAD, 'username' => 'jane staff'],
                 'expectedErrors' => ['username'],
             ],
             'username with special characters' => [
-                'payload' => ['name' => 'Jane Staff', 'username' => 'jane@staff', 'password' => 'SecurePass123!@#'],
+                'payload' => [...self::VALID_PAYLOAD, 'username' => 'jane@staff'],
                 'expectedErrors' => ['username'],
+            ],
+            'invalid location id' => [
+                'payload' => [...self::VALID_PAYLOAD, 'merchantLocationId' => Str::uuid()->toString()],
+                'expectedErrors' => ['merchantLocationId'],
             ],
         ];
     }
@@ -225,11 +262,7 @@ class CreateMerchantStaffTest extends TestCase
         $staff = MerchantUser::factory()->staff()->active()->for($this->merchant)->create();
 
         $response = $this->actingAs($staff, self::MERCHANT_USER_GUARD)
-            ->postJson(self::createMerchantStaffEndpoint(), [
-                'name' => 'New Staff',
-                'username' => 'newstaff',
-                'password' => self::VALID_PASSWORD,
-            ]);
+            ->postJson(self::createMerchantStaffEndpoint(), self::VALID_PAYLOAD);
 
         $response->assertStatus(Response::HTTP_FORBIDDEN)
             ->assertJson(['message' => 'Only the merchant owner can perform this action.']);
@@ -237,11 +270,7 @@ class CreateMerchantStaffTest extends TestCase
 
     public function testCreateMerchantUserRequiresAuthentication(): void
     {
-        $response = $this->postJson(self::createMerchantStaffEndpoint(), [
-            'name' => 'New Staff',
-            'username' => 'newstaff',
-            'password' => self::VALID_PASSWORD,
-        ]);
+        $response = $this->postJson(self::createMerchantStaffEndpoint(), self::VALID_PAYLOAD);
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
@@ -251,11 +280,7 @@ class CreateMerchantStaffTest extends TestCase
         $customer = User::factory()->create();
 
         $response = $this->actingAs($customer, 'sanctum')
-            ->postJson(self::createMerchantStaffEndpoint(), [
-                'name' => 'New Staff',
-                'username' => 'newstaff',
-                'password' => self::VALID_PASSWORD,
-            ]);
+            ->postJson(self::createMerchantStaffEndpoint(), self::VALID_PAYLOAD);
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }

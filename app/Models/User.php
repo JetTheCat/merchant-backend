@@ -117,13 +117,6 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         );
     }
 
-    protected function name(): Attribute
-    {
-        return Attribute::make(
-            get: fn () => $this->first_name.' '.$this->last_name,
-        );
-    }
-
     public function userCredits(): HasMany
     {
         return $this->hasMany(UserCredit::class);

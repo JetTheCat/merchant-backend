@@ -6,6 +6,7 @@ namespace Tests\Api\v1\MerchantPortal;
 
 use App\Enums\MerchantUserStatus;
 use App\Models\Merchant;
+use App\Models\MerchantLocation;
 use App\Models\MerchantUser;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -49,6 +50,7 @@ class UpdateMerchantStaffTest extends TestCase
                 'data' => [
                     'id',
                     'merchantId',
+                    'merchantLocationId',
                     'name',
                     'username',
                     'email',
@@ -152,6 +154,74 @@ class UpdateMerchantStaffTest extends TestCase
             'id' => $staff->id,
             'username' => 'newusername',
         ]);
+    }
+
+    public function testOwnerCanAssignStaffToLocation(): void
+    {
+        $staff = MerchantUser::factory()->staff()->active()->for($this->merchant)->create();
+        $location = MerchantLocation::factory()->for($this->merchant)->create();
+
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->patchJson(self::patchMerchantStaffEndpoint($staff->id), [
+                'merchantLocationId' => $location->id,
+            ]);
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonPath('data.merchantLocationId', $location->id);
+
+        $this->assertDatabaseHas('merchant_users', [
+            'id' => $staff->id,
+            'merchant_location_id' => $location->id,
+        ]);
+    }
+
+    public function testOwnerCanUnassignStaffFromLocation(): void
+    {
+        $location = MerchantLocation::factory()->for($this->merchant)->create();
+        $staff = MerchantUser::factory()->staff()->active()->for($this->merchant)->for($location)->create();
+
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->patchJson(self::patchMerchantStaffEndpoint($staff->id), [
+                'merchantLocationId' => null,
+            ]);
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonPath('data.merchantLocationId', null);
+
+        $this->assertDatabaseHas('merchant_users', [
+            'id' => $staff->id,
+            'merchant_location_id' => null,
+        ]);
+    }
+
+    public function testOwnerCannotAssignStaffToAnotherMerchantsLocation(): void
+    {
+        $staff = MerchantUser::factory()->staff()->active()->for($this->merchant)->create();
+        $otherMerchant = Merchant::factory()->create();
+        $otherLocation = MerchantLocation::factory()->for($otherMerchant)->create();
+
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->patchJson(self::patchMerchantStaffEndpoint($staff->id), [
+                'merchantLocationId' => $otherLocation->id,
+            ]);
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
+            ->assertJsonValidationErrors(['merchantLocationId']);
+    }
+
+    public function testOwnerCannotAssignStaffToARemovedLocation(): void
+    {
+        $staff = MerchantUser::factory()->staff()->active()->for($this->merchant)->create();
+        $location = MerchantLocation::factory()->inactive()->for($this->merchant)->create();
+        $location->delete();
+
+        $response = $this->actingAs($this->owner, self::MERCHANT_USER_GUARD)
+            ->patchJson(self::patchMerchantStaffEndpoint($staff->id), [
+                'merchantLocationId' => $location->id,
+            ]);
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
+            ->assertJsonValidationErrors(['merchantLocationId']);
     }
 
     public function testOwnerCanUpdateStaffToSameUsername(): void
@@ -306,6 +376,10 @@ class UpdateMerchantStaffTest extends TestCase
             'password without mixed case' => [
                 'payload' => ['password' => 'nouppercase123!'],
                 'expectedErrors' => ['password'],
+            ],
+            'invalid location id' => [
+                'payload' => ['merchantLocationId' => Str::uuid()->toString()],
+                'expectedErrors' => ['merchantLocationId'],
             ],
         ];
     }

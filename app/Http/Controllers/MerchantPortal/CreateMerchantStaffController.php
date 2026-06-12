@@ -25,6 +25,7 @@ class CreateMerchantStaffController extends Controller
             'username' => $request->validated('username'),
             'password' => $request->validated('password'),
             'phone' => $request->validated('phone'),
+            'merchant_location_id' => $request->validated('merchant_location_id'),
             'role' => MerchantUserRole::STAFF,
             'status' => MerchantUserStatus::ACTIVE,
         ]);

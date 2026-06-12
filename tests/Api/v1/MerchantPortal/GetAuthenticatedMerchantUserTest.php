@@ -51,7 +51,7 @@ class GetAuthenticatedMerchantUserTest extends TestCase
     {
         $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
             ->getJson(self::getAuthenticatedMerchantUserEndpoint());
-        
+
         $response->assertStatus(Response::HTTP_OK)
             ->assertJsonStructure(self::VALID_STRUCTURE)
             ->assertJsonPath('data.id', $this->merchantUser->id)

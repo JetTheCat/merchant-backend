@@ -1,0 +1,46 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Database\Factories;
+
+use App\Enums\MalaysianState;
+use App\Models\Merchant;
+use App\Models\MerchantLocation;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends Factory<MerchantLocation>
+ */
+class MerchantLocationFactory extends Factory
+{
+    protected $model = MerchantLocation::class;
+
+    public function definition(): array
+    {
+        return [
+            'merchant_id' => Merchant::factory(),
+            'name' => fake()->randomElement(['Main Branch', 'Branch 2', 'Outlet', 'Kiosk']),
+            'redemption_code' => fake()->uuid(),
+            'street' => fake()->streetAddress(),
+            'city' => fake()->city(),
+            'postcode' => fake()->numerify('#####'),
+            'state' => fake()->randomElement(MalaysianState::cases()),
+            'is_active' => false,
+        ];
+    }
+
+    public function active(): static
+    {
+        return $this->state(fn () => [
+            'is_active' => true,
+        ]);
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn () => [
+            'is_active' => false,
+        ]);
+    }
+}

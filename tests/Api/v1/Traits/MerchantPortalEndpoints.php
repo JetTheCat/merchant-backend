@@ -6,9 +6,14 @@ namespace Tests\Api\v1\Traits;
 
 trait MerchantPortalEndpoints
 {
-    protected const MERCHANT_USER_GUARD = 'merchant_user';
+    protected const string MERCHANT_USER_GUARD = 'merchant_user';
 
     protected static function getAuthenticatedMerchantUserEndpoint(): string
+    {
+        return '/api/v1/merchant/users/me';
+    }
+
+    protected static function updateMerchantOwnerEndpoint(): string
     {
         return '/api/v1/merchant/users/me';
     }
@@ -63,9 +68,9 @@ trait MerchantPortalEndpoints
         return '/api/v1/merchant/transactions';
     }
 
-    protected static function generateRedemptionQrEndpoint(): string
+    protected static function generateFallbackCodeEndpoint(): string
     {
-        return '/api/v1/merchant/redemptions/qr';
+        return '/api/v1/merchant/redemptions/code';
     }
 
     protected static function listMerchantRedemptionsEndpoint(): string
@@ -81,6 +86,31 @@ trait MerchantPortalEndpoints
     protected static function getTodayRedemptionSummaryEndpoint(): string
     {
         return '/api/v1/merchant/redemptions/today';
+    }
+
+    protected static function listMerchantStatesEndpoint(): string
+    {
+        return '/api/v1/merchant/locations/states';
+    }
+
+    protected static function listMerchantLocationsEndpoint(): string
+    {
+        return '/api/v1/merchant/locations';
+    }
+
+    protected static function createMerchantLocationEndpoint(): string
+    {
+        return '/api/v1/merchant/locations';
+    }
+
+    protected static function updateMerchantLocationEndpoint(string $id): string
+    {
+        return "/api/v1/merchant/locations/{$id}";
+    }
+
+    protected static function removeMerchantLocationEndpoint(string $id): string
+    {
+        return "/api/v1/merchant/locations/{$id}";
     }
 
     protected static function listSettlementsEndpoint(): string

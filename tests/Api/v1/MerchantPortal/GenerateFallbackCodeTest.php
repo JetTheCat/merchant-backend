@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Tests\Api\v1\Traits\MerchantPortalEndpoints;
 use Tests\TestCase;
 
-class GenerateRedemptionQrTest extends TestCase
+class GenerateFallbackCodeTest extends TestCase
 {
     use MerchantPortalEndpoints;
 
@@ -29,17 +29,16 @@ class GenerateRedemptionQrTest extends TestCase
         $this->merchantUser = MerchantUser::factory()->owner()->active()->for($this->merchant)->create();
     }
 
-    public function testMerchantUserCanGenerateRedemptionQr(): void
+    public function testMerchantUserCanGenerateFallbackCode(): void
     {
         $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
-            ->postJson(self::generateRedemptionQrEndpoint(), ['amount' => 25.00]);
+            ->postJson(self::generateFallbackCodeEndpoint(), ['amount' => 25.00]);
 
         $response->assertStatus(Response::HTTP_CREATED)
             ->assertJsonStructure([
                 'data' => [
                     'transactionId',
-                    'qrCode',
-                    'redemptionCode',
+                    'code',
                     'amount',
                     'expiresAt',
                 ],
@@ -54,18 +53,20 @@ class GenerateRedemptionQrTest extends TestCase
         ]);
     }
 
-    public function testGeneratingNewQrCancelsPreviousPendingQr(): void
+    public function testGeneratingNewCodeCancelsPreviousPending(): void
     {
         $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
-            ->postJson(self::generateRedemptionQrEndpoint(), ['amount' => 10.00]);
+            ->postJson(self::generateFallbackCodeEndpoint(), ['amount' => 10.00]);
 
-        $firstTransactionId = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
-            ->postJson(self::generateRedemptionQrEndpoint(), ['amount' => 20.00])
+        $secondTransactionId = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->postJson(self::generateFallbackCodeEndpoint(), ['amount' => 20.00])
             ->json('data.transactionId');
 
         $this->assertDatabaseHas('transactions', [
-            'id' => $firstTransactionId,
+            'id' => $secondTransactionId,
+            'type' => TransactionType::CREDIT_REDEMPTION,
             'status' => TransactionStatus::PENDING,
+            'amount' => '20.00',
         ]);
 
         $this->assertDatabaseMissing('transactions', [
@@ -79,7 +80,7 @@ class GenerateRedemptionQrTest extends TestCase
     public function testAmountIsRequired(): void
     {
         $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
-            ->postJson(self::generateRedemptionQrEndpoint(), []);
+            ->postJson(self::generateFallbackCodeEndpoint(), []);
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
             ->assertJsonValidationErrors(['amount']);
@@ -88,7 +89,7 @@ class GenerateRedemptionQrTest extends TestCase
     public function testAmountMustBePositive(): void
     {
         $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
-            ->postJson(self::generateRedemptionQrEndpoint(), ['amount' => 0]);
+            ->postJson(self::generateFallbackCodeEndpoint(), ['amount' => 0]);
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
             ->assertJsonValidationErrors(['amount']);
@@ -96,28 +97,16 @@ class GenerateRedemptionQrTest extends TestCase
 
     public function testRequiresAuthentication(): void
     {
-        $response = $this->postJson(self::generateRedemptionQrEndpoint(), ['amount' => 10.00]);
+        $response = $this->postJson(self::generateFallbackCodeEndpoint(), ['amount' => 10.00]);
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
 
-    public function testRegularUserCannotAccessThisEndpoint(): void
+    public function testCustomerCannotAccessThisEndpoint(): void
     {
         $response = $this->actingAs(User::factory()->create(), 'sanctum')
-            ->postJson(self::generateRedemptionQrEndpoint(), ['amount' => 10.00]);
+            ->postJson(self::generateFallbackCodeEndpoint(), ['amount' => 10.00]);
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
-    }
-
-    public function testRateLimitIsEnforced(): void
-    {
-        for ($i = 0; $i < config('rate_limiting.redemption_qr.attempts'); $i++) {
-            $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
-                ->postJson(self::generateRedemptionQrEndpoint(), ['amount' => 10.00]);
-        }
-
-        $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
-            ->postJson(self::generateRedemptionQrEndpoint(), ['amount' => 10.00])
-            ->assertStatus(Response::HTTP_TOO_MANY_REQUESTS);
     }
 }

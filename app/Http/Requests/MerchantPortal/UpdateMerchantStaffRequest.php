@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\MerchantPortal;
 
 use App\Enums\MerchantUserStatus;
+use App\Rules\ValidMerchantLocation;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -39,6 +40,12 @@ class UpdateMerchantStaffRequest extends FormRequest
             ],
             'password' => ['sometimes', 'string', Password::defaults()],
             'phone' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'merchant_location_id' => [
+                'sometimes',
+                'nullable',
+                'uuid',
+                new ValidMerchantLocation($this->user()->merchant_id),
+            ],
             'status' => ['sometimes', Rule::enum(MerchantUserStatus::class), Rule::notIn([MerchantUserStatus::PENDING_VERIFICATION->value])],
         ];
     }

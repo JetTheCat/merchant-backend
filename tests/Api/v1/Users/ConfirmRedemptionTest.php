@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Tests\Api\v1\Users;
 
 use App\Enums\TransactionStatus;
-use App\Models\CreditTransaction;
+use App\Events\RedemptionCompleted;
 use App\Models\Merchant;
+use App\Models\MerchantLocation;
 use App\Models\MerchantUser;
 use App\Models\User;
 use App\Models\UserCredit;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\Api\v1\Traits\UserEndpoints;
 use Tests\TestCase;
@@ -22,11 +25,9 @@ class ConfirmRedemptionTest extends TestCase
 
     private Merchant $merchant;
 
+    private MerchantLocation $location;
+
     private UserCredit $userCredit;
-
-    private CreditTransaction $pendingTransaction;
-
-    private const string VALID_TOKEN = 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';
 
     private const array VALID_STRUCTURE = [
         'data' => [
@@ -49,111 +50,140 @@ class ConfirmRedemptionTest extends TestCase
     {
         parent::setUp();
 
+        Event::fake([RedemptionCompleted::class]);
+
         $this->user = User::factory()->create();
         $this->merchant = Merchant::factory()->active()->create();
+        $this->location = MerchantLocation::factory()
+            ->active()
+            ->for($this->merchant)
+            ->create();
 
         $this->userCredit = UserCredit::factory()
             ->withBalance(100.00)
             ->for($this->user)
             ->for($this->merchant)
             ->create();
-
-        $this->pendingTransaction = CreditTransaction::factory()
-            ->redemption()
-            ->pending()
-            ->for($this->merchant)
-            ->create([
-                'amount' => 25.00,
-                'qr_code' => self::VALID_TOKEN,
-                'qr_expires_at' => now()->addMinutes(5),
-            ]);
     }
 
     public function testUserCanConfirmRedemption(): void
     {
         $response = $this->actingAs($this->user, 'sanctum')
-            ->postJson(self::confirmRedemptionEndpoint(), ['token' => self::VALID_TOKEN]);
+            ->postJson(self::confirmRedemptionEndpoint(), [
+                'code' => $this->location->redemption_code,
+                'amount' => 25.00,
+            ]);
 
         $response->assertStatus(Response::HTTP_OK)
             ->assertJsonStructure(self::VALID_STRUCTURE)
             ->assertJsonPath('data.status', 'completed');
     }
 
-    public function testBalanceIsDeductedAfterRedemption(): void
+    public function testRedemptionDeductsBalance(): void
     {
         $this->actingAs($this->user, 'sanctum')
-            ->postJson(self::confirmRedemptionEndpoint(), ['token' => self::VALID_TOKEN]);
+            ->postJson(self::confirmRedemptionEndpoint(), [
+                'code' => $this->location->redemption_code,
+                'amount' => 25.00,
+            ]);
 
         $this->assertDatabaseHas('user_credits', [
             'id' => $this->userCredit->id,
-            'merchant_id' => $this->merchant->id,
             'balance' => '75.00',
         ]);
     }
 
-    public function testTransactionIsMarkedAsCompleted(): void
+    public function testRedemptionCreatesCompletedTransaction(): void
     {
         $this->actingAs($this->user, 'sanctum')
-            ->postJson(self::confirmRedemptionEndpoint(), ['token' => self::VALID_TOKEN]);
+            ->postJson(self::confirmRedemptionEndpoint(), [
+                'code' => $this->location->redemption_code,
+                'amount' => 25.00,
+            ]);
 
         $this->assertDatabaseHas('transactions', [
-            'id' => $this->pendingTransaction->id,
-            'status' => TransactionStatus::COMPLETED,
             'user_id' => $this->user->id,
+            'merchant_id' => $this->merchant->id,
+            'merchant_location_id' => $this->location->id,
+            'status' => TransactionStatus::COMPLETED,
+            'amount' => 25.00,
         ]);
     }
 
-    public function testInvalidTokenReturnsValidationError(): void
+    public function testRedemptionDispatchesCompletedEvent(): void
     {
-        $response = $this->actingAs($this->user, 'sanctum')
-            ->postJson(self::confirmRedemptionEndpoint(), ['token' => 'invalid-token']);
+        $this->actingAs($this->user, 'sanctum')
+            ->postJson(self::confirmRedemptionEndpoint(), [
+                'code' => $this->location->redemption_code,
+                'amount' => 25.00,
+            ]);
 
-        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
-            ->assertJsonValidationErrors(['token']);
+        Event::assertDispatched(RedemptionCompleted::class);
     }
 
-    public function testAlreadyRedeemedTokenReturnsValidationError(): void
+    public function testRedemptionCodeIsRequired(): void
     {
-        $this->pendingTransaction->update(['status' => TransactionStatus::COMPLETED]);
-
         $response = $this->actingAs($this->user, 'sanctum')
-            ->postJson(self::confirmRedemptionEndpoint(), ['token' => self::VALID_TOKEN]);
+            ->postJson(self::confirmRedemptionEndpoint(), ['amount' => 25.00]);
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
-            ->assertJsonValidationErrors(['token']);
+            ->assertJsonValidationErrors(['code']);
     }
 
-    public function testCancelledTokenReturnsValidationError(): void
+    public function testRedemptionCodeMustBeUuid(): void
     {
-        $this->pendingTransaction->update(['status' => TransactionStatus::CANCELLED]);
-
         $response = $this->actingAs($this->user, 'sanctum')
-            ->postJson(self::confirmRedemptionEndpoint(), ['token' => self::VALID_TOKEN]);
+            ->postJson(self::confirmRedemptionEndpoint(), ['code' => 'AB3K9P', 'amount' => 25.00]);
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
-            ->assertJsonValidationErrors(['token']);
+            ->assertJsonValidationErrors(['code']);
     }
 
-    public function testExpiredTokenReturnsValidationError(): void
+    public function testRedemptionCodeDoesNotExistReturnsValidationError(): void
     {
-        $this->pendingTransaction->update(['qr_expires_at' => now()->subMinute()]);
-
         $response = $this->actingAs($this->user, 'sanctum')
-            ->postJson(self::confirmRedemptionEndpoint(), ['token' => self::VALID_TOKEN]);
+            ->postJson(self::confirmRedemptionEndpoint(), [
+                'code' => Str::uuid()->toString(),
+                'amount' => 25.00,
+            ]);
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
-            ->assertJsonValidationErrors(['token']);
+            ->assertJsonValidationErrors(['code']);
     }
 
-    public function testNoWalletForMerchantReturnsValidationError(): void
+    public function testAmountIsRequired(): void
     {
-        $this->userCredit->delete();
-
         $response = $this->actingAs($this->user, 'sanctum')
-            ->postJson(self::confirmRedemptionEndpoint(), ['token' => self::VALID_TOKEN]);
+            ->postJson(self::confirmRedemptionEndpoint(), ['code' => $this->location->redemption_code]);
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
-            ->assertJsonValidationErrors(['token']);
+            ->assertJsonValidationErrors(['amount']);
+    }
+
+    public function testAmountMustBePositive(): void
+    {
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson(self::confirmRedemptionEndpoint(), [
+                'code' => $this->location->redemption_code,
+                'amount' => 0,
+            ]);
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
+            ->assertJsonValidationErrors(['amount']);
+    }
+
+    public function testInactiveLocationReturnsValidationError(): void
+    {
+        $this->location->update(['is_active' => false]);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson(self::confirmRedemptionEndpoint(), [
+                'code' => $this->location->redemption_code,
+                'amount' => 25.00,
+            ]);
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
+            ->assertJsonValidationErrors(['code']);
     }
 
     public function testInsufficientBalanceReturnsValidationError(): void
@@ -161,24 +191,35 @@ class ConfirmRedemptionTest extends TestCase
         $this->userCredit->update(['balance' => 10.00]);
 
         $response = $this->actingAs($this->user, 'sanctum')
-            ->postJson(self::confirmRedemptionEndpoint(), ['token' => self::VALID_TOKEN]);
+            ->postJson(self::confirmRedemptionEndpoint(), [
+                'code' => $this->location->redemption_code,
+                'amount' => 25.00,
+            ]);
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
-            ->assertJsonValidationErrors(['token']);
+            ->assertJsonValidationErrors(['amount']);
     }
 
-    public function testTokenIsRequired(): void
+    public function testNoWalletReturnsValidationError(): void
     {
+        $this->userCredit->delete();
+
         $response = $this->actingAs($this->user, 'sanctum')
-            ->postJson(self::confirmRedemptionEndpoint(), []);
+            ->postJson(self::confirmRedemptionEndpoint(), [
+                'code' => $this->location->redemption_code,
+                'amount' => 25.00,
+            ]);
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
-            ->assertJsonValidationErrors(['token']);
+            ->assertJsonValidationErrors(['code']);
     }
 
     public function testRequiresAuthentication(): void
     {
-        $response = $this->postJson(self::confirmRedemptionEndpoint(), ['token' => self::VALID_TOKEN]);
+        $response = $this->postJson(self::confirmRedemptionEndpoint(), [
+            'code' => $this->location->redemption_code,
+            'amount' => 25.00,
+        ]);
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }
@@ -190,7 +231,10 @@ class ConfirmRedemptionTest extends TestCase
             ->create();
 
         $response = $this->actingAs($merchantUser, 'merchant_user')
-            ->postJson(self::confirmRedemptionEndpoint(), ['token' => self::VALID_TOKEN]);
+            ->postJson(self::confirmRedemptionEndpoint(), [
+                'code' => $this->location->redemption_code,
+                'amount' => 25.00,
+            ]);
 
         $response->assertStatus(Response::HTTP_UNAUTHORIZED);
     }

@@ -16,7 +16,8 @@ class ConfirmRedemptionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'token' => ['required', 'string'],
+            'code' => ['required', 'string', 'uuid'],
+            'amount' => ['required', 'numeric', 'min:0.01'],
         ];
     }
 }
