@@ -7,4 +7,4 @@ use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::channel('merchant-location.{merchantLocationId}', function (MerchantUser $user, string $merchantLocationId) {
     return $user->merchant_location_id === $merchantLocationId;
-});
+}, ['guards' => ['merchant_user']]);
