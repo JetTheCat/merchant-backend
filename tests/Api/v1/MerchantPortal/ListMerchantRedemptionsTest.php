@@ -7,8 +7,10 @@ namespace Tests\Api\v1\MerchantPortal;
 use App\Enums\TransactionStatus;
 use App\Models\CreditTransaction;
 use App\Models\Merchant;
+use App\Models\MerchantLocation;
 use App\Models\MerchantUser;
 use App\Models\User;
+use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\Api\v1\Traits\MerchantPortalEndpoints;
 use Tests\TestCase;
@@ -148,6 +150,73 @@ class ListMerchantRedemptionsTest extends TestCase
 
         $response->assertStatus(Response::HTTP_OK)
             ->assertJsonCount(2, 'data');
+    }
+
+    public function testDateFiltersConvertTimezoneToUtc(): void
+    {
+        $timezone = 'Asia/Kuala_Lumpur';
+        $windowStart = Carbon::parse('2026-05-08 00:00:00', $timezone)->utc();
+        $windowEnd = Carbon::parse('2026-05-08 23:59:59', $timezone)->utc();
+
+        CreditTransaction::factory()->redemption()->for($this->merchant)->count(4)->sequence(
+            ['created_at' => $windowStart->clone()->subSecond()],
+            ['created_at' => $windowStart],
+            ['created_at' => $windowEnd],
+            ['created_at' => $windowEnd->clone()->addSecond()],
+        )->create();
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantRedemptionsEndpoint().'?'.http_build_query([
+                'date_from' => '2026-05-08 00:00:00',
+                'date_to' => '2026-05-08 23:59:59',
+                'timezone' => $timezone,
+            ]));
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function testItCanFilterByMerchantLocation(): void
+    {
+        [$location, $otherLocation] = MerchantLocation::factory()
+            ->for($this->merchant)
+            ->count(2)
+            ->create();
+
+        CreditTransaction::factory()
+            ->count(2)
+            ->redemption()
+            ->for($this->merchant)
+            ->for($this->merchantUser)
+            ->for($location)
+            ->create();
+
+        CreditTransaction::factory()
+            ->count(3)
+            ->redemption()
+            ->for($this->merchant)
+            ->for($this->merchantUser)
+            ->for($otherLocation)
+            ->create();
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantRedemptionsEndpoint().'?merchant_location_id='.$location->id);
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function testFilteringByMerchantLocationFromAnotherMerchantReturnsValidationError(): void
+    {
+        $otherMerchantLocation = MerchantLocation::factory()
+            ->for(Merchant::factory()->active()->create())
+            ->create();
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantRedemptionsEndpoint().'?merchant_location_id='.$otherMerchantLocation->id);
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
+            ->assertJsonValidationErrors(['merchantLocationId']);
     }
 
     public function testPaginationRespectsLimitParameter(): void
