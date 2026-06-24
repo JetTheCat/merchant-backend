@@ -73,11 +73,6 @@ trait MerchantPortalEndpoints
         return '/api/v1/merchant/redemptions/code';
     }
 
-    protected static function listMerchantRedemptionsEndpoint(): string
-    {
-        return '/api/v1/merchant/redemptions';
-    }
-
     protected static function refundRedemptionEndpoint(string $id): string
     {
         return "/api/v1/merchant/redemptions/{$id}/refund";
