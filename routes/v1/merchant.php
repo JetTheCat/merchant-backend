@@ -20,7 +20,6 @@ use App\Http\Controllers\MerchantPortal\GetSettlementInvoiceController;
 use App\Http\Controllers\MerchantPortal\GetTodayRedemptionSummaryController;
 use App\Http\Controllers\MerchantPortal\ListCreditPackagesController;
 use App\Http\Controllers\MerchantPortal\ListMerchantLocationsController;
-use App\Http\Controllers\MerchantPortal\ListMerchantRedemptionsController;
 use App\Http\Controllers\MerchantPortal\ListMerchantStatesController;
 use App\Http\Controllers\MerchantPortal\ListMerchantTransactionsController;
 use App\Http\Controllers\MerchantPortal\ListMerchantUsersController;
@@ -99,7 +98,6 @@ Route::prefix('merchant')->middleware(['auth:merchant_user'])->group(function ()
     Route::prefix('redemptions')->group(function () {
         Route::post('/code', GenerateFallbackCodeController::class);
         Route::post('/{id}/refund', RefundRedemptionController::class)->middleware('merchant.owner');
-        Route::get('/', ListMerchantRedemptionsController::class);
         Route::get('/today', GetTodayRedemptionSummaryController::class);
     });
 
