@@ -14,6 +14,7 @@ class MerchantTransactionResource extends JsonResource
         return [
             'id' => $this->id,
             'merchantUser' => new MerchantUserResource($this->whenLoaded('merchantUser')),
+            'merchantLocationId' => $this->merchant_location_id,
             'type' => $this->type,
             'typeLabel' => $this->type->label(),
             'status' => $this->status,
