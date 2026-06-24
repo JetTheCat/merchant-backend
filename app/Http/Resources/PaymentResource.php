@@ -18,9 +18,9 @@ class PaymentResource extends JsonResource
             'amount' => $this->amount,
             'currency' => $this->currency,
             'status' => $this->status,
-            'payment_method' => $this->payment_method,
-            'failure_reason' => $this->failure_reason,
-            'paid_at' => $this->paid_at,
+            'paymentMethod' => $this->payment_method,
+            'failureReason' => $this->failure_reason,
+            'paidAt' => $this->paid_at,
         ];
     }
 }

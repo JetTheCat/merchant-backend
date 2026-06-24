@@ -11,9 +11,7 @@ use App\Http\Requests\MerchantPortal\ListMerchantTransactionsRequest;
 use App\Http\Resources\MerchantTransactionResource;
 use App\Http\Responses\CursorPaginationMeta;
 use App\Models\CreditTransaction;
-use App\Models\MerchantUser;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 class ListMerchantTransactionsController extends Controller
@@ -21,11 +19,11 @@ class ListMerchantTransactionsController extends Controller
     public function __invoke(ListMerchantTransactionsRequest $request): JsonResponse
     {
         $validated = $request->validated();
-        $merchant = $request->user()->merchant()->firstOrFail();
+        $merchantId = $request->user()->merchant_id;
 
         $query = CreditTransaction::query()
             ->with('merchantUser')
-            ->where('merchant_id', $merchant->id)
+            ->where('merchant_id', $merchantId)
             ->orderByDesc('created_at')
             ->orderByDesc('id');
 
@@ -42,12 +40,6 @@ class ListMerchantTransactionsController extends Controller
         }
 
         if (isset($validated['merchant_user_id'])) {
-            if (! MerchantUser::where('id', $validated['merchant_user_id'])->where('merchant_id', $merchant->id)->exists()) {
-                throw ValidationException::withMessages([
-                    'merchant_user_id' => ['The selected merchant user does not belong to this merchant.'],
-                ]);
-            }
-
             $query->where('merchant_user_id', $validated['merchant_user_id']);
         }
 
@@ -57,6 +49,10 @@ class ListMerchantTransactionsController extends Controller
 
         if ($to = $request->parseDate('date_to')) {
             $query->where('created_at', '<=', $to);
+        }
+
+        if (isset($validated['merchant_location_id'])) {
+            $query->where('merchant_location_id', $validated['merchant_location_id']);
         }
 
         $transactions = $query->cursorPaginate($request->getLimit());

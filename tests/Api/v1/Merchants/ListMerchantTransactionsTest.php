@@ -8,6 +8,7 @@ use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Models\CreditTransaction;
 use App\Models\Merchant;
+use App\Models\MerchantLocation;
 use App\Models\MerchantUser;
 use App\Models\Transaction;
 use App\Models\User;
@@ -232,6 +233,47 @@ class ListMerchantTransactionsTest extends TestCase
 
         $response->assertStatus(Response::HTTP_OK)
             ->assertJsonCount(2, 'data');
+    }
+
+    public function testItCanFilterByMerchantLocation(): void
+    {
+        [$location, $otherLocation] = MerchantLocation::factory()
+            ->for($this->merchant)
+            ->count(2)
+            ->create();
+
+        CreditTransaction::factory()
+            ->count(2)
+            ->for($this->merchant)
+            ->for($this->merchantUser)
+            ->for($location)
+            ->create();
+
+        CreditTransaction::factory()
+            ->count(3)
+            ->for($this->merchant)
+            ->for($this->merchantUser)
+            ->for($otherLocation)
+            ->create();
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint().'?merchant_location_id='.$location->id);
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function testFilteringByMerchantLocationFromAnotherMerchantReturnsValidationError(): void
+    {
+        $otherMerchantLocation = MerchantLocation::factory()
+            ->for(Merchant::factory()->active()->create())
+            ->create();
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint().'?merchant_location_id='.$otherMerchantLocation->id);
+
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
+            ->assertJsonValidationErrors(['merchantLocationId']);
     }
 
     public function testPaginationRespectsLimitParameter(): void
