@@ -22,7 +22,10 @@ class ListMerchantTransactionsController extends Controller
         $merchantId = $request->user()->merchant_id;
 
         $query = CreditTransaction::query()
-            ->with('merchantUser')
+            ->with([
+                'merchantUser',
+                'user'
+            ])
             ->where('merchant_id', $merchantId)
             ->orderByDesc('created_at')
             ->orderByDesc('id');
