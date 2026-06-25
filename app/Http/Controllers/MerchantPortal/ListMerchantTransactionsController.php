@@ -39,7 +39,7 @@ class ListMerchantTransactionsController extends Controller
         }
 
         if (isset($validated['reference'])) {
-            $query->where('reference_code', 'like', $validated['reference'].'%');
+            $query->where('reference_code', 'ilike', '%'.$validated['reference'].'%');
         }
 
         if (isset($validated['merchant_user_id'])) {

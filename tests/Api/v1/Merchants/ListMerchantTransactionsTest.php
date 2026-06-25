@@ -13,6 +13,7 @@ use App\Models\MerchantUser;
 use App\Models\Transaction;
 use App\Models\User;
 use Carbon\Carbon;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Response;
 use Tests\Api\v1\Traits\MerchantPortalEndpoints;
 use Tests\TestCase;
@@ -188,6 +189,42 @@ class ListMerchantTransactionsTest extends TestCase
 
         $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
             ->getJson(self::listMerchantTransactionsEndpoint().'?reference=TXN-MATCH');
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.referenceCode', $match->reference_code);
+    }
+
+    #[DataProvider('providesPartialReferenceMatches')]
+    public function testItCanFilterByPartialReference(string $reference): void
+    {
+        $match = CreditTransaction::factory()->for($this->merchant)->create(['reference_code' => 'TXN-MATCH-001']);
+        CreditTransaction::factory()->for($this->merchant)->create(['reference_code' => 'TXN-OTHER-001']);
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint().'?reference='.$reference);
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.referenceCode', $match->reference_code);
+    }
+
+    public static function providesPartialReferenceMatches(): array
+    {
+        return [
+            'prefix' => ['reference' => 'TXN-MATCH'],
+            'middle' => ['reference' => 'MATCH'],
+            'suffix' => ['reference' => 'MATCH-001'],
+        ];
+    }
+
+    public function testItCanFilterByReferenceCaseInsensitively(): void
+    {
+        $match = CreditTransaction::factory()->for($this->merchant)->create(['reference_code' => 'TXN-MATCH-001']);
+        CreditTransaction::factory()->for($this->merchant)->create(['reference_code' => 'TXN-OTHER-001']);
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint().'?reference=txn-match');
 
         $response->assertStatus(Response::HTTP_OK)
             ->assertJsonCount(1, 'data')
