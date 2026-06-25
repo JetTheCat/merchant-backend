@@ -101,6 +101,26 @@ class ListMerchantTransactionsTest extends TestCase
         $this->assertEquals([(string) $third->id, (string) $second->id, (string) $first->id], $ids->all());
     }
 
+    public function testTransactionResponseIncludesCustomerDetails(): void
+    {
+        $user = User::factory()->create();
+
+        CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($user)
+            ->for($this->merchant)
+            ->create();
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint())
+            ->assertSuccessful();
+
+        $response->assertJsonPath('data.0.customer.id', $user->id)
+            ->assertJsonPath('data.0.customer.firstName', $user->first_name)
+            ->assertJsonPath('data.0.customer.lastName', $user->last_name);
+    }
+
     public function testItCanFilterByType(): void
     {
         CreditTransaction::factory()->count(2)->for($this->merchant)->create([
