@@ -19,6 +19,8 @@ class UserCreditFactory extends Factory
             'user_id' => User::factory(),
             'merchant_id' => Merchant::factory(),
             'balance' => 0,
+            'cash_balance' => 0,
+            'gross_paid_balance' => 0,
             'total_purchased' => 0,
             'total_redeemed' => 0,
             'last_purchase_at' => null,
@@ -30,6 +32,8 @@ class UserCreditFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'balance' => $amount,
+            'cash_balance' => $amount,
+            'gross_paid_balance' => $amount,
             'total_purchased' => $amount,
             'last_purchase_at' => now(),
         ]);

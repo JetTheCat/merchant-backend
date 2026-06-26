@@ -21,6 +21,8 @@ class UserCredit extends Model
         'user_id',
         'merchant_id',
         'balance',
+        'cash_balance',
+        'gross_paid_balance',
         'total_purchased',
         'total_redeemed',
         'last_purchase_at',
@@ -29,6 +31,8 @@ class UserCredit extends Model
 
     protected $casts = [
         'balance' => 'decimal:2',
+        'cash_balance' => 'decimal:2',
+        'gross_paid_balance' => 'decimal:2',
         'total_purchased' => 'decimal:2',
         'total_redeemed' => 'decimal:2',
         'last_purchase_at' => 'datetime',

@@ -41,6 +41,8 @@ class Merchant extends Model
         'platform_fee_rate',
         'settlement_cycle',
         'status',
+        'credit_sales_paused_at',
+        'liability_alerted_at',
         'bank_name',
         'bank_account_number',
         'bank_account_name',
@@ -52,6 +54,8 @@ class Merchant extends Model
         'longitude' => 'decimal:8',
         'settlement_cycle' => SettlementCycle::class,
         'status' => MerchantStatus::class,
+        'credit_sales_paused_at' => 'datetime',
+        'liability_alerted_at' => 'datetime',
         'business_registration_number' => 'encrypted',
         'bank_account_number' => 'encrypted',
         'bank_account_name' => 'encrypted',
@@ -108,6 +112,11 @@ class Merchant extends Model
         return $query->where('status', MerchantStatus::ACTIVE->value);
     }
 
+    public function scopeNotPaused($query)
+    {
+        return $query->whereNull('credit_sales_paused_at');
+    }
+
     public function scopeByCategory($query, string $categoryId)
     {
         return $query->where('category_id', $categoryId);
@@ -147,5 +156,10 @@ class Merchant extends Model
     public function isSuspended(): bool
     {
         return $this->status === MerchantStatus::SUSPENDED;
+    }
+
+    public function isCreditSalesPaused(): bool
+    {
+        return $this->credit_sales_paused_at !== null;
     }
 }
