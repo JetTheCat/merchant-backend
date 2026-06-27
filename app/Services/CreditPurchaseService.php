@@ -16,6 +16,7 @@ use App\Models\Payment;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\UserCredit;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -32,9 +33,16 @@ class CreditPurchaseService
         // limited packages. Requires a compensation strategy for Stripe failures after commit
         // (cancel orphaned records or expire stale PENDING records via a cleanup job).
         return DB::transaction(function () use ($user, $package) {
-            $package = CreditPackage::where('id', $package->id)
+            $package = CreditPackage::with('merchant')
+                ->where('id', $package->id)
                 ->lockForUpdate()
                 ->firstOrFail();
+
+            if ($package->merchant->isCreditSalesPaused()) {
+                throw ValidationException::withMessages([
+                    'merchant' => ['This merchant is not currently accepting new credit purchases.'],
+                ]);
+            }
 
             if ($package->total_quantity !== null) {
                 $activeCount = CreditTransaction::where('credit_package_id', $package->id)
@@ -66,8 +74,14 @@ class CreditPurchaseService
                 ['balance' => 0, 'total_purchased' => 0, 'total_redeemed' => 0],
             );
 
+            if ($this->purchaseWouldExceedWalletLimit($userCredit, $package)) {
+                throw ValidationException::withMessages([
+                    'wallet' => ['This purchase would exceed the maximum wallet balance allowed for this merchant.'],
+                ]);
+            }
+
             $balanceBefore = $userCredit->balance;
-            $balanceAfter = bcadd((string) $balanceBefore, (string) $package->credit_amount, 2);
+            $balanceAfter = add((string) $balanceBefore, (string) $package->credit_amount);
 
             $transaction = CreditTransaction::create([
                 'user_id' => $user->id,
@@ -150,5 +164,12 @@ class CreditPurchaseService
         }
 
         $transaction->update(['status' => TransactionStatus::FAILED]);
+    }
+
+    private function purchaseWouldExceedWalletLimit(UserCredit $userCredit, CreditPackage $package): bool
+    {
+        $total = add($userCredit->balance, $package->credit_amount);
+
+        return gt($total, config('wallet.limit'));
     }
 }

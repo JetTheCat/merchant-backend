@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\UserCredit;
 use App\Services\CreditPurchaseService;
 use App\Services\StripeService;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -34,13 +35,18 @@ class CreditPurchaseServiceTest extends TestCase
                 clientSecret: 'pi_test_secret_'.fake()->regexify('[A-Za-z0-9]{24}'),
             ));
 
+        Config::set('wallet.limit', 300);
+
         $this->service = app(CreditPurchaseService::class);
     }
 
     public function testProcessPurchaseCreatesPaymentAndTransaction(): void
     {
         $user = User::factory()->create();
-        $package = CreditPackage::factory()->active()->create(['credit_amount' => 100, 'selling_price' => 90]);
+        $package = CreditPackage::factory()->active()->create([
+            'credit_amount' => 100,
+            'selling_price' => 90
+        ]);
 
         $result = $this->service->processPurchase($user, $package);
 
@@ -67,7 +73,10 @@ class CreditPurchaseServiceTest extends TestCase
     public function testProcessPurchaseCreatesUserCreditIfNotExists(): void
     {
         $user = User::factory()->create();
-        $package = CreditPackage::factory()->active()->create();
+        $package = CreditPackage::factory()->active()->create([
+            'credit_amount' => 100,
+            'selling_price' => 90
+        ]);
 
         $this->assertDatabaseMissing('user_credits', [
             'user_id' => $user->id,
@@ -213,6 +222,92 @@ class CreditPurchaseServiceTest extends TestCase
         $this->service->processPurchase($user, $package);
     }
 
+    public function testProcessPurchaseFailsWhenMerchantHasCreditSalesPaused(): void
+    {
+        $user = User::factory()->create();
+
+        $merchant = Merchant::factory()->creditSalesPaused()->create();
+        $package = CreditPackage::factory()
+        ->active()
+        ->for($merchant)
+        ->create([
+            'credit_amount' => 100,
+            'selling_price' => 90
+        ]);
+
+        try {
+            $this->service->processPurchase($user, $package);
+            $this->fail('Expected a ValidationException to be thrown.');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('merchant', $e->errors());
+        }
+    }
+
+    public function testProcessPurchaseFailsIfItExceedsWalletLimit(): void
+    {
+        $user = User::factory()->create();
+        $package = CreditPackage::factory()
+        ->active()
+        ->create([
+            'credit_amount' => 100,
+            'selling_price' => 90
+        ]);
+
+        UserCredit::factory()
+            ->for($user)
+            ->for($package->merchant)
+            ->withBalance(300)
+            ->create();
+
+        try {
+            $this->service->processPurchase($user, $package);
+            $this->fail('Expected a ValidationException to be thrown.');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('wallet', $e->errors());
+        }
+    }
+
+    public function testProcessPurchaseSucceedsWhenExactlyAtWalletLimit(): void
+    {
+        $user = User::factory()->create();
+        $package = CreditPackage::factory()
+            ->active()
+            ->create([
+                'credit_amount' => 100,
+                'selling_price' => 90,
+            ]);
+
+        UserCredit::factory()
+            ->for($user)
+            ->for($package->merchant)
+            ->withBalance(200)
+            ->create();
+
+        $result = $this->service->processPurchase($user, $package);
+
+        $this->assertInstanceOf(PaymentIntentResult::class, $result);
+    }
+
+    public function testProcessPurchaseRespectsConfiguredWalletLimit(): void
+    {
+        Config::set('wallet.limit', 50);
+
+        $user = User::factory()->create();
+        $package = CreditPackage::factory()
+            ->active()
+            ->create([
+                'credit_amount' => 100,
+                'selling_price' => 90,
+            ]);
+
+        try {
+            $this->service->processPurchase($user, $package);
+            $this->fail('Expected a ValidationException to be thrown.');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('wallet', $e->errors());
+        }
+    }
+
     public function testPendingPurchasesCountTowardsUserLimit(): void
     {
         $user = User::factory()->create();
@@ -235,6 +330,8 @@ class CreditPurchaseServiceTest extends TestCase
     {
         $user = User::factory()->create();
         $package = CreditPackage::factory()->active()->create([
+            'credit_amount' => 100,
+            'selling_price' => 90,
             'purchase_limit_per_user' => 1,
         ]);
 
