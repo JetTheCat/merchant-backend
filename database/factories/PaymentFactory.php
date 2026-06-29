@@ -21,7 +21,7 @@ class PaymentFactory extends Factory
         return [
             'user_id' => User::factory(),
             'transaction_id' => null,
-            'payment_method' => $this->faker->randomElement(PaymentType::cases()),
+            'payment_method' => PaymentType::CARD,
             'stripe_payment_intent_id' => 'pi_test_'.$this->faker->regexify('[A-Za-z0-9]{24}'),
             'stripe_charge_id' => null,
             'amount' => $this->faker->randomFloat(2, 10, 500),

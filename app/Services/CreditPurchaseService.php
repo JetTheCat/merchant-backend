@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Actions\Fees\ProcessingFeeResolver;
 use App\DataTransferObjects\PaymentIntentResult;
 use App\Enums\Currency;
 use App\Enums\PaymentStatus;
@@ -25,6 +26,7 @@ class CreditPurchaseService
 {
     public function __construct(
         private readonly StripeService $stripeService,
+        private readonly ProcessingFeeResolver $processingFeeResolver,
     ) {}
 
     public function processPurchase(User $user, CreditPackage $package): PaymentIntentResult
@@ -131,22 +133,34 @@ class CreditPurchaseService
         $userCredit = UserCredit::lockForUpdate()->find($transaction->user_credit_id);
 
         $balanceBefore = $userCredit->balance;
-        $balanceAfter = bcadd((string) $balanceBefore, (string) $transaction->amount, 2);
+        $balanceAfter = add((string) $balanceBefore, (string) $transaction->amount);
 
-        $feeRate = $transaction->creditPackage->merchant->platform_fee_rate;
-        $fee = bcmul((string) $transaction->paid_amount, (string) $feeRate, 2);
+        $platformFeeRate = $transaction->creditPackage->merchant->platform_fee_rate;
+        $platformFee = mul((string) $transaction->paid_amount, (string) $platformFeeRate);
+
+        $processingFee = $this->processingFeeResolver
+            ->resolve($payment->payment_method)
+            ->amountFor($transaction->paid_amount);
+
+        $netCash = sub(sub((string) $transaction->paid_amount, $platformFee), $processingFee);
 
         $transaction->update([
             'status' => TransactionStatus::COMPLETED,
             'balance_before' => $balanceBefore,
             'balance_after' => $balanceAfter,
-            'platform_fee_rate' => $feeRate,
-            'platform_fee' => $fee,
+            'platform_fee_rate' => $platformFeeRate,
+            'platform_fee' => $platformFee,
+        ]);
+
+        $payment->update([
+            'processing_fee' => $processingFee,
         ]);
 
         $userCredit->update([
             'balance' => $balanceAfter,
-            'total_purchased' => bcadd((string) $userCredit->total_purchased, (string) $transaction->amount, 2),
+            'cash_balance' => add((string) $userCredit->cash_balance, $netCash),
+            'gross_paid_balance' => add((string) $userCredit->gross_paid_balance, (string) $transaction->paid_amount),
+            'total_purchased' => add((string) $userCredit->total_purchased, (string) $transaction->amount),
             'last_purchase_at' => now(),
         ]);
 
@@ -168,7 +182,7 @@ class CreditPurchaseService
 
     private function purchaseWouldExceedWalletLimit(UserCredit $userCredit, CreditPackage $package): bool
     {
-        $total = add($userCredit->balance, $package->credit_amount);
+        $total = add((string) $userCredit->balance, (string) $package->credit_amount);
 
         return gt($total, config('wallet.limit'));
     }

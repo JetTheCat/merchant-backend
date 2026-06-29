@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\DataTransferObjects\ChargeResult;
 use App\DataTransferObjects\PaymentIntentResult;
 use App\DataTransferObjects\WebhookEventResult;
 use App\Models\Payment;
@@ -32,6 +33,18 @@ class StripeService
             paymentId: $payment->id,
             paymentIntentId: $intent->id,
             clientSecret: $intent->client_secret,
+        );
+    }
+
+    public function retrieveCharge(string $chargeId): ChargeResult
+    {
+        $charge = $this->stripeClient->charges->retrieve($chargeId, [
+            'expand' => ['balance_transaction'],
+        ]);
+
+        return new ChargeResult(
+            chargeId: $charge->id,
+            paymentMethodType: $charge->payment_method_details->type,
         );
     }
 

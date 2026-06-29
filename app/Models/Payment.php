@@ -78,11 +78,12 @@ class Payment extends Model
         $query->where('status', PaymentStatus::PAYMENT_FAILED);
     }
 
-    public function markAsSucceeded(string $chargeId, array $payload): bool
+    public function markAsSucceeded(string $chargeId, PaymentType $paymentMethod, array $payload): bool
     {
         return $this->update([
             'status' => PaymentStatus::SUCCEEDED,
             'stripe_charge_id' => $chargeId,
+            'payment_method' => $paymentMethod,
             'stripe_payload' => $payload,
             'paid_at' => now(),
         ]);

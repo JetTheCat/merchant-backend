@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Jobs;
 
+use App\DataTransferObjects\ChargeResult;
 use App\Enums\PaymentStatus;
+use App\Enums\PaymentType;
 use App\Jobs\ProcessStripeWebhook;
 use App\Models\Payment;
 use App\Models\StripeEvent;
 use App\Services\CreditPurchaseService;
+use App\Services\StripeService;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -18,6 +21,7 @@ class ProcessStripeWebhookTest extends TestCase
     {
         $payment = Payment::factory()->create([
             'stripe_payment_intent_id' => 'pi_test_succeeded',
+            'payment_method' => PaymentType::CARD,
             'status' => PaymentStatus::PROCESSING,
         ]);
 
@@ -36,6 +40,12 @@ class ProcessStripeWebhookTest extends TestCase
             ],
         ]);
 
+        $this->mock(StripeService::class)
+            ->shouldReceive('retrieveCharge')
+            ->once()
+            ->with($chargeId)
+            ->andReturn(new ChargeResult(chargeId: $chargeId, paymentMethodType: 'card'));
+
         $this->mock(CreditPurchaseService::class)
             ->shouldReceive('grantCredits')
             ->once()
@@ -47,6 +57,7 @@ class ProcessStripeWebhookTest extends TestCase
 
         $this->assertEquals(PaymentStatus::SUCCEEDED, $payment->status);
         $this->assertEquals($chargeId, $payment->stripe_charge_id);
+        $this->assertEquals(PaymentType::CARD, $payment->payment_method);
         $this->assertNotNull($payment->paid_at);
         $this->assertNotNull($event->fresh()->processed_at);
     }
@@ -72,6 +83,8 @@ class ProcessStripeWebhookTest extends TestCase
                 ],
             ],
         ]);
+
+        $this->mock(StripeService::class);
 
         $this->mock(CreditPurchaseService::class)
             ->shouldReceive('failPurchase')
