@@ -91,12 +91,12 @@ class Transaction extends Model
 
     public function merchantUser(): BelongsTo
     {
-        return $this->belongsTo(MerchantUser::class, 'merchant_user_id');
+        return $this->belongsTo(MerchantUser::class);
     }
 
     public function merchantLocation(): BelongsTo
     {
-        return $this->belongsTo(MerchantLocation::class, 'merchant_location_id');
+        return $this->belongsTo(MerchantLocation::class);
     }
 
     public function payment(): BelongsTo
