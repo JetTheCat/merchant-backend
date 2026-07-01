@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Notifications\VerifyEmailNotification;
 use App\UserStatus;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasName;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -21,7 +22,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, HasName, MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
     use HasRoles, HasUuids;
@@ -108,6 +109,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     protected function verified(Builder $query): void
     {
         $query->whereNotNull('email_verified_at');
+    }
+
+    public function getFilamentName(): string
+    {
+        return $this->fullName;
     }
 
     protected function fullName(): Attribute

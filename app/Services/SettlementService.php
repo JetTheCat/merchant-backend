@@ -25,21 +25,19 @@ class SettlementService
 
         return DB::transaction(function () use ($merchant, $periodStart, $periodEnd) {
             $transactions = CreditTransaction::where('merchant_id', $merchant->id)
-                ->where('type', TransactionType::CREDIT_PURCHASE)
+                ->where('type', TransactionType::CREDIT_REDEMPTION)
                 ->where('status', TransactionStatus::COMPLETED)
                 ->whereNull('settlement_id')
                 ->whereBetween('created_at', [$periodStart->startOfDay(), $periodEnd->endOfDay()])
                 ->lockForUpdate()
-                ->select(['id', 'paid_amount', 'platform_fee'])
+                ->select(['id', 'settlement_amount'])
                 ->get();
 
             if ($transactions->isEmpty()) {
-                throw new InvalidArgumentException("No unsettled credit purchases found for merchant [{$merchant->id}] in the given period.");
+                throw new InvalidArgumentException("No unsettled credit redemptions found for merchant [{$merchant->id}] in the given period.");
             }
 
-            $totalSales = $transactions->sum(fn ($t) => (float) $t->paid_amount);
-            $totalFees = $transactions->sum(fn ($t) => (float) $t->platform_fee);
-            $netAmount = bcsub((string) $totalSales, (string) $totalFees, 2);
+            $totalSales = $transactions->sum(fn ($t) => (float) $t->settlement_amount);
 
             $settlement = Settlement::create([
                 'merchant_id' => $merchant->id,
@@ -47,8 +45,7 @@ class SettlementService
                 'period_start' => $periodStart->toDateString(),
                 'period_end' => $periodEnd->toDateString(),
                 'total_sales' => $totalSales,
-                'total_fees' => $totalFees,
-                'net_amount' => $netAmount,
+                'net_amount' => $totalSales,
                 'transaction_count' => $transactions->count(),
                 'status' => SettlementStatus::PENDING,
                 'bank_name' => $merchant->bank_name,

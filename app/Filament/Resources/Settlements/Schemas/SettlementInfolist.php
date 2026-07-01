@@ -51,18 +51,13 @@ class SettlementInfolist
                             ->prefix('RM ')
                             ->numeric(decimalPlaces: 2),
 
-                        TextEntry::make('total_fees')
-                            ->label('Platform Fees')
-                            ->prefix('RM ')
-                            ->numeric(decimalPlaces: 2),
-
                         TextEntry::make('net_amount')
                             ->label('Net Payout')
                             ->prefix('RM ')
                             ->numeric(decimalPlaces: 2),
 
                         TextEntry::make('transaction_count')
-                            ->label('Purchases'),
+                            ->label('Redemptions'),
                     ]),
 
                 Section::make('Banking Details')

@@ -20,16 +20,16 @@ class GetSettlementInvoiceController extends Controller
             ->with('merchant')
             ->findOrFail($id);
 
-        $purchases = $settlement->transactions()
-            ->where('type', TransactionType::CREDIT_PURCHASE)
+        $redemptions = $settlement->transactions()
+            ->where('type', TransactionType::CREDIT_REDEMPTION)
             ->orderBy('created_at')
-            ->get(['created_at', 'reference_code', 'paid_amount', 'platform_fee']);
+            ->get(['created_at', 'reference_code', 'settlement_amount']);
 
         $filename = "settlement-{$settlement->reference_code}.pdf";
 
         return Pdf::view('settlements.invoice', [
             'settlement' => $settlement,
-            'purchases' => $purchases,
+            'redemptions' => $redemptions,
         ])->download($filename);
     }
 }

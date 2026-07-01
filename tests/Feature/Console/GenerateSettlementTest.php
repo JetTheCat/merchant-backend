@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Feature\Console;
 
 use App\Enums\SettlementStatus;
-use App\Enums\TransactionStatus;
 use App\Models\CreditTransaction;
 use App\Models\Merchant;
 use App\Models\Settlement;
@@ -19,19 +18,19 @@ class GenerateSettlementTest extends TestCase
     {
         parent::setUp();
 
-        $this->merchant = Merchant::factory()->active()->create([
-            'platform_fee_rate' => 0.05,
-        ]);
+        $this->merchant = Merchant::factory()->active()->create();
     }
 
     public function testGeneratesSettlementSuccessfully(): void
     {
-        CreditTransaction::factory()->count(3)->purchase()->for($this->merchant)->create([
-            'status' => TransactionStatus::COMPLETED,
-            'paid_amount' => 100.00,
-            'platform_fee_rate' => 0.05,
-            'platform_fee' => 5.00,
-        ]);
+        CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($this->merchant)
+            ->count(3)
+            ->create([
+                'settlement_amount' => 100.00,
+            ]);
 
         $this->artisan('settlements:generate', [
             'merchantId' => $this->merchant->id,
@@ -45,12 +44,14 @@ class GenerateSettlementTest extends TestCase
 
     public function testSettlementIsCreatedInDatabase(): void
     {
-        CreditTransaction::factory()->count(2)->purchase()->for($this->merchant)->create([
-            'status' => TransactionStatus::COMPLETED,
-            'paid_amount' => 50.00,
-            'platform_fee_rate' => 0.05,
-            'platform_fee' => 2.50,
-        ]);
+        CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($this->merchant)
+            ->count(2)
+            ->create([
+                'settlement_amount' => 50.00,
+            ]);
 
         $this->artisan('settlements:generate', [
             'merchantId' => $this->merchant->id,
@@ -61,8 +62,7 @@ class GenerateSettlementTest extends TestCase
         $this->assertDatabaseHas('settlements', [
             'merchant_id' => $this->merchant->id,
             'total_sales' => '100.00',
-            'total_fees' => '5.00',
-            'net_amount' => '95.00',
+            'net_amount' => '100.00',
             'transaction_count' => 2,
             'status' => SettlementStatus::PENDING,
         ]);
@@ -122,18 +122,19 @@ class GenerateSettlementTest extends TestCase
             'periodEnd' => now()->toDateString(),
         ])
             ->assertFailed()
-            ->expectsOutputToContain('No unsettled credit purchases found');
+            ->expectsOutputToContain('No unsettled credit redemptions found');
     }
 
     public function testDoesNotIncludeTransactionsOutsidePeriod(): void
     {
-        CreditTransaction::factory()->purchase()->for($this->merchant)->create([
-            'status' => TransactionStatus::COMPLETED,
-            'paid_amount' => 100.00,
-            'platform_fee_rate' => 0.05,
-            'platform_fee' => 5.00,
-            'created_at' => now()->subDays(10),
-        ]);
+        CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($this->merchant)
+            ->create([
+                'settlement_amount' => 100.00,
+                'created_at' => now()->subDays(10),
+            ]);
 
         $this->artisan('settlements:generate', [
             'merchantId' => $this->merchant->id,
@@ -141,20 +142,21 @@ class GenerateSettlementTest extends TestCase
             'periodEnd' => now()->toDateString(),
         ])
             ->assertFailed()
-            ->expectsOutputToContain('No unsettled credit purchases found');
+            ->expectsOutputToContain('No unsettled credit redemptions found');
     }
 
     public function testDoesNotIncludeAlreadySettledTransactions(): void
     {
         $existingSettlement = Settlement::factory()->for($this->merchant)->create();
 
-        CreditTransaction::factory()->purchase()->for($this->merchant)->create([
-            'status' => TransactionStatus::COMPLETED,
-            'paid_amount' => 100.00,
-            'platform_fee_rate' => 0.05,
-            'platform_fee' => 5.00,
-            'settlement_id' => $existingSettlement->id,
-        ]);
+        CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($this->merchant)
+            ->create([
+                'settlement_amount' => 100.00,
+                'settlement_id' => $existingSettlement->id,
+            ]);
 
         $this->artisan('settlements:generate', [
             'merchantId' => $this->merchant->id,
@@ -162,6 +164,6 @@ class GenerateSettlementTest extends TestCase
             'periodEnd' => now()->toDateString(),
         ])
             ->assertFailed()
-            ->expectsOutputToContain('No unsettled credit purchases found');
+            ->expectsOutputToContain('No unsettled credit redemptions found');
     }
 }
