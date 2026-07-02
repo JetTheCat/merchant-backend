@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use RuntimeException;
 
@@ -45,6 +46,7 @@ class Transaction extends Model
         'platform_fee',
         'settlement_amount',
         'gross_settlement_amount',
+        'parent_transaction_id',
         'fallback_code',
         'redeemed_at',
         'expires_at',
@@ -107,6 +109,16 @@ class Transaction extends Model
     public function settlement(): BelongsTo
     {
         return $this->belongsTo(Settlement::class);
+    }
+
+    public function parentTransaction(): BelongsTo
+    {
+        return $this->belongsTo(Transaction::class, 'parent_transaction_id');
+    }
+
+    public function childTransactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'parent_transaction_id');
     }
 
     #[Scope]

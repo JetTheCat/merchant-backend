@@ -21,6 +21,7 @@ class Settlement extends Model
         'period_start',
         'period_end',
         'total_sales',
+        'clawback_amount',
         'net_amount',
         'transaction_count',
         'status',
@@ -37,6 +38,7 @@ class Settlement extends Model
         'period_start' => 'date',
         'period_end' => 'date',
         'total_sales' => 'decimal:2',
+        'clawback_amount' => 'decimal:2',
         'net_amount' => 'decimal:2',
         'status' => SettlementStatus::class,
         'paid_at' => 'datetime',
@@ -50,6 +52,11 @@ class Settlement extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(CreditTransaction::class);
+    }
+
+    public function clawbacks(): HasMany
+    {
+        return $this->hasMany(SettlementClawback::class);
     }
 
     public function scopePending($query)
