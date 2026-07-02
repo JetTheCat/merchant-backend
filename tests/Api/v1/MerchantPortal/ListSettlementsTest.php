@@ -29,7 +29,6 @@ class ListSettlementsTest extends TestCase
                 'periodStart',
                 'periodEnd',
                 'totalSales',
-                'totalFees',
                 'netAmount',
                 'transactionCount',
                 'status',

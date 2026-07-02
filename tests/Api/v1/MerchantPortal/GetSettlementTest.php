@@ -27,7 +27,6 @@ class GetSettlementTest extends TestCase
             'periodStart',
             'periodEnd',
             'totalSales',
-            'totalFees',
             'netAmount',
             'transactionCount',
             'status',

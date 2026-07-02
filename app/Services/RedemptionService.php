@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\DataTransferObjects\RedemptionSettlement;
+use App\Enums\ClawbackStatus;
 use App\Enums\TransactionCategory;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
@@ -12,6 +13,7 @@ use App\Events\RedemptionCompleted;
 use App\Models\CreditTransaction;
 use App\Models\MerchantLocation;
 use App\Models\MerchantUser;
+use App\Models\SettlementClawback;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\UserCredit;
@@ -203,11 +205,12 @@ class RedemptionService
                 'total_redeemed' => sub((string) $userCredit->total_redeemed, (string) $redemption->amount),
             ]);
 
-            return CreditTransaction::create([
+            $refund = CreditTransaction::create([
                 'user_id' => $redemption->user_id,
                 'merchant_id' => $byUser->merchant_id,
                 'merchant_user_id' => $byUser->id,
                 'user_credit_id' => $redemption->user_credit_id,
+                'parent_transaction_id' => $redemption->id,
                 'category' => TransactionCategory::CREDIT,
                 'type' => TransactionType::CREDIT_REFUND,
                 'reference_code' => Transaction::generateUniqueReferenceCode(),
@@ -217,6 +220,18 @@ class RedemptionService
                 'balance_after' => $balanceAfter,
                 'notes' => $notes,
             ]);
+
+            if ($redemption->settlement_id !== null) {
+                SettlementClawback::create([
+                    'merchant_id' => $byUser->merchant_id,
+                    'original_redemption_id' => $redemption->id,
+                    'refund_transaction_id' => $refund->id,
+                    'amount' => $redemption->settlement_amount,
+                    'status' => ClawbackStatus::PENDING,
+                ]);
+            }
+
+            return $refund;
         });
     }
 
