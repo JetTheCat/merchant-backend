@@ -25,11 +25,17 @@ class GetSettlementInvoiceController extends Controller
             ->orderBy('created_at')
             ->get(['created_at', 'reference_code', 'settlement_amount']);
 
+        $clawbacks = $settlement->clawbacks()
+            ->with('originalRedemption:id,reference_code')
+            ->orderBy('created_at')
+            ->get();
+
         $filename = "settlement-{$settlement->reference_code}.pdf";
 
         return Pdf::view('settlements.invoice', [
             'settlement' => $settlement,
             'redemptions' => $redemptions,
+            'clawbacks' => $clawbacks,
         ])->download($filename);
     }
 }

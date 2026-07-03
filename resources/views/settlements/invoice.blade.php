@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <title>Settlement Statement — {{ $settlement->reference_code }}</title>
     <style>
+        @page {
+            margin: 40px;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -16,7 +20,6 @@
             line-height: 1.5;
             color: #1a202c;
             background: #ffffff;
-            padding: 40px;
         }
 
         /* Header */
@@ -123,7 +126,7 @@
         /* Summary boxes */
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 12px;
             margin-bottom: 32px;
         }
@@ -170,6 +173,7 @@
             border-collapse: collapse;
             margin-bottom: 32px;
             font-size: 12px;
+            break-inside: avoid;
         }
 
         thead th {
@@ -226,6 +230,7 @@
             border-radius: 8px;
             padding: 20px 24px;
             margin-bottom: 32px;
+            break-inside: avoid;
         }
 
         .payment-box.paid {
@@ -296,7 +301,9 @@
         </div>
         <div class="doc-meta">
             <div class="reference">{{ $settlement->reference_code }}</div>
-            <div class="generated">Generated {{ now()->format('d M Y, h:i A') }}</div>
+            <div class="generated">
+                Generated {{ now(config('app.reporting_timezone'))->format('d M Y, h:i A') }} ({{ config('app.reporting_timezone') }})
+            </div>
             <div>
                 <span class="status-badge status-{{ $settlement->status->value }}">
                     {{ $settlement->status->label() }}
@@ -339,6 +346,12 @@
             <div class="summary-label">Redemptions</div>
             <div class="summary-value">{{ $settlement->transaction_count }}</div>
         </div>
+        @if ($clawbacks->isNotEmpty())
+            <div class="summary-box">
+                <div class="summary-label">Clawback Deductions</div>
+                <div class="summary-value">RM {{ number_format((float) $settlement->clawback_amount, 2) }}</div>
+            </div>
+        @endif
         <div class="summary-box net">
             <div class="summary-label">Net Payout</div>
             <div class="summary-value">RM {{ number_format((float) $settlement->net_amount, 2) }}</div>
@@ -358,17 +371,44 @@
         <tbody>
             @foreach ($redemptions as $redemption)
                 <tr>
-                    <td>{{ $redemption->created_at->format('d M Y, h:i A') }}</td>
+                    <td>{{ $redemption->created_at->timezone(config('app.reporting_timezone'))->format('d M Y, h:i A') }}</td>
                     <td class="mono">{{ $redemption->reference_code }}</td>
                     <td class="text-right">{{ number_format((float) $redemption->settlement_amount, 2) }}</td>
                 </tr>
             @endforeach
             <tr class="totals-row">
                 <td colspan="2">Total</td>
-                <td class="text-right">{{ number_format((float) $settlement->net_amount, 2) }}</td>
+                <td class="text-right">{{ number_format((float) $settlement->total_sales, 2) }}</td>
             </tr>
         </tbody>
     </table>
+
+    {{-- Clawback Deductions --}}
+    @if ($clawbacks->isNotEmpty())
+        <div class="section-title">Clawback Deductions</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Original Redemption</th>
+                    <th class="text-right">Amount (RM)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($clawbacks as $clawback)
+                    <tr>
+                        <td>{{ $clawback->created_at->timezone(config('app.reporting_timezone'))->format('d M Y, h:i A') }}</td>
+                        <td class="mono">{{ $clawback->originalRedemption->reference_code }}</td>
+                        <td class="text-right">{{ number_format((float) $clawback->amount, 2) }}</td>
+                    </tr>
+                @endforeach
+                <tr class="totals-row">
+                    <td colspan="2">Total Deducted</td>
+                    <td class="text-right">{{ number_format((float) $settlement->clawback_amount, 2) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    @endif
 
     {{-- Payment Info --}}
     @if ($settlement->paid_at)
