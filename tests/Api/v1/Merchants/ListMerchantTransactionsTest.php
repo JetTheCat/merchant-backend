@@ -30,6 +30,7 @@ class ListMerchantTransactionsTest extends TestCase
         'data' => [
             '*' => [
                 'id',
+                'parentTransactionId',
                 'merchantUser',
                 'type',
                 'typeLabel',
@@ -38,6 +39,7 @@ class ListMerchantTransactionsTest extends TestCase
                 'referenceCode',
                 'amount',
                 'paidAmount',
+                'settlementAmount',
                 'balanceBefore',
                 'balanceAfter',
                 'notes',
@@ -369,6 +371,42 @@ class ListMerchantTransactionsTest extends TestCase
 
         $response->assertStatus(Response::HTTP_OK)
             ->assertJsonCount(0, 'data');
+    }
+
+    public function testRedemptionTransactionResponseIncludesSettlementAmount(): void
+    {
+        CreditTransaction::factory()
+            ->redemption()
+            ->for($this->merchant)
+            ->create(['settlement_amount' => 85.00]);
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint())
+            ->assertSuccessful();
+
+        $response->assertJsonPath('data.0.settlementAmount', '85.00');
+    }
+
+    public function testRefundTransactionResponseIncludesParentTransactionId(): void
+    {
+        $redemption = CreditTransaction::factory()
+            ->redemption()
+            ->for($this->merchant)
+            ->create();
+
+        CreditTransaction::factory()
+            ->refund()
+            ->for($this->merchant)
+            ->create(['parent_transaction_id' => $redemption->id]);
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint())
+            ->assertSuccessful();
+
+        $refund = collect($response->json('data'))
+            ->firstWhere('type', 'credit_refund');
+
+        $this->assertEquals($redemption->id, $refund['parentTransactionId']);
     }
 
     public function testRequiresAuthentication(): void
