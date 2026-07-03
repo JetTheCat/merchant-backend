@@ -42,6 +42,8 @@ class CreditTransactionFactory extends TransactionFactory
                 'amount' => $amount,
                 'paid_amount' => null,
                 'balance_after' => round((float) $attributes['balance_before'] - $amount, 2),
+                'settlement_amount' => $amount,
+                'gross_settlement_amount' => $amount,
                 'expires_at' => now()->addMinutes(config('app.fallback_code_expiry_minutes', 5)),
             ];
         });
@@ -59,6 +61,7 @@ class CreditTransactionFactory extends TransactionFactory
                 'amount' => $amount,
                 'paid_amount' => null,
                 'balance_after' => round((float) $attributes['balance_before'] + $amount, 2),
+                'parent_transaction_id' => null,
             ];
         });
     }

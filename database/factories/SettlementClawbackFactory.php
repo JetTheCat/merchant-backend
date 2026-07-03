@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Enums\ClawbackStatus;
+use App\Models\CreditTransaction;
 use App\Models\Merchant;
 use App\Models\Settlement;
 use App\Models\SettlementClawback;
-use App\Models\Transaction;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,8 +22,8 @@ class SettlementClawbackFactory extends Factory
     {
         return [
             'merchant_id' => Merchant::factory(),
-            'original_redemption_id' => Transaction::factory(),
-            'refund_transaction_id' => Transaction::factory(),
+            'original_redemption_id' => CreditTransaction::factory()->redemption(),
+            'refund_transaction_id' => CreditTransaction::factory()->refund(),
             'amount' => fake()->randomFloat(2, 10, 200),
             'status' => ClawbackStatus::PENDING,
             'settlement_id' => null,
