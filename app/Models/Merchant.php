@@ -107,6 +107,11 @@ class Merchant extends Model
         return $this->hasMany(Settlement::class);
     }
 
+    public function clawbacks(): HasMany
+    {
+        return $this->hasMany(SettlementClawback::class);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', MerchantStatus::ACTIVE->value);

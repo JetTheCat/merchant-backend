@@ -16,4 +16,12 @@ enum ClawbackStatus: string
             self::RECOVERED => 'Recovered',
         };
     }
+
+    public function color(): string
+    {
+        return match ($this) {
+            self::PENDING => 'warning',
+            self::RECOVERED => 'success',
+        };
+    }
 }

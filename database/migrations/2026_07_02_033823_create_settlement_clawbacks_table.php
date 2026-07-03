@@ -23,6 +23,8 @@ return new class extends Migration
             $table->foreign('refund_transaction_id')->references('id')->on('transactions');
             $table->foreign('settlement_id')->references('id')->on('settlements');
 
+            $table->softDeletes();
+
             $table->index(['merchant_id', 'status', 'created_at']);
         });
     }
