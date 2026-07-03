@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\ClawbackStatus;
 use App\Enums\SettlementStatus;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Models\CreditTransaction;
 use App\Models\Merchant;
 use App\Models\Settlement;
+use App\Models\SettlementClawback;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -56,8 +58,50 @@ class SettlementService
             CreditTransaction::whereIn('id', $transactions->pluck('id'))
                 ->update(['settlement_id' => $settlement->id]);
 
-            return $settlement;
+            $this->applyClawbacks($settlement, $totalSales);
+
+            return $settlement->fresh();
         });
+    }
+
+    private function applyClawbacks(Settlement $settlement, float $totalSales): void
+    {
+        // whole-record-only, oldest-first: only deduct a clawback if its full amount
+        // fits within the remaining deductible; skip if it doesn't, carry to next cycle
+        $clawbacks = SettlementClawback::where('merchant_id', $settlement->merchant_id)
+            ->where('status', ClawbackStatus::PENDING)
+            ->orderBy('created_at')
+            ->lockForUpdate()
+            ->get();
+
+        $remaining = $totalSales;
+        $clawbackAmount = 0.0;
+        $recoveredIds = [];
+
+        foreach ($clawbacks as $clawback) {
+            if ((float) $clawback->amount > $remaining) {
+                continue;
+            }
+
+            $remaining -= (float) $clawback->amount;
+            $clawbackAmount += (float) $clawback->amount;
+            $recoveredIds[] = $clawback->id;
+        }
+
+        if (empty($recoveredIds)) {
+            return;
+        }
+
+        SettlementClawback::whereIn('id', $recoveredIds)
+            ->update([
+                'status' => ClawbackStatus::RECOVERED,
+                'settlement_id' => $settlement->id,
+            ]);
+
+        $settlement->update([
+            'clawback_amount' => $clawbackAmount,
+            'net_amount' => $totalSales - $clawbackAmount,
+        ]);
     }
 
     public function markAsPaid(Settlement $settlement, string $paymentReference): Settlement

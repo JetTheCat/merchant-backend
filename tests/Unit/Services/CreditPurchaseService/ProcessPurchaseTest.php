@@ -35,7 +35,7 @@ class ProcessPurchaseTest extends TestCase
                 clientSecret: 'pi_test_secret_'.fake()->regexify('[A-Za-z0-9]{24}'),
             ));
 
-        Config::set('wallet.limit', 300);
+        Config::set('wallet.limit', 250);
 
         $this->service = app(CreditPurchaseService::class);
     }
@@ -164,7 +164,7 @@ class ProcessPurchaseTest extends TestCase
         UserCredit::factory()
             ->for($user)
             ->for($package->merchant)
-            ->withBalance(300)
+            ->withBalance(250)
             ->create();
 
         try {
@@ -188,7 +188,7 @@ class ProcessPurchaseTest extends TestCase
         UserCredit::factory()
             ->for($user)
             ->for($package->merchant)
-            ->withBalance(200)
+            ->withBalance(150)
             ->create();
 
         $result = $this->service->processPurchase($user, $package);

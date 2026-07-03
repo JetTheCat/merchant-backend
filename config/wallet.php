@@ -3,5 +3,5 @@
 declare(strict_types=1);
 
 return [
-    'limit' => (float) env('WALLET_LIMIT', 300),
+    'limit' => (float) env('WALLET_LIMIT', 250),
 ];
