@@ -47,7 +47,12 @@ class SettlementInfolist
                     ->columns(2)
                     ->schema([
                         TextEntry::make('total_sales')
-                            ->label('Total Sales')
+                            ->label('Total Redeemed')
+                            ->prefix('RM ')
+                            ->numeric(decimalPlaces: 2),
+
+                        TextEntry::make('clawback_amount')
+                            ->label('Clawback Deductions')
                             ->prefix('RM ')
                             ->numeric(decimalPlaces: 2),
 
