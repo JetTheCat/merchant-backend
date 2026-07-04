@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Filament\Widgets;
 
+use App\Enums\ClawbackStatus;
 use App\Enums\TransactionStatus;
 use App\Models\CreditTransaction;
 use App\Models\Merchant;
+use App\Models\SettlementClawback;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -15,12 +17,16 @@ class PlatformStatsOverview extends StatsOverviewWidget
 {
     protected function getStats(): array
     {
+        $pendingClawbackAmount = $this->getPendingClawbackAmount();
+
         return [
             Stat::make('GMV (All Time)', 'RM '.number_format($this->getGmv(), 2)),
             Stat::make('GMV (This Month)', 'RM '.number_format($this->getGmvThisMonth(), 2)),
             Stat::make('Platform Fees (All Time)', 'RM '.number_format($this->getPlatformFees(), 2)),
             Stat::make('Active Merchants', Merchant::active()->count()),
             Stat::make('Total Users', User::count()),
+            Stat::make('Outstanding Clawbacks', 'RM '.number_format($pendingClawbackAmount, 2))
+                ->color($pendingClawbackAmount > 0 ? 'warning' : 'success'),
         ];
     }
 
@@ -45,5 +51,11 @@ class PlatformStatsOverview extends StatsOverviewWidget
         return (float) CreditTransaction::purchases()
             ->where('status', TransactionStatus::COMPLETED)
             ->sum('platform_fee');
+    }
+
+    private function getPendingClawbackAmount(): float
+    {
+        return (float) SettlementClawback::where('status', ClawbackStatus::PENDING)
+            ->sum('amount');
     }
 }

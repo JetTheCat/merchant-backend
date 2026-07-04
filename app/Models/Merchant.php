@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\ClawbackStatus;
 use App\Enums\MerchantStatus;
 use App\Enums\SettlementCycle;
 use App\Observers\MerchantObserver;
@@ -166,5 +167,18 @@ class Merchant extends Model
     public function isCreditSalesPaused(): bool
     {
         return $this->credit_sales_paused_at !== null;
+    }
+
+    public function hasPendingClawbacks(): bool
+    {
+        return $this->clawbacks()->where('status', ClawbackStatus::PENDING)->exists();
+    }
+
+    public function hasOverdueClawbacks(): bool
+    {
+        return $this->clawbacks()
+            ->where('status', ClawbackStatus::PENDING)
+            ->where('created_at', '<', now()->subDays(config('settlement.clawback_overdue_days')))
+            ->exists();
     }
 }

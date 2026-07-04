@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Merchants\Schemas;
 
 use App\Enums\MerchantStatus;
+use App\Models\Merchant;
 use App\Support\Filament\Placeholder;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -42,6 +43,20 @@ class MerchantInfolist
                             ->color(fn (MerchantStatus $state) => match ($state) {
                                 MerchantStatus::ACTIVE => 'success',
                                 MerchantStatus::SUSPENDED => 'danger',
+                            }),
+
+                        TextEntry::make('clawback_status')
+                            ->label('Clawback Status')
+                            ->state(fn (Merchant $record) => match (true) {
+                                $record->hasOverdueClawbacks() => 'Overdue',
+                                $record->hasPendingClawbacks() => 'Pending',
+                                default => 'Clear',
+                            })
+                            ->badge()
+                            ->color(fn (string $state) => match ($state) {
+                                'Overdue' => 'danger',
+                                'Pending' => 'warning',
+                                default => 'success',
                             }),
 
                         TextEntry::make('description')

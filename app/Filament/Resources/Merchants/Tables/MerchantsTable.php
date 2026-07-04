@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Merchants\Tables;
 
+use App\Enums\ClawbackStatus;
 use App\Enums\MerchantStatus;
 use App\Models\Merchant;
 use Filament\Actions\Action;
@@ -18,12 +19,22 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class MerchantsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query
+                ->withExists([
+                    'clawbacks as has_pending_clawbacks' => fn (Builder $q) => $q
+                        ->where('status', ClawbackStatus::PENDING),
+                    'clawbacks as has_overdue_clawbacks' => fn (Builder $q) => $q
+                        ->where('status', ClawbackStatus::PENDING)
+                        ->where('created_at', '<', now()->subDays(config('settlement.clawback_overdue_days'))),
+                ])
+            )
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
@@ -54,6 +65,21 @@ class MerchantsTable
                     ->badge()
                     ->formatStateUsing(fn (MerchantStatus $state) => $state->label())
                     ->color(fn (MerchantStatus $state) => $state->color()),
+
+                TextColumn::make('clawback_status')
+                    ->label('Clawbacks')
+                    ->state(fn (Merchant $record) => match (true) {
+                        (bool) $record->has_overdue_clawbacks => 'Overdue',
+                        (bool) $record->has_pending_clawbacks => 'Pending',
+                        default => null,
+                    })
+                    ->badge()
+                    ->color(fn (?string $state) => match ($state) {
+                        'Overdue' => 'danger',
+                        'Pending' => 'warning',
+                        default => null,
+                    })
+                    ->placeholder('—'),
 
                 TextColumn::make('created_at')
                     ->label('Created')
