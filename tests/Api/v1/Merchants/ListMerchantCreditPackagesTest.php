@@ -9,12 +9,13 @@ use App\Models\CreditTransaction;
 use App\Models\Merchant;
 use App\Models\User;
 use Symfony\Component\HttpFoundation\Response;
-use Tests\Api\v1\Traits\MerchantPortalEndpoints;
+use Tests\Api\v1\Traits\MerchantEndpoints;
+use Tests\Constants\Guards;
 use Tests\TestCase;
 
 class ListMerchantCreditPackagesTest extends TestCase
 {
-    use MerchantPortalEndpoints;
+    use MerchantEndpoints;
 
     private Merchant $merchant;
 
@@ -32,7 +33,7 @@ class ListMerchantCreditPackagesTest extends TestCase
     {
         CreditPackage::factory()->count(3)->for($this->merchant)->active()->create();
 
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user, Guards::CUSTOMER)
             ->getJson(self::listMerchantCreditPackagesEndpoint((string) $this->merchant->id));
 
         $response->assertStatus(Response::HTTP_OK)
@@ -63,7 +64,7 @@ class ListMerchantCreditPackagesTest extends TestCase
         CreditPackage::factory()->count(2)->for($this->merchant)->active()->create();
         CreditPackage::factory()->count(3)->for($this->merchant)->inactive()->create();
 
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user, Guards::CUSTOMER)
             ->getJson(self::listMerchantCreditPackagesEndpoint((string) $this->merchant->id));
 
         $response->assertStatus(Response::HTTP_OK)
@@ -75,7 +76,7 @@ class ListMerchantCreditPackagesTest extends TestCase
         CreditPackage::factory()->count(2)->for($this->merchant)->active()->create();
         CreditPackage::factory()->count(3)->for(Merchant::factory()->create())->active()->create();
 
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user, Guards::CUSTOMER)
             ->getJson(self::listMerchantCreditPackagesEndpoint((string) $this->merchant->id));
 
         $response->assertStatus(Response::HTTP_OK)
@@ -93,7 +94,7 @@ class ListMerchantCreditPackagesTest extends TestCase
             'sold_quantity' => 2,
         ]);
 
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user, Guards::CUSTOMER)
             ->getJson(self::listMerchantCreditPackagesEndpoint((string) $this->merchant->id));
 
         $response->assertStatus(Response::HTTP_OK)
@@ -106,7 +107,7 @@ class ListMerchantCreditPackagesTest extends TestCase
             'total_quantity' => null,
         ]);
 
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user, Guards::CUSTOMER)
             ->getJson(self::listMerchantCreditPackagesEndpoint((string) $this->merchant->id));
 
         $response->assertStatus(Response::HTTP_OK)
@@ -130,7 +131,7 @@ class ListMerchantCreditPackagesTest extends TestCase
             ->for($this->merchant)
             ->create();
 
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user, Guards::CUSTOMER)
             ->getJson(self::listMerchantCreditPackagesEndpoint((string) $this->merchant->id));
 
         $response->assertStatus(Response::HTTP_OK)
@@ -152,7 +153,7 @@ class ListMerchantCreditPackagesTest extends TestCase
             ->for($this->merchant)
             ->create();
 
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user, Guards::CUSTOMER)
             ->getJson(self::listMerchantCreditPackagesEndpoint((string) $this->merchant->id));
 
         $response->assertStatus(Response::HTTP_OK)
@@ -175,18 +176,30 @@ class ListMerchantCreditPackagesTest extends TestCase
             ->for($this->merchant)
             ->create();
 
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user, Guards::CUSTOMER)
             ->getJson(self::listMerchantCreditPackagesEndpoint((string) $this->merchant->id));
 
         $response->assertStatus(Response::HTTP_OK)
             ->assertJsonCount(1, 'data');
     }
 
+    public function testReturnsNotFoundForPausedMerchant(): void
+    {
+        $pausedMerchant = Merchant::factory()->active()->create([
+            'credit_sales_paused_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->user, Guards::CUSTOMER)
+            ->getJson(self::listMerchantCreditPackagesEndpoint((string) $pausedMerchant->id));
+
+        $response->assertStatus(Response::HTTP_NOT_FOUND);
+    }
+
     public function testReturnsNotFoundForInactiveMerchant(): void
     {
         $inactiveMerchant = Merchant::factory()->create(['status' => \App\Enums\MerchantStatus::SUSPENDED]);
 
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user, Guards::CUSTOMER)
             ->getJson(self::listMerchantCreditPackagesEndpoint((string) $inactiveMerchant->id));
 
         $response->assertStatus(Response::HTTP_NOT_FOUND);
@@ -194,7 +207,7 @@ class ListMerchantCreditPackagesTest extends TestCase
 
     public function testReturnsNotFoundForNonExistentMerchant(): void
     {
-        $response = $this->actingAs($this->user, 'sanctum')
+        $response = $this->actingAs($this->user, Guards::CUSTOMER)
             ->getJson(self::listMerchantCreditPackagesEndpoint(\Illuminate\Support\Str::uuid()->toString()));
 
         $response->assertStatus(Response::HTTP_NOT_FOUND);

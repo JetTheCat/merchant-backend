@@ -24,4 +24,9 @@ trait MerchantEndpoints
             $merchantId
         );
     }
+
+    protected static function listMerchantCreditPackagesEndpoint(string $merchantId): string
+    {
+        return "/api/v1/merchants/{$merchantId}/packages";
+    }
 }
