@@ -26,11 +26,12 @@ class ListMerchantTransactionsTest extends TestCase
 
     private MerchantUser $merchantUser;
 
-    private const VALID_TRANSACTION_STRUCTURE = [
+    private const array VALID_TRANSACTION_STRUCTURE = [
         'data' => [
             '*' => [
                 'id',
                 'parentTransactionId',
+                'parentTransactionReference',
                 'merchantUser',
                 'type',
                 'typeLabel',
@@ -39,6 +40,9 @@ class ListMerchantTransactionsTest extends TestCase
                 'referenceCode',
                 'amount',
                 'paidAmount',
+                'platformFeeRate',
+                'platformFee',
+                'processingFee',
                 'settlementAmount',
                 'balanceBefore',
                 'balanceAfter',
@@ -387,7 +391,7 @@ class ListMerchantTransactionsTest extends TestCase
         $response->assertJsonPath('data.0.settlementAmount', '85.00');
     }
 
-    public function testRefundTransactionResponseIncludesParentTransactionId(): void
+    public function testRefundTransactionResponseIncludesParentTransactionData(): void
     {
         $redemption = CreditTransaction::factory()
             ->redemption()
@@ -407,6 +411,7 @@ class ListMerchantTransactionsTest extends TestCase
             ->firstWhere('type', 'credit_refund');
 
         $this->assertEquals($redemption->id, $refund['parentTransactionId']);
+        $this->assertEquals($redemption->reference_code, $refund['parentTransactionReference']);
     }
 
     public function testRequiresAuthentication(): void
