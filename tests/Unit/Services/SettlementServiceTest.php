@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services;
 
+use App\Enums\ClawbackStatus;
 use App\Enums\SettlementStatus;
-use App\Enums\TransactionStatus;
 use App\Models\CreditTransaction;
 use App\Models\Merchant;
 use App\Models\Settlement;
+use App\Models\SettlementClawback;
 use App\Services\SettlementService;
 use Carbon\CarbonImmutable;
 use InvalidArgumentException;
@@ -26,19 +27,19 @@ class SettlementServiceTest extends TestCase
 
         $this->service = app(SettlementService::class);
 
-        $this->merchant = Merchant::factory()->active()->create([
-            'platform_fee_rate' => 0.05,
-        ]);
+        $this->merchant = Merchant::factory()->active()->create();
     }
 
     public function testGenerateForMerchantCreatesSettlement(): void
     {
-        CreditTransaction::factory()->count(3)->purchase()->for($this->merchant)->create([
-            'status' => TransactionStatus::COMPLETED,
-            'paid_amount' => 100.00,
-            'platform_fee_rate' => 0.05,
-            'platform_fee' => 5.00,
-        ]);
+        CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($this->merchant)
+            ->count(3)
+            ->create([
+                'settlement_amount' => 100.00,
+            ]);
 
         $date = CarbonImmutable::today();
 
@@ -55,8 +56,8 @@ class SettlementServiceTest extends TestCase
             'period_start' => $date->toDateString(),
             'period_end' => $date->toDateString(),
             'total_sales' => '300.00',
-            'total_fees' => '15.00',
-            'net_amount' => '285.00',
+            'clawback_amount' => '0.00',
+            'net_amount' => '300.00',
             'transaction_count' => 3,
             'status' => SettlementStatus::PENDING,
         ]);
@@ -64,11 +65,13 @@ class SettlementServiceTest extends TestCase
 
     public function testGenerateForMerchantSnapshotsBankingDetails(): void
     {
-        CreditTransaction::factory()->purchase()->for($this->merchant)->create([
-            'status' => TransactionStatus::COMPLETED,
-            'platform_fee_rate' => 0.05,
-            'platform_fee' => 5.00,
-        ]);
+        CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($this->merchant)
+            ->create([
+                'settlement_amount' => 100.00,
+            ]);
 
         $settlement = $this->service->generateForMerchant(
             $this->merchant,
@@ -83,11 +86,14 @@ class SettlementServiceTest extends TestCase
 
     public function testGenerateForMerchantSetsSettlementIdOnTransactions(): void
     {
-        $transactions = CreditTransaction::factory()->count(2)->purchase()->for($this->merchant)->create([
-            'status' => TransactionStatus::COMPLETED,
-            'platform_fee_rate' => 0.05,
-            'platform_fee' => 5.00,
-        ]);
+        $transactions = CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($this->merchant)
+            ->count(2)
+            ->create([
+                'settlement_amount' => 100.00,
+            ]);
 
         $settlement = $this->service->generateForMerchant(
             $this->merchant,
@@ -104,12 +110,14 @@ class SettlementServiceTest extends TestCase
     {
         $existingSettlement = Settlement::factory()->for($this->merchant)->create();
 
-        CreditTransaction::factory()->purchase()->for($this->merchant)->create([
-            'status' => TransactionStatus::COMPLETED,
-            'platform_fee_rate' => 0.05,
-            'platform_fee' => 5.00,
-            'settlement_id' => $existingSettlement->id,
-        ]);
+        CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($this->merchant)
+            ->create([
+                'settlement_amount' => 100.00,
+                'settlement_id' => $existingSettlement->id,
+            ]);
 
         $this->expectException(InvalidArgumentException::class);
 
@@ -122,9 +130,11 @@ class SettlementServiceTest extends TestCase
 
     public function testGenerateForMerchantOnlyIncludesCompletedTransactions(): void
     {
-        CreditTransaction::factory()->purchase()->for($this->merchant)->create([
-            'status' => TransactionStatus::PENDING,
-        ]);
+        CreditTransaction::factory()
+            ->redemption()
+            ->pending()
+            ->for($this->merchant)
+            ->create();
 
         $this->expectException(InvalidArgumentException::class);
 
@@ -137,12 +147,14 @@ class SettlementServiceTest extends TestCase
 
     public function testGenerateForMerchantOnlyIncludesTransactionsWithinPeriod(): void
     {
-        CreditTransaction::factory()->purchase()->for($this->merchant)->create([
-            'status' => TransactionStatus::COMPLETED,
-            'platform_fee_rate' => 0.05,
-            'platform_fee' => 5.00,
-            'created_at' => now()->subDays(10),
-        ]);
+        CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($this->merchant)
+            ->create([
+                'settlement_amount' => 100.00,
+                'created_at' => now()->subDays(10),
+            ]);
 
         $this->expectException(InvalidArgumentException::class);
 
@@ -166,13 +178,128 @@ class SettlementServiceTest extends TestCase
     public function testGenerateForMerchantThrowsWhenNoUnsettledTransactions(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('No unsettled credit purchases found');
+        $this->expectExceptionMessage('No unsettled credit redemptions found');
 
         $this->service->generateForMerchant(
             $this->merchant,
             CarbonImmutable::today(),
             CarbonImmutable::today(),
         );
+    }
+
+    public function testClawbackIsRecoveredWhenItFitsWithinTotalSales(): void
+    {
+        CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($this->merchant)
+            ->count(3)
+            ->create(['settlement_amount' => 100.00]);
+
+        $clawback = SettlementClawback::factory()
+            ->for($this->merchant)
+            ->create(['amount' => 100.00]);
+
+        $settlement = $this->service->generateForMerchant(
+            $this->merchant,
+            CarbonImmutable::today(),
+            CarbonImmutable::today(),
+        );
+
+        // total_sales = 300, clawback = 100 -> net_amount = 200
+        $this->assertEquals('300.00', $settlement->total_sales);
+        $this->assertEquals('100.00', $settlement->clawback_amount);
+        $this->assertEquals('200.00', $settlement->net_amount);
+
+        $clawback->refresh();
+        $this->assertEquals(ClawbackStatus::RECOVERED, $clawback->status);
+        $this->assertEquals($settlement->id, $clawback->settlement_id);
+    }
+
+    public function testClawbackIsSkippedWhenItExceedsTotalSales(): void
+    {
+        CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($this->merchant)
+            ->create(['settlement_amount' => 100.00]);
+
+        $clawback = SettlementClawback::factory()
+            ->for($this->merchant)
+            ->create(['amount' => 150.00]);
+
+        $settlement = $this->service->generateForMerchant(
+            $this->merchant,
+            CarbonImmutable::today(),
+            CarbonImmutable::today(),
+        );
+
+        // clawback (150) exceeds total_sales (100) — skipped, carries to next cycle
+        $this->assertEquals('100.00', $settlement->total_sales);
+        $this->assertEquals('0.00', $settlement->clawback_amount);
+        $this->assertEquals('100.00', $settlement->net_amount);
+
+        $clawback->refresh();
+        $this->assertEquals(ClawbackStatus::PENDING, $clawback->status);
+        $this->assertNull($clawback->settlement_id);
+    }
+
+    public function testOversizedClawbackSkippedButSmallerSubsequentOneStillRecovered(): void
+    {
+        CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($this->merchant)
+            ->create(['settlement_amount' => 100.00]);
+
+        // A is too large, B fits — proves continue rather than break
+        [$clawbackA, $clawbackB] = SettlementClawback::factory()
+            ->for($this->merchant)
+            ->count(2)
+            ->sequence(
+                ['amount' => 150.00, 'created_at' => now()->subMinute()],
+                ['amount' => 80.00]
+            )
+            ->create();
+
+        $settlement = $this->service->generateForMerchant(
+            $this->merchant,
+            CarbonImmutable::today(),
+            CarbonImmutable::today(),
+        );
+
+        // A (150) exceeds total_sales (100) — skipped; B (80) still fits — recovered
+        $this->assertEquals('100.00', $settlement->total_sales);
+        $this->assertEquals('80.00', $settlement->clawback_amount);
+        $this->assertEquals('20.00', $settlement->net_amount);
+
+        $clawbackA->refresh();
+        $this->assertEquals(ClawbackStatus::PENDING, $clawbackA->status);
+        $this->assertNull($clawbackA->settlement_id);
+
+        $clawbackB->refresh();
+        $this->assertEquals(ClawbackStatus::RECOVERED, $clawbackB->status);
+        $this->assertEquals($settlement->id, $clawbackB->settlement_id);
+    }
+
+    public function testPendingClawbacksAreNotModifiedWhenNoRedemptionsExist(): void
+    {
+        $clawback = SettlementClawback::factory()
+            ->for($this->merchant)
+            ->create(['amount' => 100.00]);
+
+        try {
+            $this->service->generateForMerchant(
+                $this->merchant,
+                CarbonImmutable::today(),
+                CarbonImmutable::today(),
+            );
+            $this->fail('Expected an InvalidArgumentException to be thrown.');
+        } catch (InvalidArgumentException) {
+            $clawback->refresh();
+            $this->assertEquals(ClawbackStatus::PENDING, $clawback->status);
+            $this->assertNull($clawback->settlement_id);
+        }
     }
 
     public function testMarkAsPaidCompletesSettlement(): void

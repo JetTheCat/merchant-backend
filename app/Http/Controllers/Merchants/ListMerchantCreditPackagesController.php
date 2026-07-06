@@ -14,7 +14,7 @@ class ListMerchantCreditPackagesController extends Controller
 {
     public function __invoke(Request $request, string $id): JsonResponse
     {
-        $merchant = Merchant::active()->findOrFail($id);
+        $merchant = Merchant::active()->notPaused()->findOrFail($id);
 
         $packages = $merchant->creditPackages()
             ->active()

@@ -63,12 +63,12 @@ class GenerateSettlement extends Command
 
         $this->info('Settlement generated successfully.');
         $this->table(
-            ['Reference', 'Transactions', 'Total Sales', 'Total Fees', 'Net Amount', 'Status'],
+            ['Reference', 'Redemptions', 'Total Redeemed', 'Clawback Deductions', 'Net Payout', 'Status'],
             [[
                 $settlement->reference_code,
                 $settlement->transaction_count,
                 'RM '.number_format((float) $settlement->total_sales, 2),
-                'RM '.number_format((float) $settlement->total_fees, 2),
+                'RM '.number_format((float) $settlement->clawback_amount, 2),
                 'RM '.number_format((float) $settlement->net_amount, 2),
                 $settlement->status->label(),
             ]],

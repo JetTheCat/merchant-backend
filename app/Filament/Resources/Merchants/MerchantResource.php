@@ -11,6 +11,7 @@ use App\Filament\Resources\Merchants\Pages\ViewMerchant;
 use App\Filament\Resources\Merchants\RelationManagers\CreditPackagesRelationManager;
 use App\Filament\Resources\Merchants\RelationManagers\MerchantLocationsRelationManager;
 use App\Filament\Resources\Merchants\RelationManagers\MerchantUsersRelationManager;
+use App\Filament\Resources\Merchants\RelationManagers\SettlementClawbacksRelationManager;
 use App\Filament\Resources\Merchants\RelationManagers\SettlementsRelationManager;
 use App\Filament\Resources\Merchants\Schemas\MerchantForm;
 use App\Filament\Resources\Merchants\Schemas\MerchantInfolist;
@@ -55,6 +56,7 @@ class MerchantResource extends Resource
             MerchantUsersRelationManager::class,
             CreditPackagesRelationManager::class,
             SettlementsRelationManager::class,
+            SettlementClawbacksRelationManager::class,
             MerchantLocationsRelationManager::class,
         ];
     }

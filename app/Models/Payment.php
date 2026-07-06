@@ -26,6 +26,7 @@ class Payment extends Model
         'stripe_payment_intent_id',
         'stripe_charge_id',
         'amount',
+        'processing_fee',
         'currency',
         'status',
         'stripe_payload',
@@ -38,6 +39,7 @@ class Payment extends Model
         'currency' => Currency::class,
         'status' => PaymentStatus::class,
         'amount' => 'decimal:2',
+        'processing_fee' => 'decimal:2',
         'stripe_payload' => 'array',
         'paid_at' => 'datetime',
     ];
@@ -76,11 +78,12 @@ class Payment extends Model
         $query->where('status', PaymentStatus::PAYMENT_FAILED);
     }
 
-    public function markAsSucceeded(string $chargeId, array $payload): bool
+    public function markAsSucceeded(string $chargeId, PaymentType $paymentMethod, array $payload): bool
     {
         return $this->update([
             'status' => PaymentStatus::SUCCEEDED,
             'stripe_charge_id' => $chargeId,
+            'payment_method' => $paymentMethod,
             'stripe_payload' => $payload,
             'paid_at' => now(),
         ]);

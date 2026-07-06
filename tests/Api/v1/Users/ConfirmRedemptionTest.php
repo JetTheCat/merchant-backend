@@ -107,6 +107,8 @@ class ConfirmRedemptionTest extends TestCase
             'merchant_location_id' => $this->location->id,
             'status' => TransactionStatus::COMPLETED,
             'amount' => 25.00,
+            'settlement_amount' => 25.00,
+            'gross_settlement_amount' => 25.00,
         ]);
     }
 

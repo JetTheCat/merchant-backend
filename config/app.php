@@ -130,4 +130,6 @@ return [
     ],
 
     'fallback_code_expiry_minutes' => (int) env('APP_FALLBACK_CODE_EXPIRY', 5),
+
+    'reporting_timezone' => env('REPORTING_TIMEZONE', 'Asia/Kuala_Lumpur'),
 ];

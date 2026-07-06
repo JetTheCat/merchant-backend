@@ -13,16 +13,22 @@ class DownloadSettlementInvoiceController extends Controller
 {
     public function __invoke(Settlement $settlement): mixed
     {
-        $purchases = $settlement->transactions()
-            ->where('type', TransactionType::CREDIT_PURCHASE)
+        $redemptions = $settlement->transactions()
+            ->where('type', TransactionType::CREDIT_REDEMPTION)
             ->orderBy('created_at')
-            ->get(['created_at', 'reference_code', 'paid_amount', 'platform_fee']);
+            ->get(['created_at', 'reference_code', 'settlement_amount']);
+
+        $clawbacks = $settlement->clawbacks()
+            ->with('originalRedemption:id,reference_code')
+            ->orderBy('created_at')
+            ->get();
 
         $filename = "settlement-{$settlement->reference_code}.pdf";
 
         return Pdf::view('settlements.invoice', [
             'settlement' => $settlement->load('merchant'),
-            'purchases' => $purchases,
+            'redemptions' => $redemptions,
+            'clawbacks' => $clawbacks,
         ])->download($filename);
     }
 }

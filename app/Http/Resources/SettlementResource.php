@@ -17,7 +17,7 @@ class SettlementResource extends JsonResource
             'periodStart' => $this->period_start->toDateString(),
             'periodEnd' => $this->period_end->toDateString(),
             'totalSales' => $this->total_sales,
-            'totalFees' => $this->total_fees,
+            'clawbackAmount' => $this->clawback_amount,
             'netAmount' => $this->net_amount,
             'transactionCount' => $this->transaction_count,
             'status' => $this->status,

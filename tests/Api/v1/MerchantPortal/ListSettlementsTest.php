@@ -21,7 +21,7 @@ class ListSettlementsTest extends TestCase
 
     private MerchantUser $merchantUser;
 
-    private const VALID_STRUCTURE = [
+    private const array VALID_STRUCTURE = [
         'data' => [
             '*' => [
                 'id',
@@ -29,7 +29,7 @@ class ListSettlementsTest extends TestCase
                 'periodStart',
                 'periodEnd',
                 'totalSales',
-                'totalFees',
+                'clawbackAmount',
                 'netAmount',
                 'transactionCount',
                 'status',

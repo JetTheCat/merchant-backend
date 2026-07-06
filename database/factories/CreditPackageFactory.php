@@ -14,7 +14,7 @@ class CreditPackageFactory extends Factory
 {
     public function definition(): array
     {
-        $creditAmount = $this->faker->randomElement([50, 100, 200, 300, 500]);
+        $creditAmount = $this->faker->randomElement([50, 100, 150, 200]);
         $sellingPrice = round($creditAmount * 0.9, 2);
 
         return [

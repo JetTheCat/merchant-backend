@@ -24,7 +24,9 @@ class ListMerchantTransactionsController extends Controller
         $query = CreditTransaction::query()
             ->with([
                 'merchantUser',
-                'user'
+                'user',
+                'payment',
+                'parentTransaction:id,reference_code',
             ])
             ->where('merchant_id', $merchantId)
             ->orderByDesc('created_at')

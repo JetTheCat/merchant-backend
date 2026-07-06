@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\DataTransferObjects\RedemptionSettlement;
+use App\Enums\ClawbackStatus;
 use App\Enums\TransactionCategory;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
@@ -11,6 +13,7 @@ use App\Events\RedemptionCompleted;
 use App\Models\CreditTransaction;
 use App\Models\MerchantLocation;
 use App\Models\MerchantUser;
+use App\Models\SettlementClawback;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\UserCredit;
@@ -43,14 +46,13 @@ class RedemptionService
                 ]);
             }
 
-            if (bccomp((string) $userCredit->balance, (string) $amount, 2) < 0) {
+            if (compare((string) $userCredit->balance, (string) $amount) < 0) {
                 throw ValidationException::withMessages([
                     'amount' => ['Insufficient balance.'],
                 ]);
             }
 
-            $balanceBefore = $userCredit->balance;
-            $balanceAfter = bcsub((string) $balanceBefore, (string) $amount, 2);
+            $settlement = $this->settleRedemption($userCredit, (string) $amount);
 
             $transaction = CreditTransaction::create([
                 'user_id' => $user->id,
@@ -62,15 +64,11 @@ class RedemptionService
                 'reference_code' => Transaction::generateUniqueReferenceCode(),
                 'status' => TransactionStatus::COMPLETED,
                 'amount' => $amount,
-                'balance_before' => $balanceBefore,
-                'balance_after' => $balanceAfter,
+                'balance_before' => $settlement->balanceBefore,
+                'balance_after' => $settlement->balanceAfter,
+                'settlement_amount' => $settlement->settlementAmount,
+                'gross_settlement_amount' => $settlement->grossSettlementAmount,
                 'redeemed_at' => now(),
-            ]);
-
-            $userCredit->update([
-                'balance' => $balanceAfter,
-                'total_redeemed' => bcadd((string) $userCredit->total_redeemed, (string) $amount, 2),
-                'last_redemption_at' => now(),
             ]);
 
             return $transaction->fresh();
@@ -137,28 +135,23 @@ class RedemptionService
                 ]);
             }
 
-            if (bccomp((string) $userCredit->balance, (string) $transaction->amount, 2) < 0) {
+            if (compare((string) $userCredit->balance, (string) $transaction->amount, 2) < 0) {
                 throw ValidationException::withMessages([
                     'code' => ['Insufficient balance.'],
                 ]);
             }
 
-            $balanceBefore = $userCredit->balance;
-            $balanceAfter = bcsub((string) $balanceBefore, (string) $transaction->amount, 2);
+            $settlement = $this->settleRedemption($userCredit, (string) $transaction->amount);
 
             $transaction->update([
                 'user_id' => $user->id,
                 'user_credit_id' => $userCredit->id,
                 'status' => TransactionStatus::COMPLETED,
-                'balance_before' => $balanceBefore,
-                'balance_after' => $balanceAfter,
+                'balance_before' => $settlement->balanceBefore,
+                'balance_after' => $settlement->balanceAfter,
+                'settlement_amount' => $settlement->settlementAmount,
+                'gross_settlement_amount' => $settlement->grossSettlementAmount,
                 'redeemed_at' => now(),
-            ]);
-
-            $userCredit->update([
-                'balance' => $balanceAfter,
-                'total_redeemed' => bcadd((string) $userCredit->total_redeemed, (string) $transaction->amount, 2),
-                'last_redemption_at' => now(),
             ]);
 
             return $transaction->fresh();
@@ -203,18 +196,21 @@ class RedemptionService
                 ->firstOrFail();
 
             $balanceBefore = $userCredit->balance;
-            $balanceAfter = bcadd((string) $balanceBefore, (string) $redemption->amount, 2);
+            $balanceAfter = add((string) $balanceBefore, (string) $redemption->amount);
 
             $userCredit->update([
                 'balance' => $balanceAfter,
-                'total_redeemed' => bcsub((string) $userCredit->total_redeemed, (string) $redemption->amount, 2),
+                'cash_balance' => add((string) $userCredit->cash_balance, (string) $redemption->settlement_amount),
+                'gross_paid_balance' => add((string) $userCredit->gross_paid_balance, (string) $redemption->gross_settlement_amount),
+                'total_redeemed' => sub((string) $userCredit->total_redeemed, (string) $redemption->amount),
             ]);
 
-            return CreditTransaction::create([
+            $refund = CreditTransaction::create([
                 'user_id' => $redemption->user_id,
                 'merchant_id' => $byUser->merchant_id,
                 'merchant_user_id' => $byUser->id,
                 'user_credit_id' => $redemption->user_credit_id,
+                'parent_transaction_id' => $redemption->id,
                 'category' => TransactionCategory::CREDIT,
                 'type' => TransactionType::CREDIT_REFUND,
                 'reference_code' => Transaction::generateUniqueReferenceCode(),
@@ -224,7 +220,46 @@ class RedemptionService
                 'balance_after' => $balanceAfter,
                 'notes' => $notes,
             ]);
+
+            if ($redemption->settlement_id !== null) {
+                SettlementClawback::create([
+                    'merchant_id' => $byUser->merchant_id,
+                    'original_redemption_id' => $redemption->id,
+                    'refund_transaction_id' => $refund->id,
+                    'amount' => $redemption->settlement_amount,
+                    'status' => ClawbackStatus::PENDING,
+                ]);
+            }
+
+            return $refund;
         });
+    }
+
+    private function settleRedemption(UserCredit $userCredit, string $amount): RedemptionSettlement
+    {
+        $balanceBefore = (string) $userCredit->balance;
+        $balanceAfter = sub($balanceBefore, $amount);
+
+        $netRatio = div((string) $userCredit->cash_balance, $balanceBefore, 5);
+        $settlementAmount = mul($amount, $netRatio);
+
+        $grossRatio = div((string) $userCredit->gross_paid_balance, $balanceBefore, 5);
+        $grossSettlementAmount = mul($amount, $grossRatio);
+
+        $userCredit->update([
+            'balance' => $balanceAfter,
+            'cash_balance' => sub((string) $userCredit->cash_balance, $settlementAmount),
+            'gross_paid_balance' => sub((string) $userCredit->gross_paid_balance, $grossSettlementAmount),
+            'total_redeemed' => add((string) $userCredit->total_redeemed, $amount),
+            'last_redemption_at' => now(),
+        ]);
+
+        return new RedemptionSettlement(
+            balanceBefore: $balanceBefore,
+            balanceAfter: $balanceAfter,
+            settlementAmount: $settlementAmount,
+            grossSettlementAmount: $grossSettlementAmount,
+        );
     }
 
     private function generateShortCode(): string

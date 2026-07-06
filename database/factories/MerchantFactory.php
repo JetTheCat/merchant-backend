@@ -60,6 +60,13 @@ class MerchantFactory extends Factory
         ]);
     }
 
+    public function creditSalesPaused(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'credit_sales_paused_at' => now(),
+        ]);
+    }
+
     public function forCategory(string $categoryId): static
     {
         return $this->state(fn (array $attributes) => [

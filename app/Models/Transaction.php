@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use RuntimeException;
 
@@ -43,6 +44,9 @@ class Transaction extends Model
         'balance_after',
         'platform_fee_rate',
         'platform_fee',
+        'settlement_amount',
+        'gross_settlement_amount',
+        'parent_transaction_id',
         'fallback_code',
         'redeemed_at',
         'expires_at',
@@ -60,6 +64,8 @@ class Transaction extends Model
         'balance_after' => 'decimal:2',
         'platform_fee_rate' => 'decimal:4',
         'platform_fee' => 'decimal:2',
+        'settlement_amount' => 'decimal:2',
+        'gross_settlement_amount' => 'decimal:2',
         'redeemed_at' => 'datetime',
         'expires_at' => 'datetime',
         'metadata' => 'array',
@@ -87,12 +93,12 @@ class Transaction extends Model
 
     public function merchantUser(): BelongsTo
     {
-        return $this->belongsTo(MerchantUser::class, 'merchant_user_id');
+        return $this->belongsTo(MerchantUser::class);
     }
 
     public function merchantLocation(): BelongsTo
     {
-        return $this->belongsTo(MerchantLocation::class, 'merchant_location_id');
+        return $this->belongsTo(MerchantLocation::class);
     }
 
     public function payment(): BelongsTo
@@ -103,6 +109,16 @@ class Transaction extends Model
     public function settlement(): BelongsTo
     {
         return $this->belongsTo(Settlement::class);
+    }
+
+    public function parentTransaction(): BelongsTo
+    {
+        return $this->belongsTo(Transaction::class, 'parent_transaction_id');
+    }
+
+    public function childTransactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'parent_transaction_id');
     }
 
     #[Scope]

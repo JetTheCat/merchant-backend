@@ -6,9 +6,11 @@ namespace App\Jobs;
 
 use App\Constants\QueueConnections;
 use App\Constants\QueueNames;
+use App\Enums\PaymentType;
 use App\Models\Payment;
 use App\Models\StripeEvent;
 use App\Services\CreditPurchaseService;
+use App\Services\StripeService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -33,13 +35,13 @@ class ProcessStripeWebhook implements ShouldQueue
             ->onQueue(QueueNames::DEFAULT);
     }
 
-    public function handle(CreditPurchaseService $creditPurchaseService): void
+    public function handle(CreditPurchaseService $creditPurchaseService, StripeService $stripeService): void
     {
         $payload = $this->stripeEvent->payload;
         $paymentIntentId = $payload['data']['object']['id'] ?? null;
 
         match ($this->stripeEvent->type) {
-            'payment_intent.succeeded' => $this->handleSucceeded($paymentIntentId, $payload, $creditPurchaseService),
+            'payment_intent.succeeded' => $this->handleSucceeded($paymentIntentId, $payload, $creditPurchaseService, $stripeService),
             'payment_intent.payment_failed' => $this->handleFailed($paymentIntentId, $payload, $creditPurchaseService),
             default => null,
         };
@@ -47,7 +49,7 @@ class ProcessStripeWebhook implements ShouldQueue
         $this->stripeEvent->markAsProcessed();
     }
 
-    private function handleSucceeded(?string $paymentIntentId, array $payload, CreditPurchaseService $creditPurchaseService): void
+    private function handleSucceeded(?string $paymentIntentId, array $payload, CreditPurchaseService $creditPurchaseService, StripeService $stripeService): void
     {
         if ($paymentIntentId === null) {
             return;
@@ -63,8 +65,17 @@ class ProcessStripeWebhook implements ShouldQueue
 
         $chargeId = $payload['data']['object']['latest_charge'] ?? '';
 
-        DB::transaction(function () use ($payment, $chargeId, $payload, $creditPurchaseService) {
-            $payment->markAsSucceeded($chargeId, $payload);
+        if ($chargeId === '') {
+            Log::warning('Succeeded payment intent has no charge', ['payment_intent_id' => $paymentIntentId]);
+
+            return;
+        }
+
+        $charge = $stripeService->retrieveCharge($chargeId);
+        $paymentMethod = PaymentType::fromStripeType($charge->paymentMethodType);
+
+        DB::transaction(function () use ($payment, $charge, $paymentMethod, $payload, $creditPurchaseService) {
+            $payment->markAsSucceeded($charge->chargeId, $paymentMethod, $payload);
             $creditPurchaseService->grantCredits($payment);
         });
     }

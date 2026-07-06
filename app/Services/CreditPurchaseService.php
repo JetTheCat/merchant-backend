@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Actions\Fees\ProcessingFeeResolver;
 use App\DataTransferObjects\PaymentIntentResult;
 use App\Enums\Currency;
 use App\Enums\PaymentStatus;
@@ -16,6 +17,7 @@ use App\Models\Payment;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\UserCredit;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -24,6 +26,7 @@ class CreditPurchaseService
 {
     public function __construct(
         private readonly StripeService $stripeService,
+        private readonly ProcessingFeeResolver $processingFeeResolver,
     ) {}
 
     public function processPurchase(User $user, CreditPackage $package): PaymentIntentResult
@@ -32,9 +35,16 @@ class CreditPurchaseService
         // limited packages. Requires a compensation strategy for Stripe failures after commit
         // (cancel orphaned records or expire stale PENDING records via a cleanup job).
         return DB::transaction(function () use ($user, $package) {
-            $package = CreditPackage::where('id', $package->id)
+            $package = CreditPackage::with('merchant')
+                ->where('id', $package->id)
                 ->lockForUpdate()
                 ->firstOrFail();
+
+            if ($package->merchant->isCreditSalesPaused()) {
+                throw ValidationException::withMessages([
+                    'merchant' => ['This merchant is not currently accepting new credit purchases.'],
+                ]);
+            }
 
             if ($package->total_quantity !== null) {
                 $activeCount = CreditTransaction::where('credit_package_id', $package->id)
@@ -66,8 +76,14 @@ class CreditPurchaseService
                 ['balance' => 0, 'total_purchased' => 0, 'total_redeemed' => 0],
             );
 
+            if ($this->purchaseWouldExceedWalletLimit($userCredit, $package)) {
+                throw ValidationException::withMessages([
+                    'wallet' => ['This purchase would exceed the maximum wallet balance allowed for this merchant.'],
+                ]);
+            }
+
             $balanceBefore = $userCredit->balance;
-            $balanceAfter = bcadd((string) $balanceBefore, (string) $package->credit_amount, 2);
+            $balanceAfter = add((string) $balanceBefore, (string) $package->credit_amount);
 
             $transaction = CreditTransaction::create([
                 'user_id' => $user->id,
@@ -117,22 +133,34 @@ class CreditPurchaseService
         $userCredit = UserCredit::lockForUpdate()->find($transaction->user_credit_id);
 
         $balanceBefore = $userCredit->balance;
-        $balanceAfter = bcadd((string) $balanceBefore, (string) $transaction->amount, 2);
+        $balanceAfter = add((string) $balanceBefore, (string) $transaction->amount);
 
-        $feeRate = $transaction->creditPackage->merchant->platform_fee_rate;
-        $fee = bcmul((string) $transaction->paid_amount, (string) $feeRate, 2);
+        $platformFeeRate = $transaction->creditPackage->merchant->platform_fee_rate;
+        $platformFee = mul((string) $transaction->paid_amount, (string) $platformFeeRate);
+
+        $processingFee = $this->processingFeeResolver
+            ->resolve($payment->payment_method)
+            ->amountFor($transaction->paid_amount);
+
+        $netCash = sub(sub((string) $transaction->paid_amount, $platformFee), $processingFee);
 
         $transaction->update([
             'status' => TransactionStatus::COMPLETED,
             'balance_before' => $balanceBefore,
             'balance_after' => $balanceAfter,
-            'platform_fee_rate' => $feeRate,
-            'platform_fee' => $fee,
+            'platform_fee_rate' => $platformFeeRate,
+            'platform_fee' => $platformFee,
+        ]);
+
+        $payment->update([
+            'processing_fee' => $processingFee,
         ]);
 
         $userCredit->update([
             'balance' => $balanceAfter,
-            'total_purchased' => bcadd((string) $userCredit->total_purchased, (string) $transaction->amount, 2),
+            'cash_balance' => add((string) $userCredit->cash_balance, $netCash),
+            'gross_paid_balance' => add((string) $userCredit->gross_paid_balance, (string) $transaction->paid_amount),
+            'total_purchased' => add((string) $userCredit->total_purchased, (string) $transaction->amount),
             'last_purchase_at' => now(),
         ]);
 
@@ -150,5 +178,12 @@ class CreditPurchaseService
         }
 
         $transaction->update(['status' => TransactionStatus::FAILED]);
+    }
+
+    private function purchaseWouldExceedWalletLimit(UserCredit $userCredit, CreditPackage $package): bool
+    {
+        $total = add((string) $userCredit->balance, (string) $package->credit_amount);
+
+        return gt($total, config('wallet.limit'));
     }
 }

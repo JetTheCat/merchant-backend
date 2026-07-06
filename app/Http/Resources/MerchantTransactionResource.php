@@ -13,6 +13,8 @@ class MerchantTransactionResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'parentTransactionId' => $this->parent_transaction_id,
+            'parentTransactionReference' => $this->whenLoaded('parentTransaction', fn () => $this->parentTransaction?->reference_code),
             'merchantUser' => new MerchantUserResource($this->whenLoaded('merchantUser')),
             'customer' => $this->whenLoaded('user', fn () => [
                 'id' => $this->user->id,
@@ -27,6 +29,10 @@ class MerchantTransactionResource extends JsonResource
             'referenceCode' => $this->reference_code,
             'amount' => $this->amount,
             'paidAmount' => $this->paid_amount,
+            'platformFeeRate' => $this->platform_fee_rate,
+            'platformFee' => $this->platform_fee,
+            'processingFee' => $this->whenLoaded('payment', fn () => $this->payment?->processing_fee),
+            'settlementAmount' => $this->settlement_amount,
             'balanceBefore' => $this->balance_before,
             'balanceAfter' => $this->balance_after,
             'notes' => $this->notes,

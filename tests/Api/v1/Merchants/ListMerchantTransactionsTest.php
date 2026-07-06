@@ -26,10 +26,12 @@ class ListMerchantTransactionsTest extends TestCase
 
     private MerchantUser $merchantUser;
 
-    private const VALID_TRANSACTION_STRUCTURE = [
+    private const array VALID_TRANSACTION_STRUCTURE = [
         'data' => [
             '*' => [
                 'id',
+                'parentTransactionId',
+                'parentTransactionReference',
                 'merchantUser',
                 'type',
                 'typeLabel',
@@ -38,6 +40,10 @@ class ListMerchantTransactionsTest extends TestCase
                 'referenceCode',
                 'amount',
                 'paidAmount',
+                'platformFeeRate',
+                'platformFee',
+                'processingFee',
+                'settlementAmount',
                 'balanceBefore',
                 'balanceAfter',
                 'notes',
@@ -369,6 +375,43 @@ class ListMerchantTransactionsTest extends TestCase
 
         $response->assertStatus(Response::HTTP_OK)
             ->assertJsonCount(0, 'data');
+    }
+
+    public function testRedemptionTransactionResponseIncludesSettlementAmount(): void
+    {
+        CreditTransaction::factory()
+            ->redemption()
+            ->for($this->merchant)
+            ->create(['settlement_amount' => 85.00]);
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint())
+            ->assertSuccessful();
+
+        $response->assertJsonPath('data.0.settlementAmount', '85.00');
+    }
+
+    public function testRefundTransactionResponseIncludesParentTransactionData(): void
+    {
+        $redemption = CreditTransaction::factory()
+            ->redemption()
+            ->for($this->merchant)
+            ->create();
+
+        CreditTransaction::factory()
+            ->refund()
+            ->for($this->merchant)
+            ->create(['parent_transaction_id' => $redemption->id]);
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::listMerchantTransactionsEndpoint())
+            ->assertSuccessful();
+
+        $refund = collect($response->json('data'))
+            ->firstWhere('type', 'credit_refund');
+
+        $this->assertEquals($redemption->id, $refund['parentTransactionId']);
+        $this->assertEquals($redemption->reference_code, $refund['parentTransactionReference']);
     }
 
     public function testRequiresAuthentication(): void

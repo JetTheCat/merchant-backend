@@ -20,14 +20,14 @@ class GetSettlementTest extends TestCase
 
     private MerchantUser $merchantUser;
 
-    private const VALID_STRUCTURE = [
+    private const array VALID_STRUCTURE = [
         'data' => [
             'id',
             'referenceCode',
             'periodStart',
             'periodEnd',
             'totalSales',
-            'totalFees',
+            'clawbackAmount',
             'netAmount',
             'transactionCount',
             'status',
@@ -59,6 +59,23 @@ class GetSettlementTest extends TestCase
         $response->assertStatus(Response::HTTP_OK)
             ->assertJsonStructure(self::VALID_STRUCTURE)
             ->assertJsonPath('data.id', $settlement->id);
+    }
+
+    public function testSettlementResponseIncludesClawbackAmount(): void
+    {
+        $settlement = Settlement::factory()->for($this->merchant)->create([
+            'total_sales' => 200.00,
+            'clawback_amount' => 50.00,
+            'net_amount' => 150.00,
+        ]);
+
+        $response = $this->actingAs($this->merchantUser, self::MERCHANT_USER_GUARD)
+            ->getJson(self::getSettlementEndpoint($settlement->id))
+            ->assertSuccessful();
+
+        $response->assertJsonPath('data.clawbackAmount', '50.00')
+            ->assertJsonPath('data.totalSales', '200.00')
+            ->assertJsonPath('data.netAmount', '150.00');
     }
 
     public function testMerchantCannotGetAnotherMerchantsSettlement(): void
