@@ -25,7 +25,6 @@ class PlatformFeeReport extends Model
         'total_gmv',
         'total_platform_fees',
         'total_processing_costs',
-        'net_earnings',
         'status',
         'payment_reference',
         'paid_at',
@@ -38,7 +37,6 @@ class PlatformFeeReport extends Model
         'total_gmv' => 'decimal:2',
         'total_platform_fees' => 'decimal:2',
         'total_processing_costs' => 'decimal:2',
-        'net_earnings' => 'decimal:2',
         'status' => FeeReportStatus::class,
         'paid_at' => 'datetime',
     ];

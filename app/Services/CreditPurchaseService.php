@@ -108,8 +108,6 @@ class CreditPurchaseService
                 'status' => PaymentStatus::REQUIRES_PAYMENT_METHOD,
             ]);
 
-            $transaction->update(['payment_id' => $payment->id]);
-
             $result = $this->stripeService->createPaymentIntent($payment);
 
             $payment->update(['stripe_payment_intent_id' => $result->paymentIntentId]);
@@ -121,7 +119,7 @@ class CreditPurchaseService
     public function grantCredits(Payment $payment): void
     {
         $transaction = CreditTransaction::with('creditPackage.merchant')
-            ->where('payment_id', $payment->id)
+            ->where('id', $payment->transaction_id)
             ->first();
 
         if ($transaction === null) {
@@ -169,7 +167,7 @@ class CreditPurchaseService
 
     public function failPurchase(Payment $payment): void
     {
-        $transaction = CreditTransaction::where('payment_id', $payment->id)->first();
+        $transaction = CreditTransaction::where('id', $payment->transaction_id)->first();
 
         if ($transaction === null) {
             Log::warning('Transaction not found for payment', ['payment_id' => $payment->id]);

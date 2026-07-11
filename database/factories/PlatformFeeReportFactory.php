@@ -32,7 +32,6 @@ class PlatformFeeReportFactory extends Factory
             'total_gmv' => $totalGmv,
             'total_platform_fees' => $totalPlatformFees,
             'total_processing_costs' => $totalProcessingCosts,
-            'net_earnings' => round($totalPlatformFees - $totalProcessingCosts, 2),
             'status' => FeeReportStatus::PENDING,
             'payment_reference' => null,
             'paid_at' => null,

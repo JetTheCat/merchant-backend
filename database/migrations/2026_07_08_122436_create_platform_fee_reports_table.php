@@ -16,7 +16,6 @@ return new class extends Migration
             $table->decimal('total_gmv', 12, 2);
             $table->decimal('total_platform_fees', 12, 2);
             $table->decimal('total_processing_costs', 12, 2);
-            $table->decimal('net_earnings', 12, 2);
             $table->string('status');
             $table->string('payment_reference')->nullable();
             $table->timestamp('paid_at')->nullable();
