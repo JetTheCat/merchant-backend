@@ -29,9 +29,9 @@ class FeeReportStorageService implements FeeReportStorageInterface
         return $path;
     }
 
-    public function download(string $filename): StreamedResponse
+    public function download(string $path): StreamedResponse
     {
-        return Storage::download($this->getFilePath($filename));
+        return Storage::download($path);
     }
 
     public function exists(string $path): bool
@@ -41,6 +41,6 @@ class FeeReportStorageService implements FeeReportStorageInterface
 
     private function getFilePath(string $filename): string
     {
-        return sprintf('%s/%s/%s', self::DIRECTORY, now()->year, $filename);
+        return sprintf('%s/%s', self::DIRECTORY, $filename);
     }
 }

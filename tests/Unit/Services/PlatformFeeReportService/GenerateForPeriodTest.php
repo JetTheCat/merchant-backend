@@ -373,8 +373,7 @@ class GenerateForPeriodTest extends TestCase
         $report = $this->service->generateForPeriod($periodStart, $periodEnd, $this->generatedBy);
 
         $expectedPath = sprintf(
-            'fee-reports/%s/platform-fee-report_%s_%s.csv',
-            $periodStart->format('Y'),
+            'fee-reports/platform-fee-report_%s_%s.csv',
             $periodStart->format('Y-m-d'),
             $periodEnd->format('Y-m-d'),
         );
