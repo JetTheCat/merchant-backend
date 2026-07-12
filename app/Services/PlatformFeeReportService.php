@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Contracts\Storage\FeeReportStorageInterface;
 use App\Enums\FeeReportStatus;
+use App\Exceptions\PlatformFeeReport\MissingFirstPeriodStartException;
 use App\Exceptions\PlatformFeeReport\OverlappingPeriodException;
 use App\Models\CreditTransaction;
 use App\Models\PlatformFeeReport;
@@ -101,11 +102,57 @@ class PlatformFeeReportService
         ]);
     }
 
+    /**
+     * @return array{period_start: CarbonImmutable, period_end: CarbonImmutable, available_from: CarbonImmutable}
+     */
+    public function nextPeriod(): array
+    {
+        $reportingTimezone = config('app.reporting_timezone');
+
+        $lastReport = PlatformFeeReport::latest('period_end')->first();
+
+        $periodStart = $lastReport
+            ? CarbonImmutable::parse($lastReport->period_end->format('Y-m-d'), $reportingTimezone)->addDay()->startOfDay()
+            : $this->firstPeriodStart($reportingTimezone);
+
+        $periodEnd = $periodStart->addDays(6)->endOfDay();
+
+        return [
+            'period_start' => $periodStart,
+            'period_end' => $periodEnd,
+            'available_from' => $periodEnd->addDays(config('platform-fee-report.availability_buffer_days'))->startOfDay(),
+        ];
+    }
+
+    private function firstPeriodStart(string $reportingTimezone): CarbonImmutable
+    {
+        $firstPeriodStart = config('platform-fee-report.first_period_start');
+
+        if ($firstPeriodStart === null) {
+            throw new MissingFirstPeriodStartException(
+                'No platform fee reports exist yet. Set PLATFORM_FEE_REPORT_FIRST_PERIOD_START to generate the first report.'
+            );
+        }
+
+        return CarbonImmutable::parse($firstPeriodStart, $reportingTimezone)->startOfDay();
+    }
+
     public function previousUnpaidReport(): ?PlatformFeeReport
     {
         $latest = PlatformFeeReport::latest('period_end')->first();
 
         return $latest?->status === FeeReportStatus::PENDING ? $latest : null;
+    }
+
+    public function markAsPaid(PlatformFeeReport $platformFeeReport, string $paymentReference): PlatformFeeReport
+    {
+        $platformFeeReport->update([
+            'status' => FeeReportStatus::PAID,
+            'payment_reference' => $paymentReference,
+            'paid_at' => now(),
+        ]);
+
+        return $platformFeeReport->fresh();
     }
 
     private function tableHeader(): array
