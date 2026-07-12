@@ -16,7 +16,7 @@ class StripeMalaysiaCardFeeTest extends TestCase
         Config::set('stripe.fees.my.card.percentage', '0.03');
         Config::set('stripe.fees.my.card.fixed', '1.00');
 
-        $fee = (new StripeMalaysiaCardFee())->amountFor('100');
+        $fee = (new StripeMalaysiaCardFee)->amountFor('100');
 
         $this->assertEquals('4.00', $fee);
     }
@@ -28,7 +28,7 @@ class StripeMalaysiaCardFeeTest extends TestCase
 
         $this->expectException(RuntimeException::class);
 
-        (new StripeMalaysiaCardFee())->amountFor('100');
+        (new StripeMalaysiaCardFee)->amountFor('100');
     }
 
     public function testAmountForThrowsWhenFixedIsMissing(): void
@@ -38,6 +38,6 @@ class StripeMalaysiaCardFeeTest extends TestCase
 
         $this->expectException(RuntimeException::class);
 
-        (new StripeMalaysiaCardFee())->amountFor('100');
+        (new StripeMalaysiaCardFee)->amountFor('100');
     }
 }

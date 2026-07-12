@@ -11,9 +11,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DownloadPlatformFeeReportController extends Controller
 {
-    public function __construct(private readonly PlatformFeeReportStorageInterface $feeReportStorage)
-    {
-    }
+    public function __construct(private readonly PlatformFeeReportStorageInterface $feeReportStorage) {}
 
     public function __invoke(PlatformFeeReport $platformFeeReport): StreamedResponse
     {

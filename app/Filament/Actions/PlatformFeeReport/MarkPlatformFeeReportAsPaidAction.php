@@ -30,7 +30,7 @@ class MarkPlatformFeeReportAsPaidAction extends Action
             ->requiresConfirmation()
             ->modalDescription('This will mark the platform fee report as paid.')
             ->visible(fn (PlatformFeeReport $record) => in_array($record->status, [
-                PlatformFeeReportStatus::PENDING
+                PlatformFeeReportStatus::PENDING,
             ]));
 
         $this->schema([

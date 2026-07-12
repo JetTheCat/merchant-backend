@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\PlatformFeeReports;
 
 use App\Filament\Resources\PlatformFeeReports\Pages\ListPlatformFeeReports;

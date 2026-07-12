@@ -45,7 +45,7 @@ class ProcessPurchaseTest extends TestCase
         $user = User::factory()->create();
         $package = CreditPackage::factory()->active()->create([
             'credit_amount' => 100,
-            'selling_price' => 90
+            'selling_price' => 90,
         ]);
 
         $result = $this->service->processPurchase($user, $package);
@@ -75,7 +75,7 @@ class ProcessPurchaseTest extends TestCase
         $user = User::factory()->create();
         $package = CreditPackage::factory()->active()->create([
             'credit_amount' => 100,
-            'selling_price' => 90
+            'selling_price' => 90,
         ]);
 
         $this->assertDatabaseMissing('user_credits', [
@@ -136,12 +136,12 @@ class ProcessPurchaseTest extends TestCase
 
         $merchant = Merchant::factory()->creditSalesPaused()->create();
         $package = CreditPackage::factory()
-        ->active()
-        ->for($merchant)
-        ->create([
-            'credit_amount' => 100,
-            'selling_price' => 90
-        ]);
+            ->active()
+            ->for($merchant)
+            ->create([
+                'credit_amount' => 100,
+                'selling_price' => 90,
+            ]);
 
         try {
             $this->service->processPurchase($user, $package);
@@ -155,11 +155,11 @@ class ProcessPurchaseTest extends TestCase
     {
         $user = User::factory()->create();
         $package = CreditPackage::factory()
-        ->active()
-        ->create([
-            'credit_amount' => 100,
-            'selling_price' => 90
-        ]);
+            ->active()
+            ->create([
+                'credit_amount' => 100,
+                'selling_price' => 90,
+            ]);
 
         UserCredit::factory()
             ->for($user)

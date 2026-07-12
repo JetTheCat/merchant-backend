@@ -11,7 +11,6 @@ use App\Models\CreditTransaction;
 use App\Models\Merchant;
 use App\Models\MerchantUser;
 use App\Models\Settlement;
-use App\Models\SettlementClawback;
 use App\Models\User;
 use App\Models\UserCredit;
 use App\Services\RedemptionService;

@@ -17,9 +17,7 @@ use League\Csv\Writer;
 
 class PlatformFeeReportService
 {
-    public function __construct(private readonly PlatformFeeReportStorageInterface $feeReportStorage)
-    {
-    }
+    public function __construct(private readonly PlatformFeeReportStorageInterface $feeReportStorage) {}
 
     public function generateForPeriod(CarbonImmutable $from, CarbonImmutable $to, User $generatedBy): PlatformFeeReport
     {

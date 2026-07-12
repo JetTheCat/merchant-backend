@@ -16,7 +16,7 @@ class StripeMalaysiaFpxFeeTest extends TestCase
         Config::set('stripe.fees.my.fpx.percentage', '0.03');
         Config::set('stripe.fees.my.fpx.fixed', '1.00');
 
-        $fee = (new StripeMalaysiaFpxFee())->amountFor('100');
+        $fee = (new StripeMalaysiaFpxFee)->amountFor('100');
 
         $this->assertEquals('4.00', $fee);
     }
@@ -28,7 +28,7 @@ class StripeMalaysiaFpxFeeTest extends TestCase
 
         $this->expectException(RuntimeException::class);
 
-        (new StripeMalaysiaFpxFee())->amountFor('100');
+        (new StripeMalaysiaFpxFee)->amountFor('100');
     }
 
     public function testAmountForThrowsWhenFixedIsMissing(): void
@@ -38,6 +38,6 @@ class StripeMalaysiaFpxFeeTest extends TestCase
 
         $this->expectException(RuntimeException::class);
 
-        (new StripeMalaysiaFpxFee())->amountFor('100');
+        (new StripeMalaysiaFpxFee)->amountFor('100');
     }
 }

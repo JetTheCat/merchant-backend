@@ -7,4 +7,3 @@ namespace App\Exceptions\Storage;
 use RuntimeException;
 
 class FileAlreadyExistsException extends RuntimeException {}
-
