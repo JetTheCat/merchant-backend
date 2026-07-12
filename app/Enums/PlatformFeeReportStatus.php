@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-enum FeeReportStatus: string
+enum PlatformFeeReportStatus: string
 {
     case PENDING = 'pending';
     case PAID = 'paid';

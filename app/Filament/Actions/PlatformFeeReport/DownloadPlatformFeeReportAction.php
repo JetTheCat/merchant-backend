@@ -8,11 +8,11 @@ use App\Models\PlatformFeeReport;
 use Filament\Actions\Action;
 use Filament\Support\Icons\Heroicon;
 
-class DownloadFeeReportAction extends Action
+class DownloadPlatformFeeReportAction extends Action
 {
     public static function getDefaultName(): ?string
     {
-        return 'downloadFeeReport';
+        return 'downloadPlatformFeeReport';
     }
 
     protected function setUp(): void

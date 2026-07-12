@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Contracts\Storage\FeeReportStorageInterface;
-use App\Enums\FeeReportStatus;
+use App\Contracts\Storage\PlatformFeeReportStorageInterface;
+use App\Enums\PlatformFeeReportStatus;
 use App\Exceptions\PlatformFeeReport\MissingFirstPeriodStartException;
 use App\Exceptions\PlatformFeeReport\OverlappingPeriodException;
 use App\Models\CreditTransaction;
@@ -17,7 +17,7 @@ use League\Csv\Writer;
 
 class PlatformFeeReportService
 {
-    public function __construct(private readonly FeeReportStorageInterface $feeReportStorage)
+    public function __construct(private readonly PlatformFeeReportStorageInterface $feeReportStorage)
     {
     }
 
@@ -97,7 +97,7 @@ class PlatformFeeReportService
             'total_gmv' => $totalGmv,
             'total_platform_fees' => $totalPlatformFees,
             'total_processing_costs' => $totalProcessingCosts,
-            'status' => FeeReportStatus::PENDING,
+            'status' => PlatformFeeReportStatus::PENDING,
             'generated_by' => $generatedBy->id,
         ]);
     }
@@ -141,13 +141,13 @@ class PlatformFeeReportService
     {
         $latest = PlatformFeeReport::latest('period_end')->first();
 
-        return $latest?->status === FeeReportStatus::PENDING ? $latest : null;
+        return $latest?->status === PlatformFeeReportStatus::PENDING ? $latest : null;
     }
 
     public function markAsPaid(PlatformFeeReport $platformFeeReport, string $paymentReference): PlatformFeeReport
     {
         $platformFeeReport->update([
-            'status' => FeeReportStatus::PAID,
+            'status' => PlatformFeeReportStatus::PAID,
             'payment_reference' => $paymentReference,
             'paid_at' => now(),
         ]);

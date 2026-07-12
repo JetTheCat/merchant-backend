@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Actions\PlatformFeeReport;
 
-use App\Enums\FeeReportStatus;
+use App\Enums\PlatformFeeReportStatus;
 use App\Models\PlatformFeeReport;
 use App\Services\PlatformFeeReportService;
 use Filament\Actions\Action;
@@ -30,7 +30,7 @@ class MarkPlatformFeeReportAsPaidAction extends Action
             ->requiresConfirmation()
             ->modalDescription('This will mark the platform fee report as paid.')
             ->visible(fn (PlatformFeeReport $record) => in_array($record->status, [
-                FeeReportStatus::PENDING
+                PlatformFeeReportStatus::PENDING
             ]));
 
         $this->schema([

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Services\Storage;
 
-use App\Contracts\Storage\FeeReportStorageInterface;
+use App\Contracts\Storage\PlatformFeeReportStorageInterface;
 use App\Exceptions\Storage\FileAlreadyExistsException;
 use App\Exceptions\Storage\FileStorageException;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class FeeReportStorageService implements FeeReportStorageInterface
+class PlatformFeeReportStorageService implements PlatformFeeReportStorageInterface
 {
     private const string DIRECTORY = 'fee-reports';
 

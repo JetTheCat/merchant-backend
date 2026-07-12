@@ -6,20 +6,20 @@ namespace Tests\Unit\Services\Storage;
 
 use App\Exceptions\Storage\FileAlreadyExistsException;
 use App\Exceptions\Storage\FileStorageException;
-use App\Services\Storage\FeeReportStorageService;
+use App\Services\Storage\PlatformFeeReportStorageService;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Tests\TestCase;
 
-class FeeReportStorageServiceTest extends TestCase
+class PlatformFeeReportStorageServiceTest extends TestCase
 {
-    private FeeReportStorageService $service;
+    private PlatformFeeReportStorageService $service;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->service = app(FeeReportStorageService::class);
+        $this->service = app(PlatformFeeReportStorageService::class);
     }
 
     public function testStoreWritesContentToExpectedPath(): void

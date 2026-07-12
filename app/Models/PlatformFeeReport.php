@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\FeeReportStatus;
+use App\Enums\PlatformFeeReportStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -37,7 +37,7 @@ class PlatformFeeReport extends Model
         'total_gmv' => 'decimal:2',
         'total_platform_fees' => 'decimal:2',
         'total_processing_costs' => 'decimal:2',
-        'status' => FeeReportStatus::class,
+        'status' => PlatformFeeReportStatus::class,
         'paid_at' => 'datetime',
     ];
 
@@ -48,7 +48,7 @@ class PlatformFeeReport extends Model
 
     public function scopePending(Builder $query): Builder
     {
-        return $query->where('status', FeeReportStatus::PENDING);
+        return $query->where('status', PlatformFeeReportStatus::PENDING);
     }
 
     public function scopeOverlapping(Builder $query, string $periodStart, string $periodEnd): Builder

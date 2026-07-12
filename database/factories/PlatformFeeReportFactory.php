@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
-use App\Enums\FeeReportStatus;
+use App\Enums\PlatformFeeReportStatus;
 use App\Models\PlatformFeeReport;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -32,7 +32,7 @@ class PlatformFeeReportFactory extends Factory
             'total_gmv' => $totalGmv,
             'total_platform_fees' => $totalPlatformFees,
             'total_processing_costs' => $totalProcessingCosts,
-            'status' => FeeReportStatus::PENDING,
+            'status' => PlatformFeeReportStatus::PENDING,
             'payment_reference' => null,
             'paid_at' => null,
             'generated_by' => User::factory(),
@@ -42,7 +42,7 @@ class PlatformFeeReportFactory extends Factory
     public function paid(): static
     {
         return $this->state(fn () => [
-            'status' => FeeReportStatus::PAID,
+            'status' => PlatformFeeReportStatus::PAID,
             'payment_reference' => fake()->bothify('PAY-########'),
             'paid_at' => fake()->dateTimeBetween('-1 month', 'now'),
         ]);

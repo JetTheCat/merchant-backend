@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\PlatformFeeReports\Pages;
 
-use App\Filament\Actions\PlatformFeeReport\GenerateFeeReportAction;
+use App\Filament\Actions\PlatformFeeReport\GeneratePlatformFeeReportAction;
 use App\Filament\Resources\PlatformFeeReports\PlatformFeeReportResource;
 use Filament\Resources\Pages\ListRecords;
 
@@ -13,7 +13,7 @@ class ListPlatformFeeReports extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            GenerateFeeReportAction::make(),
+            GeneratePlatformFeeReportAction::make(),
         ];
     }
 }

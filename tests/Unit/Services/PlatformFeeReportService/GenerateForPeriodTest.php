@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services\PlatformFeeReportService;
 
-use App\Enums\FeeReportStatus;
+use App\Enums\PlatformFeeReportStatus;
 use App\Enums\TransactionStatus;
 use App\Exceptions\PlatformFeeReport\OverlappingPeriodException;
 use App\Models\CreditTransaction;
@@ -358,7 +358,7 @@ class GenerateForPeriodTest extends TestCase
 
         $report = $this->service->generateForPeriod($periodStart, $periodEnd, $this->generatedBy);
 
-        $this->assertSame(FeeReportStatus::PENDING, $report->status);
+        $this->assertSame(PlatformFeeReportStatus::PENDING, $report->status);
     }
 
     public function testGenerateForPeriodStoresReportFilePathFromStorageService(): void

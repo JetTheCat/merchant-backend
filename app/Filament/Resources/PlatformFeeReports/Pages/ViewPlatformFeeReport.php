@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\PlatformFeeReports\Pages;
 
-use App\Filament\Actions\PlatformFeeReport\DownloadFeeReportAction;
+use App\Filament\Actions\PlatformFeeReport\DownloadPlatformFeeReportAction;
 use App\Filament\Actions\PlatformFeeReport\MarkPlatformFeeReportAsPaidAction;
 use App\Filament\Resources\PlatformFeeReports\PlatformFeeReportResource;
 use Filament\Resources\Pages\ViewRecord;
@@ -14,7 +14,7 @@ class ViewPlatformFeeReport extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            DownloadFeeReportAction::make(),
+            DownloadPlatformFeeReportAction::make(),
             MarkPlatformFeeReportAsPaidAction::make(),
         ];
     }

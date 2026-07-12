@@ -10,11 +10,11 @@ use Carbon\CarbonImmutable;
 use Filament\Actions\Action;
 use Filament\Support\Icons\Heroicon;
 
-class GenerateFeeReportAction extends Action
+class GeneratePlatformFeeReportAction extends Action
 {
     public static function getDefaultName(): ?string
     {
-        return 'generateFeeReport';
+        return 'generatePlatformFeeReport';
     }
 
     protected function setUp(): void

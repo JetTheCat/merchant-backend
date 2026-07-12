@@ -6,7 +6,7 @@ namespace App\Contracts\Storage;
 
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-interface FeeReportStorageInterface
+interface PlatformFeeReportStorageInterface
 {
     public function store(string $filename, string $content): string;
 

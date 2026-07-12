@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
-use App\Contracts\Storage\FeeReportStorageInterface;
+use App\Contracts\Storage\PlatformFeeReportStorageInterface;
 use App\Http\Controllers\Controller;
 use App\Models\PlatformFeeReport;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class DownloadFeeReportController extends Controller
+class DownloadPlatformFeeReportController extends Controller
 {
-    public function __construct(private readonly FeeReportStorageInterface $feeReportStorage)
+    public function __construct(private readonly PlatformFeeReportStorageInterface $feeReportStorage)
     {
     }
 
