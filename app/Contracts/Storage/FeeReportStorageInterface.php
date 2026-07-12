@@ -10,7 +10,7 @@ interface FeeReportStorageInterface
 {
     public function store(string $filename, string $content): string;
 
-    public function download(string $filename): StreamedResponse;
+    public function download(string $path): StreamedResponse;
 
     public function exists(string $path): bool;
 }

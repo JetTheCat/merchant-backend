@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\PlatformFeeReports\Tables;
 
 use App\Enums\FeeReportStatus;
+use App\Filament\Actions\PlatformFeeReport\DownloadFeeReportAction;
 use App\Filament\Actions\PlatformFeeReport\MarkPlatformFeeReportAsPaidAction;
 use App\Support\Filament\Placeholder;
 use Filament\Actions\BulkActionGroup;
@@ -79,6 +80,7 @@ class PlatformFeeReportsTable
             ])
             ->recordActions([
                 ViewAction::make(),
+                DownloadFeeReportAction::make(),
                 MarkPlatformFeeReportAsPaidAction::make(),
             ])
             ->toolbarActions([
