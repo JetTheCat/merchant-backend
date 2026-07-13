@@ -21,6 +21,8 @@ class SettlementServiceTest extends TestCase
 
     private Merchant $merchant;
 
+    private const string KUALA_LUMPUR_TIMEZONE = 'Asia/Kuala_Lumpur';
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,6 +30,73 @@ class SettlementServiceTest extends TestCase
         $this->service = app(SettlementService::class);
 
         $this->merchant = Merchant::factory()->active()->create();
+    }
+
+    public function testGenerateForMerchantConvertsLocalPeriodStartToUtcBeforeQueryingTransactions(): void
+    {
+        // 1:00 am local time (Asia/Kuala_Lumpur) is 5:00 pm UTC the previous day
+        $kualaLumpurTime = CarbonImmutable::now(self::KUALA_LUMPUR_TIMEZONE)->setHour(1);
+
+        CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($this->merchant)
+            ->create([
+                'settlement_amount' => 100.00,
+                'created_at' => $kualaLumpurTime->utc(),
+            ]);
+
+        $settlement = $this->service->generateForMerchant(
+            $this->merchant,
+            $kualaLumpurTime,
+            $kualaLumpurTime->addDays(13),
+        );
+
+        $this->assertEquals('100.00', $settlement->total_sales);
+    }
+
+    public function testGenerateForMerchantExcludesTransactionOnDayBeforePeriodStart(): void
+    {
+        $periodStart = CarbonImmutable::now(self::KUALA_LUMPUR_TIMEZONE)->startOfDay();
+        $periodEnd = $periodStart->addDays(13);
+
+        // 11:59 pm local time the day before periodStart, one minute before the true cutoff
+        $excludedTime = $periodStart->subDay()->setTime(23, 59);
+
+        CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($this->merchant)
+            ->create([
+                'settlement_amount' => 100.00,
+                'created_at' => $excludedTime->utc(),
+            ]);
+
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->service->generateForMerchant($this->merchant, $periodStart, $periodEnd);
+    }
+
+    public function testGenerateForMerchantExcludesTransactionOnDayAfterPeriodEnd(): void
+    {
+        $periodStart = CarbonImmutable::now(self::KUALA_LUMPUR_TIMEZONE)->startOfDay();
+        $periodEnd = $periodStart->addDays(13);
+
+        // 6:00 am local time (Asia/Kuala_Lumpur) is 10:00 pm UTC the previous day
+        $excludedTime = $periodEnd->addDay()->setTime(6, 0);
+
+        CreditTransaction::factory()
+            ->redemption()
+            ->completed()
+            ->for($this->merchant)
+            ->create([
+                'settlement_amount' => 100.00,
+                'created_at' => $excludedTime->utc(),
+            ]);
+
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->service->generateForMerchant($this->merchant, $periodStart, $periodEnd);
     }
 
     public function testGenerateForMerchantCreatesSettlement(): void
