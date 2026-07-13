@@ -24,7 +24,8 @@ class PlatformFeeReportService
         $reportingTimezone = config('app.reporting_timezone');
 
         // periodStart/periodEnd are calendar days in reporting_timezone; queryFrom/queryTo are
-        // the same instants in UTC, for comparing against created_at.
+        // the same instants in UTC, for comparing against created_at. The format('Y-m-d') is
+        // required — see "Timezone-safe date conversion" in CLAUDE.md.
         $periodStart = CarbonImmutable::parse($from->format('Y-m-d'), $reportingTimezone)->startOfDay();
         $periodEnd = CarbonImmutable::parse($to->format('Y-m-d'), $reportingTimezone)->endOfDay();
 
@@ -132,7 +133,7 @@ class PlatformFeeReportService
             );
         }
 
-        return CarbonImmutable::parse($firstPeriodStart, $reportingTimezone)->startOfDay();
+        return CarbonImmutable::createFromFormat('Y-m-d', $firstPeriodStart, $reportingTimezone)->startOfDay();
     }
 
     public function previousUnpaidReport(): ?PlatformFeeReport

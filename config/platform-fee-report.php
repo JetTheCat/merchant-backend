@@ -29,6 +29,6 @@ return [
     |
     */
 
-    'availability_buffer_days' => env('PLATFORM_FEE_REPORT_AVAILABILITY_BUFFER_DAYS', 3),
+    'availability_buffer_days' => (int) env('PLATFORM_FEE_REPORT_AVAILABILITY_BUFFER_DAYS', 3),
 
 ];

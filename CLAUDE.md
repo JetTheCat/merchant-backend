@@ -28,3 +28,18 @@ app('filesystem')->set(config('filesystems.default'), $disk);
 ```
 
 `app('filesystem')` is the same `FilesystemManager` singleton the `Storage` facade proxies to. `set($name, $disk)` overwrites its internal disk cache for that name — this is exactly what `Storage::fake()` does internally (`FilesystemManager::set()` registers the fake disk under the default disk name), so registering our mock disk the same way is what makes `Storage::exists()`/`Storage::put()` resolve to it. Skipping this `set()` call leaves the mock inert — the facade will still resolve to whatever real disk is currently registered instead.
+
+# Timezone-safe date conversion
+
+When converting a `Carbon`/`CarbonImmutable` instance's date into a specific business timezone (e.g. `config('app.reporting_timezone')`), extract the date-only string first, then re-parse it in the target timezone — never pass the instance directly to `parse()`:
+
+```php
+// Correct — reinterprets the digits, no conversion:
+CarbonImmutable::parse($from->format('Y-m-d'), $reportingTimezone);
+
+// Wrong — Carbon converts the instant via setTimezone() before parsing,
+// which can silently shift the date across a day boundary:
+CarbonImmutable::parse($from, $reportingTimezone);
+```
+
+Carbon's constructor (`Creator.php::constructTimezoneFromDateTime()`) calls `setTimezone()` on `DateTimeInterface` input when an explicit timezone argument is also given — a real conversion, not a reinterpretation. A plain string with no embedded timezone info skips that branch entirely, so `parse()` treats the target timezone as pure interpretation context instead. See `app/Services/PlatformFeeReportService.php` for the working pattern.
