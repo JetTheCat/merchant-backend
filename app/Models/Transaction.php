@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use RuntimeException;
 
@@ -33,7 +34,6 @@ class Transaction extends Model
         'merchant_user_id',
         'merchant_location_id',
         'settlement_id',
-        'payment_id',
         'category',
         'type',
         'reference_code',
@@ -101,9 +101,9 @@ class Transaction extends Model
         return $this->belongsTo(MerchantLocation::class);
     }
 
-    public function payment(): BelongsTo
+    public function payment(): HasOne
     {
-        return $this->belongsTo(Payment::class);
+        return $this->hasOne(Payment::class, 'transaction_id');
     }
 
     public function settlement(): BelongsTo

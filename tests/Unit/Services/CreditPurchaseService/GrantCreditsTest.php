@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services\CreditPurchaseService;
 
-use App\DataTransferObjects\PaymentIntentResult;
 use App\Enums\PaymentStatus;
 use App\Enums\PaymentType;
 use App\Enums\TransactionStatus;
@@ -56,22 +55,22 @@ class GrantCreditsTest extends TestCase
             'merchant_id' => $package->merchant_id,
         ]);
 
-        $payment = Payment::factory()->create([
-            'user_id' => $user->id,
-            'status' => PaymentStatus::PROCESSING,
-            'payment_method' => PaymentType::CARD,
-        ]);
-
         $transaction = CreditTransaction::factory()->purchase()->pending()->create([
             'user_id' => $user->id,
             'credit_package_id' => $package->id,
             'merchant_id' => $package->merchant_id,
             'user_credit_id' => $userCredit->id,
-            'payment_id' => $payment->id,
             'amount' => 100,
             'paid_amount' => 90,
             'balance_before' => 0,
             'balance_after' => 100,
+        ]);
+
+        $payment = Payment::factory()->create([
+            'user_id' => $user->id,
+            'transaction_id' => $transaction->id,
+            'status' => PaymentStatus::PROCESSING,
+            'payment_method' => PaymentType::CARD,
         ]);
 
         $this->service->grantCredits($payment);
@@ -114,20 +113,20 @@ class GrantCreditsTest extends TestCase
             'merchant_id' => $package->merchant_id,
         ]);
 
-        $payment = Payment::factory()->create([
-            'user_id' => $user->id,
-            'status' => PaymentStatus::PROCESSING,
-            'payment_method' => PaymentType::CARD,
-        ]);
-
-        CreditTransaction::factory()->purchase()->pending()->create([
+        $transaction = CreditTransaction::factory()->purchase()->pending()->create([
             'user_id' => $user->id,
             'credit_package_id' => $package->id,
             'merchant_id' => $package->merchant_id,
             'user_credit_id' => $userCredit->id,
-            'payment_id' => $payment->id,
             'amount' => 100,
             'paid_amount' => 90,
+        ]);
+
+        $payment = Payment::factory()->create([
+            'user_id' => $user->id,
+            'transaction_id' => $transaction->id,
+            'status' => PaymentStatus::PROCESSING,
+            'payment_method' => PaymentType::CARD,
         ]);
 
         $this->service->grantCredits($payment);
@@ -159,20 +158,20 @@ class GrantCreditsTest extends TestCase
                 'merchant_id' => $package->merchant_id,
             ]);
 
-        $payment = Payment::factory()->create([
-            'user_id' => $user->id,
-            'status' => PaymentStatus::PROCESSING,
-            'payment_method' => PaymentType::CARD,
-        ]);
-
-        CreditTransaction::factory()->purchase()->pending()->create([
+        $transaction = CreditTransaction::factory()->purchase()->pending()->create([
             'user_id' => $user->id,
             'credit_package_id' => $package->id,
             'merchant_id' => $package->merchant_id,
             'user_credit_id' => $userCredit->id,
-            'payment_id' => $payment->id,
             'amount' => 100,
             'paid_amount' => 90,
+        ]);
+
+        $payment = Payment::factory()->create([
+            'user_id' => $user->id,
+            'transaction_id' => $transaction->id,
+            'status' => PaymentStatus::PROCESSING,
+            'payment_method' => PaymentType::CARD,
         ]);
 
         $this->service->grantCredits($payment);
@@ -215,20 +214,20 @@ class GrantCreditsTest extends TestCase
             'merchant_id' => $package->merchant_id,
         ]);
 
-        $payment = Payment::factory()->create([
-            'user_id' => $user->id,
-            'status' => PaymentStatus::PROCESSING,
-            'payment_method' => $paymentType,
-        ]);
-
-        CreditTransaction::factory()->purchase()->pending()->create([
+        $transaction = CreditTransaction::factory()->purchase()->pending()->create([
             'user_id' => $user->id,
             'credit_package_id' => $package->id,
             'merchant_id' => $package->merchant_id,
             'user_credit_id' => $userCredit->id,
-            'payment_id' => $payment->id,
             'amount' => 100,
             'paid_amount' => 90,
+        ]);
+
+        $payment = Payment::factory()->create([
+            'user_id' => $user->id,
+            'transaction_id' => $transaction->id,
+            'status' => PaymentStatus::PROCESSING,
+            'payment_method' => $paymentType,
         ]);
 
         $this->service->grantCredits($payment);
@@ -256,20 +255,20 @@ class GrantCreditsTest extends TestCase
             'merchant_id' => $package->merchant_id,
         ]);
 
-        $payment = Payment::factory()->create([
-            'user_id' => $user->id,
-            'status' => PaymentStatus::PROCESSING,
-            'payment_method' => PaymentType::CARD,
-        ]);
-
-        CreditTransaction::factory()->purchase()->pending()->create([
+        $transaction = CreditTransaction::factory()->purchase()->pending()->create([
             'user_id' => $user->id,
             'credit_package_id' => $package->id,
             'merchant_id' => $package->merchant_id,
             'user_credit_id' => $userCredit->id,
-            'payment_id' => $payment->id,
             'amount' => 100,
             'paid_amount' => 90,
+        ]);
+
+        $payment = Payment::factory()->create([
+            'user_id' => $user->id,
+            'transaction_id' => $transaction->id,
+            'status' => PaymentStatus::PROCESSING,
+            'payment_method' => PaymentType::CARD,
         ]);
 
         $this->expectException(RuntimeException::class);

@@ -45,7 +45,7 @@ class ProcessPurchaseTest extends TestCase
         $user = User::factory()->create();
         $package = CreditPackage::factory()->active()->create([
             'credit_amount' => 100,
-            'selling_price' => 90
+            'selling_price' => 90,
         ]);
 
         $result = $this->service->processPurchase($user, $package);
@@ -75,7 +75,7 @@ class ProcessPurchaseTest extends TestCase
         $user = User::factory()->create();
         $package = CreditPackage::factory()->active()->create([
             'credit_amount' => 100,
-            'selling_price' => 90
+            'selling_price' => 90,
         ]);
 
         $this->assertDatabaseMissing('user_credits', [
@@ -136,12 +136,12 @@ class ProcessPurchaseTest extends TestCase
 
         $merchant = Merchant::factory()->creditSalesPaused()->create();
         $package = CreditPackage::factory()
-        ->active()
-        ->for($merchant)
-        ->create([
-            'credit_amount' => 100,
-            'selling_price' => 90
-        ]);
+            ->active()
+            ->for($merchant)
+            ->create([
+                'credit_amount' => 100,
+                'selling_price' => 90,
+            ]);
 
         try {
             $this->service->processPurchase($user, $package);
@@ -155,11 +155,11 @@ class ProcessPurchaseTest extends TestCase
     {
         $user = User::factory()->create();
         $package = CreditPackage::factory()
-        ->active()
-        ->create([
-            'credit_amount' => 100,
-            'selling_price' => 90
-        ]);
+            ->active()
+            ->create([
+                'credit_amount' => 100,
+                'selling_price' => 90,
+            ]);
 
         UserCredit::factory()
             ->for($user)
@@ -259,11 +259,6 @@ class ProcessPurchaseTest extends TestCase
         $user = User::factory()->create();
         $package = CreditPackage::factory()->active()->create();
 
-        $payment = Payment::factory()->create([
-            'user_id' => $user->id,
-            'status' => PaymentStatus::PAYMENT_FAILED,
-        ]);
-
         $userCredit = UserCredit::factory()
             ->for($user)
             ->for($package->merchant)
@@ -274,7 +269,12 @@ class ProcessPurchaseTest extends TestCase
             'credit_package_id' => $package->id,
             'merchant_id' => $package->merchant_id,
             'user_credit_id' => $userCredit->id,
-            'payment_id' => $payment->id,
+        ]);
+
+        $payment = Payment::factory()->create([
+            'user_id' => $user->id,
+            'transaction_id' => $transaction->id,
+            'status' => PaymentStatus::PAYMENT_FAILED,
         ]);
 
         $this->service->failPurchase($payment);

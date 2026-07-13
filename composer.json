@@ -13,6 +13,8 @@
         "laravel/reverb": "^1.10",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
+        "league/csv": "9.28.0",
+        "league/flysystem-aws-s3-v3": "^3.35",
         "spatie/browsershot": "^5.2",
         "spatie/laravel-pdf": "^2.6",
         "spatie/laravel-permission": "^7.2",

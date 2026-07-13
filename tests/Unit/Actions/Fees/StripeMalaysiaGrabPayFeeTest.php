@@ -15,7 +15,7 @@ class StripeMalaysiaGrabPayFeeTest extends TestCase
     {
         Config::set('stripe.fees.my.grabpay.percentage', '0.03');
 
-        $fee = (new StripeMalaysiaGrabPayFee())->amountFor('100');
+        $fee = (new StripeMalaysiaGrabPayFee)->amountFor('100');
 
         $this->assertEquals('3.00', $fee);
     }
@@ -26,6 +26,6 @@ class StripeMalaysiaGrabPayFeeTest extends TestCase
 
         $this->expectException(RuntimeException::class);
 
-        (new StripeMalaysiaGrabPayFee())->amountFor('100');
+        (new StripeMalaysiaGrabPayFee)->amountFor('100');
     }
 }

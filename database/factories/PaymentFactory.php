@@ -30,6 +30,7 @@ class PaymentFactory extends Factory
             'stripe_payload' => null,
             'failure_reason' => null,
             'paid_at' => null,
+            'processing_fee' => null,
         ];
     }
 
