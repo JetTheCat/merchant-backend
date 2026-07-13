@@ -25,12 +25,19 @@ class SettlementService
             throw new InvalidArgumentException("Merchant [{$merchant->id}] does not have banking details on file.");
         }
 
-        return DB::transaction(function () use ($merchant, $periodStart, $periodEnd) {
+        $reportingTimezone = config('app.reporting_timezone');
+
+        // periodStart/periodEnd are calendar days in reporting_timezone; queryFrom/queryTo are
+        // the same instants in UTC, for comparing against created_at.
+        $queryFrom = CarbonImmutable::parse($periodStart->format('Y-m-d'), $reportingTimezone)->startOfDay()->utc();
+        $queryTo = CarbonImmutable::parse($periodEnd->format('Y-m-d'), $reportingTimezone)->endOfDay()->utc();
+
+        return DB::transaction(function () use ($merchant, $periodStart, $periodEnd, $queryFrom, $queryTo) {
             $transactions = CreditTransaction::where('merchant_id', $merchant->id)
                 ->where('type', TransactionType::CREDIT_REDEMPTION)
                 ->where('status', TransactionStatus::COMPLETED)
                 ->whereNull('settlement_id')
-                ->whereBetween('created_at', [$periodStart->startOfDay(), $periodEnd->endOfDay()])
+                ->whereBetween('created_at', [$queryFrom, $queryTo])
                 ->lockForUpdate()
                 ->select(['id', 'settlement_amount'])
                 ->get();
