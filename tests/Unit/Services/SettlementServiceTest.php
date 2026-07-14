@@ -110,7 +110,7 @@ class SettlementServiceTest extends TestCase
                 'settlement_amount' => 100.00,
             ]);
 
-        $date = CarbonImmutable::today();
+        $date = $this->nowInReportingTimezone();
 
         $settlement = $this->service->generateForMerchant(
             $this->merchant,
@@ -144,8 +144,8 @@ class SettlementServiceTest extends TestCase
 
         $settlement = $this->service->generateForMerchant(
             $this->merchant,
-            CarbonImmutable::today(),
-            CarbonImmutable::today(),
+            $this->nowInReportingTimezone(),
+            $this->nowInReportingTimezone(),
         );
 
         $this->assertEquals($this->merchant->bank_name, $settlement->bank_name);
@@ -166,8 +166,8 @@ class SettlementServiceTest extends TestCase
 
         $settlement = $this->service->generateForMerchant(
             $this->merchant,
-            CarbonImmutable::today(),
-            CarbonImmutable::today(),
+            $this->nowInReportingTimezone(),
+            $this->nowInReportingTimezone(),
         );
 
         foreach ($transactions as $transaction) {
@@ -192,8 +192,8 @@ class SettlementServiceTest extends TestCase
 
         $this->service->generateForMerchant(
             $this->merchant,
-            CarbonImmutable::today(),
-            CarbonImmutable::today(),
+            $this->nowInReportingTimezone(),
+            $this->nowInReportingTimezone(),
         );
     }
 
@@ -209,8 +209,8 @@ class SettlementServiceTest extends TestCase
 
         $this->service->generateForMerchant(
             $this->merchant,
-            CarbonImmutable::today(),
-            CarbonImmutable::today(),
+            $this->nowInReportingTimezone(),
+            $this->nowInReportingTimezone(),
         );
     }
 
@@ -229,8 +229,8 @@ class SettlementServiceTest extends TestCase
 
         $this->service->generateForMerchant(
             $this->merchant,
-            CarbonImmutable::today()->subDays(3),
-            CarbonImmutable::today(),
+            $this->nowInReportingTimezone()->subDays(3),
+            $this->nowInReportingTimezone(),
         );
     }
 
@@ -241,7 +241,7 @@ class SettlementServiceTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('banking details');
 
-        $this->service->generateForMerchant($merchant, CarbonImmutable::today(), CarbonImmutable::today());
+        $this->service->generateForMerchant($merchant, $this->nowInReportingTimezone(), $this->nowInReportingTimezone());
     }
 
     public function testGenerateForMerchantThrowsWhenNoUnsettledTransactions(): void
@@ -251,8 +251,8 @@ class SettlementServiceTest extends TestCase
 
         $this->service->generateForMerchant(
             $this->merchant,
-            CarbonImmutable::today(),
-            CarbonImmutable::today(),
+            $this->nowInReportingTimezone(),
+            $this->nowInReportingTimezone(),
         );
     }
 
@@ -271,8 +271,8 @@ class SettlementServiceTest extends TestCase
 
         $settlement = $this->service->generateForMerchant(
             $this->merchant,
-            CarbonImmutable::today(),
-            CarbonImmutable::today(),
+            $this->nowInReportingTimezone(),
+            $this->nowInReportingTimezone(),
         );
 
         // total_sales = 300, clawback = 100 -> net_amount = 200
@@ -299,8 +299,8 @@ class SettlementServiceTest extends TestCase
 
         $settlement = $this->service->generateForMerchant(
             $this->merchant,
-            CarbonImmutable::today(),
-            CarbonImmutable::today(),
+            $this->nowInReportingTimezone(),
+            $this->nowInReportingTimezone(),
         );
 
         // clawback (150) exceeds total_sales (100) — skipped, carries to next cycle
@@ -333,8 +333,8 @@ class SettlementServiceTest extends TestCase
 
         $settlement = $this->service->generateForMerchant(
             $this->merchant,
-            CarbonImmutable::today(),
-            CarbonImmutable::today(),
+            $this->nowInReportingTimezone(),
+            $this->nowInReportingTimezone(),
         );
 
         // A (150) exceeds total_sales (100) — skipped; B (80) still fits — recovered
@@ -360,8 +360,8 @@ class SettlementServiceTest extends TestCase
         try {
             $this->service->generateForMerchant(
                 $this->merchant,
-                CarbonImmutable::today(),
-                CarbonImmutable::today(),
+                $this->nowInReportingTimezone(),
+                $this->nowInReportingTimezone(),
             );
             $this->fail('Expected an InvalidArgumentException to be thrown.');
         } catch (InvalidArgumentException) {
@@ -386,5 +386,10 @@ class SettlementServiceTest extends TestCase
             'status' => SettlementStatus::COMPLETED,
             'payment_reference' => 'TT1234567890',
         ]);
+    }
+
+    private function nowInReportingTimezone(): CarbonImmutable
+    {
+        return CarbonImmutable::now(config('app.reporting_timezone'));
     }
 }
