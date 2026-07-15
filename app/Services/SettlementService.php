@@ -19,6 +19,10 @@ use RuntimeException;
 
 class SettlementService
 {
+    /**
+     * Only the Y-m-d portion of $periodStart/$periodEnd is used, treated as a calendar
+     * day in reporting_timezone — the instant/timezone each value carries is otherwise ignored.
+     */
     public function generateForMerchant(Merchant $merchant, CarbonImmutable $periodStart, CarbonImmutable $periodEnd): Settlement
     {
         if (empty($merchant->bank_name) || empty($merchant->bank_account_number) || empty($merchant->bank_account_name)) {

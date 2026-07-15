@@ -40,7 +40,7 @@ class GenerateForPeriodTest extends TestCase
         int $existingStartOffsetDays,
         int $existingEndOffsetDays,
     ): void {
-        $periodStart = CarbonImmutable::now();
+        $periodStart = $this->nowInReportingTimezone();
         $periodEnd = $periodStart->addDays(13);
 
         $this->expectException(OverlappingPeriodException::class);
@@ -94,7 +94,7 @@ class GenerateForPeriodTest extends TestCase
     {
         Storage::fake();
 
-        $periodStart = CarbonImmutable::now();
+        $periodStart = $this->nowInReportingTimezone();
         $periodEnd = $periodStart->addDays(13);
 
         PlatformFeeReport::factory()->create([
@@ -111,7 +111,7 @@ class GenerateForPeriodTest extends TestCase
     {
         Storage::fake();
 
-        $periodStart = CarbonImmutable::now();
+        $periodStart = $this->nowInReportingTimezone();
         $periodEnd = $periodStart->addDays(13);
 
         $report = $this->service->generateForPeriod($periodStart, $periodEnd, $this->generatedBy);
@@ -123,7 +123,7 @@ class GenerateForPeriodTest extends TestCase
     {
         Storage::fake();
 
-        $periodStart = CarbonImmutable::now();
+        $periodStart = $this->nowInReportingTimezone();
         $periodEnd = $periodStart->addDays(13);
 
         $existingReport = PlatformFeeReport::factory()->create([
@@ -198,7 +198,7 @@ class GenerateForPeriodTest extends TestCase
     {
         Storage::fake();
 
-        $periodStart = CarbonImmutable::now();
+        $periodStart = $this->nowInReportingTimezone();
         $periodEnd = $periodStart->addDays(13);
 
         $this->createPurchaseTransaction();
@@ -222,7 +222,7 @@ class GenerateForPeriodTest extends TestCase
     {
         Storage::fake();
 
-        $periodStart = CarbonImmutable::now();
+        $periodStart = $this->nowInReportingTimezone();
         $periodEnd = $periodStart->addDays(13);
 
         $this->createPurchaseTransaction();
@@ -240,7 +240,7 @@ class GenerateForPeriodTest extends TestCase
     {
         Storage::fake();
 
-        $periodStart = CarbonImmutable::now();
+        $periodStart = $this->nowInReportingTimezone();
         $periodEnd = $periodStart->addDays(13);
 
         CreditTransaction::factory()
@@ -263,7 +263,7 @@ class GenerateForPeriodTest extends TestCase
     {
         Storage::fake();
 
-        $periodStart = CarbonImmutable::now();
+        $periodStart = $this->nowInReportingTimezone();
         $periodEnd = $periodStart->addDays(13);
 
         $report = $this->service->generateForPeriod($periodStart, $periodEnd, $this->generatedBy);
@@ -286,7 +286,7 @@ class GenerateForPeriodTest extends TestCase
     {
         Storage::fake();
 
-        $periodStart = CarbonImmutable::now();
+        $periodStart = $this->nowInReportingTimezone();
         $periodEnd = $periodStart->addDays(13);
 
         $transaction = $this->createPurchaseTransaction()->fresh();
@@ -315,7 +315,7 @@ class GenerateForPeriodTest extends TestCase
     {
         Storage::fake();
 
-        $periodStart = CarbonImmutable::now();
+        $periodStart = $this->nowInReportingTimezone();
         $periodEnd = $periodStart->addDays(13);
 
         $this->createPurchaseTransaction();
@@ -333,7 +333,7 @@ class GenerateForPeriodTest extends TestCase
     {
         Storage::fake();
 
-        $periodStart = CarbonImmutable::now();
+        $periodStart = $this->nowInReportingTimezone();
         $periodEnd = $periodStart->addDays(13);
 
         $this->createPurchaseTransaction(['paid_amount' => 40, 'platform_fee' => 1]);
@@ -351,7 +351,7 @@ class GenerateForPeriodTest extends TestCase
     {
         Storage::fake();
 
-        $periodStart = CarbonImmutable::now();
+        $periodStart = $this->nowInReportingTimezone();
         $periodEnd = $periodStart->addDays(13);
 
         $this->createPurchaseTransaction();
@@ -365,7 +365,7 @@ class GenerateForPeriodTest extends TestCase
     {
         Storage::fake();
 
-        $periodStart = CarbonImmutable::now();
+        $periodStart = $this->nowInReportingTimezone();
         $periodEnd = $periodStart->addDays(13);
 
         $this->createPurchaseTransaction();
@@ -386,7 +386,7 @@ class GenerateForPeriodTest extends TestCase
     {
         Storage::fake();
 
-        $periodStart = CarbonImmutable::now();
+        $periodStart = $this->nowInReportingTimezone();
         $periodEnd = $periodStart->addDays(13);
 
         $this->createPurchaseTransaction();
@@ -400,7 +400,7 @@ class GenerateForPeriodTest extends TestCase
     {
         Storage::fake();
 
-        $periodStart = CarbonImmutable::now();
+        $periodStart = $this->nowInReportingTimezone();
         $periodEnd = $periodStart->addDays(13);
 
         CreditTransaction::factory()
@@ -437,6 +437,11 @@ class GenerateForPeriodTest extends TestCase
         $this->assertSame($report->total_gmv, $summaryRow[0]);
         $this->assertSame($report->total_platform_fees, $summaryRow[1]);
         $this->assertSame($report->total_processing_costs, $summaryRow[2]);
+    }
+
+    private function nowInReportingTimezone(): CarbonImmutable
+    {
+        return CarbonImmutable::now(config('app.reporting_timezone'));
     }
 
     private function readCsvRows(string $path): array

@@ -19,6 +19,10 @@ class PlatformFeeReportService
 {
     public function __construct(private readonly PlatformFeeReportStorageInterface $feeReportStorage) {}
 
+    /**
+     * Only the Y-m-d portion of $from/$to is used, treated as a calendar day in
+     * reporting_timezone — the instant/timezone each value carries is otherwise ignored.
+     */
     public function generateForPeriod(CarbonImmutable $from, CarbonImmutable $to, User $generatedBy): PlatformFeeReport
     {
         $reportingTimezone = config('app.reporting_timezone');

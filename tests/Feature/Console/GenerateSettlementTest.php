@@ -32,10 +32,12 @@ class GenerateSettlementTest extends TestCase
                 'settlement_amount' => 100.00,
             ]);
 
+        $today = now(config('app.reporting_timezone'))->toDateString();
+
         $this->artisan('settlements:generate', [
             'merchantId' => $this->merchant->id,
-            'periodStart' => now()->toDateString(),
-            'periodEnd' => now()->toDateString(),
+            'periodStart' => $today,
+            'periodEnd' => $today,
         ])
             ->assertSuccessful()
             ->expectsOutputToContain('Settlement generated successfully.')
@@ -53,10 +55,12 @@ class GenerateSettlementTest extends TestCase
                 'settlement_amount' => 50.00,
             ]);
 
+        $today = now(config('app.reporting_timezone'))->toDateString();
+
         $this->artisan('settlements:generate', [
             'merchantId' => $this->merchant->id,
-            'periodStart' => now()->toDateString(),
-            'periodEnd' => now()->toDateString(),
+            'periodStart' => $today,
+            'periodEnd' => $today,
         ])->assertSuccessful();
 
         $this->assertDatabaseHas('settlements', [
