@@ -1,4 +1,4 @@
-FROM php:8.4-cli-bookworm
+FROM php:8.5.12-cli-bookworm
 
 # Install system dependencies and build libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -16,7 +16,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     pdo_mysql \
     pdo_pgsql \
     pgsql \
-    opcache \
     intl \
     zip \
     bcmath \

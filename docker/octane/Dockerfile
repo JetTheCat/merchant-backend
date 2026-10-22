@@ -1,5 +1,5 @@
 # Stage 1: Build environment and PHP extensions
-FROM php:8.4-cli-bookworm AS builder
+FROM php:8.5.12-cli-bookworm AS builder
 
 # Install system dependencies and PHP extensions for Laravel with MySQL/PostgreSQL support.
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -16,7 +16,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     pdo_mysql \
     pdo_pgsql \
     pgsql \
-    opcache \
     intl \
     zip \
     bcmath \
@@ -31,7 +30,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /var/www
 
 # Stage 2: Production/development environment
-FROM php:8.4-cli-bookworm
+FROM php:8.5.12-cli-bookworm
 
 # Use ARGs to define environment variables passed from the Docker build command or Docker Compose.
 ARG XDEBUG_ENABLED=false
