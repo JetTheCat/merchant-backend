@@ -1,59 +1,112 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Merchant Credit Platform — Backend API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel backend for a prepaid-credit platform aimed at Malaysian merchants (F&B, retail, services). Customers buy discounted credit packages from a merchant, then redeem them in-store by scanning a QR code. The backend handles payments, wallets, redemptions, merchant settlements and platform-fee reporting, and exposes an admin panel for operations.
 
-## About Laravel
+> **Project status: archived.** Development stopped before launch because of regulatory and market-research findings, not technical blockers. The code is published as a portfolio piece. It is not production-hardened, and it is not being maintained.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Why this project is interesting
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+The hard part of this system was money handling, not CRUD. These are the problems I spent the most time on:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Idempotent payment processing.** Stripe webhooks are signature-verified, logged to a `stripe_events` table keyed on the event ID, then handed to a queue job. Duplicate or replayed events are ignored.
+- **Concurrency-safe wallets.** Redemptions and refunds run inside DB transactions with pessimistic locks on the `user_credits` row, which prevents double-spend.
+- **Cash-backed credit accounting.** A credit's face value is not what backs it. Platform and gateway fees are deducted at purchase time, and the wallet tracks `cash_balance` alongside the credit balance. Merchants are settled on the cash backing, not the face value. See [docs/credit-lifecycle.md](docs/credit-lifecycle.md).
+- **Settlements with clawbacks.** Settlements are generated per merchant per period from redemptions. A refund issued after a period has already been settled becomes a clawback that is deducted from the next payout.
+- **Fee strategy per payment method.** Stripe Malaysia fees for card, FPX and GrabPay are resolved through a small `ProcessingFeeResolver` with one class per method (`app/Actions/Fees`).
+- **Platform fee reporting and cash flow.** Weekly reports work out how much of each period's cash is platform revenue and how much moves to escrow. The fee is always taken out before funds move. See [docs/platform-fee-reporting.md](docs/platform-fee-reporting.md).
+- **Timezone correctness.** Business periods are anchored to the Malaysian reporting timezone and converted to UTC before querying. Several bug fixes in the git history deal with this.
+- **Real-time merchant notifications.** `RedemptionCompleted` is broadcast over Laravel Reverb on a per-location private channel. Channel authorisation is scoped to the `merchant_user` guard, so staff can only subscribe to their own location.
 
-## Learning Laravel
+## Product flow
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+1. A customer buys a credit package (e.g. pay RM 90 for RM 100 of credit) through a Stripe PaymentIntent.
+2. The webhook credits the wallet, records the platform and processing fees, and tracks the cash backing.
+3. Each merchant location has a permanent, printable QR code. The customer scans it, enters an amount and confirms. The balance is deducted at once and staff at that location get a live notification.
+4. If scanning fails, staff can generate a short-lived 6-character fallback code instead.
+5. Owners can refund a mischarged redemption, which restores the customer's balance.
+6. Admins generate periodic settlements for merchants, download PDF invoices, and mark payouts as paid in the admin panel.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+The original redemption design used a per-transaction QR generated by the merchant. I replaced it with static, location-based QR codes before launch because staff friction was too high and expiring codes broke at busy counters.
 
-## Laravel Sponsors
+## Tech stack
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+| Area | Choice |
+|---|---|
+| Framework | Laravel 12, PHP 8.5 |
+| Database | PostgreSQL (UUID keys, encrypted columns for sensitive merchant data) |
+| Auth | Laravel Sanctum with separate guards for customers and merchant users |
+| Payments | Stripe (cards, FPX, GrabPay) via `stripe-php` |
+| Real-time | Laravel Reverb (WebSockets) |
+| Admin panel | Filament 5 |
+| Runtime | Laravel Octane on RoadRunner, behind Nginx |
+| Queues and cache | Laravel queues and Redis/database drivers |
+| PDFs | `spatie/laravel-pdf` with Browsershot (settlement invoices) |
+| Storage | S3-compatible via Flysystem, behind a storage contract |
+| Roles | `spatie/laravel-permission` |
+| Testing | PHPUnit 13, Paratest |
+| Style | Laravel Pint |
+| Dev environment | Docker Compose |
 
-### Premium Partners
+## Architecture
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```
+app/
+├── Actions/Fees/        # Per-payment-method processing fee strategies
+├── Services/            # Business logic: purchases, redemptions, settlements, fee reports, Stripe
+├── Http/                # Thin controllers, form requests, API resources
+├── Jobs/                # Webhook processing, email notifications
+├── Events/              # RedemptionCompleted (broadcast)
+├── Enums/               # Statuses, transaction types, settlement cycles, etc.
+├── DataTransferObjects/ # Typed results from Stripe and settlement logic
+├── Filament/            # Admin resources, actions, widgets
+├── Contracts/Storage/   # Storage abstraction
+└── Models/              # Eloquent models
 
-## Contributing
+routes/v1/               # Versioned API: auth, categories, merchant, payments, user
+docs/                    # Domain write-ups (see below)
+tests/                   # API (v1), Feature, Unit
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Controllers stay thin. Money-moving logic lives in services (`CreditPurchaseService`, `RedemptionService`, `SettlementService`, `PlatformFeeReportService`) and runs inside database transactions. Credit and payment transactions share one `transactions` table, with `CreditTransaction` as a scoped subclass.
 
-## Code of Conduct
+## API overview
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+The API is versioned under `/api/v1`. The main groups are:
 
-## Security Vulnerabilities
+- **Customer:** registration, login, email verification, password reset, browse categories and merchants (including nearby search), purchase packages, wallet balances, transaction history, QR lookup and redemption.
+- **Merchant portal and POS:** merchant-user auth with an invitation and password-setup flow, profile, staff management, credit packages, locations, redemption history and daily summary, refunds, transactions, settlements and invoices.
+- **Payments:** purchase endpoint, payment status, Stripe webhook.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Auth endpoints are rate limited (login, forgot-password, resend-verification). The admin panel covers merchants, merchant users, locations, packages, payments, transactions, settlements, clawbacks and platform fee reports.
+
+## Documentation
+
+Design notes written during development:
+
+- [Credit lifecycle](docs/credit-lifecycle.md): how cash becomes credit, how credit becomes payout, and how refunds work
+- [Settlement operations](docs/settlement-operations.md): generating settlements, invoices and clawbacks
+- [Platform fee reporting](docs/platform-fee-reporting.md): cash flow from Stripe to escrow and report timing
+- [Stripe webhook testing](docs/stripe-webhook-testing.md): testing webhooks locally
+
+## Tests
+
+The suite has 78 test files across API, feature and unit tests. They cover webhook idempotency, purchase and redemption flows, refunds, settlement and clawback calculation, broadcast channel authorisation, and rate limiting. Browsing `tests/` is the quickest way to see how each flow is expected to behave.
+
+This repository is published for code review and isn't set up to be run by reviewers. It needs Docker, Stripe credentials and a Reverb/Octane stack.
+
+## What I'd do next
+
+Left unfinished because the project stopped:
+
+- `charge.refunded` webhook handling (refund policy was still undecided)
+- Self-service banking-detail updates with OTP verification (admin-only for the pilot)
+- Sentry, API documentation (Scribe) and static analysis (PHPStan/Larastan)
+- Transaction exports and an automated settlement scheduler
+
+## Companion apps
+
+The API was built to serve a customer mobile app, a merchant mobile app and a merchant web portal. Those clients are not part of this repository.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+No license has been specified. The code is published for review purposes.
